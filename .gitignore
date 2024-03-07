@@ -1,5 +1,7 @@
 # Prerequisites
 *.d
+*.user
+*.vs
 
 # Compiled Object files
 *.slo
@@ -14,7 +16,7 @@
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
+#*.dll
 
 # Fortran module files
 *.mod
@@ -23,10 +25,26 @@
 # Compiled Static libraries
 *.lai
 *.la
-*.a
+#*.a
 *.lib
 
 # Executables
 *.exe
 *.out
 *.app
+
+
+# Paths
+bin
+build
+Sandbox/bin
+UnitTests/bin
+extern/SFML-2.5.1/doc
+extern/SFML-2.5.1/examples
+doxygen
+out
+include
+lib
+LICENSE.APACHE
+
+LICENSE.MIT
