@@ -1,45 +1,51 @@
 #include "ui/RibbonImpl.h"
 
 namespace CLC {
+	RibbonImpl* RibbonImpl::m_instance = nullptr;
 	RibbonImpl::RibbonImpl(QWidget* parent)
 		: RibbonWidget::Ribbon(parent)
 	{
+		m_instance = this;
+		Q_INIT_RESOURCE(icons);
 		// Create tabs
-		RibbonWidget::RibbonTab* tabSettings = new RibbonWidget::RibbonTab("Settings", "developerTool", this);
-		RibbonWidget::RibbonTab* tabEdit = new RibbonWidget::RibbonTab("Editing", "create_new_2", this);
+		m_mainTab = new RibbonWidget::RibbonTab("Project", "", this);
+		//RibbonWidget::RibbonTab* tabEdit = new RibbonWidget::RibbonTab("Editing", "create_new_2", this);
 
 		// Create groups
-		RibbonWidget::RibbonButtonGroup* groupSettings = new RibbonWidget::RibbonButtonGroup("group\nSettings", tabSettings);
-		RibbonWidget::RibbonButtonGroup* groupWork = new RibbonWidget::RibbonButtonGroup("groupWork", tabEdit);
-		RibbonWidget::RibbonButtonGroup* groupEdit = new RibbonWidget::RibbonButtonGroup("groupEdit", tabEdit);
+		m_templateGroup = new RibbonWidget::RibbonButtonGroup("Template management", m_mainTab);
+		m_projectGroup = new RibbonWidget::RibbonButtonGroup("Library management", m_mainTab);
 
 		// Create buttons
-		m_settingsButtons.settings1 = new RibbonWidget::RibbonButton("Settings 1", "Settings 1", "engineering_1", true, groupSettings);
-		m_settingsButtons.settingsOK = new RibbonWidget::RibbonButton("Settings OK", "Settings OK", "accept", true, groupSettings);
-		m_settingsButtons.settingsCancel = new RibbonWidget::RibbonButton("Cancel", "Cancel", "close", true, groupSettings);
-		m_settingsButtons.settingsSave = new RibbonWidget::RibbonButton("Settings Save", "Settings Save", "floppy_disk", true, groupSettings);
+		m_templateButtons.openTemplatePath = new RibbonWidget::RibbonButton("Open template path", "Open an existing folder which holds the template for libraries.", ":/icons/folder-open.png", true, m_templateGroup);
+		m_templateButtons.downloadTemplate = new RibbonWidget::RibbonButton("Download template", "Download the newest version of the template.", ":/icons/download.png", true, m_templateGroup);
 
-		m_workButtons.open = new RibbonWidget::InformativeToolButton("Open", "Open", "document", true, groupWork);
-		m_workButtons.save = new RibbonWidget::InformativeToolButton("Save", "Save", "floppy_disk", true, groupWork);
-
-		m_editButtons.undo = new RibbonWidget::RibbonButton("Undo", "Undo", "arrowCClockwise", true, groupEdit);
-		m_editButtons.redo = new RibbonWidget::RibbonButton("Redo", "Redo", "arrowClockwise", true, groupEdit);
+		m_projectButtons.openExistingProject = new RibbonWidget::RibbonButton("Open", "Open an existing library", ":/icons/folder-open.png", true, m_projectGroup);
+		m_projectButtons.saveExistingProject = new RibbonWidget::RibbonButton("Save", "Save to existing library", ":/icons/save.png", true, m_projectGroup);
+		m_projectButtons.saveAsNewProject    = new RibbonWidget::RibbonButton("Save as new", "Save as new library project", ":/icons/save.png", true, m_projectGroup);
 
 		// Add tabs
-		addTab(tabSettings);
-		addTab(tabEdit);
+		addTab(m_mainTab);
+	}
+	RibbonImpl::~RibbonImpl()
+	{
+		m_instance = nullptr;
+		delete m_templateGroup;
+		delete m_projectGroup;
+		delete m_mainTab;
 	}
 
-	RibbonImpl::SettingsButtons& RibbonImpl::settingsButtons()
+	RibbonImpl::TemplateManagementButtons& RibbonImpl::getTemplateManagementButtons()
 	{
-		return m_settingsButtons;
+		if(m_instance)
+			return m_instance->m_templateButtons;
+		static TemplateManagementButtons empty;
+		return empty;
 	}
-	RibbonImpl::WorkButtons& RibbonImpl::workButtons()
+	RibbonImpl::ProjectButtons& RibbonImpl::getProjectButtons()
 	{
-		return m_workButtons;
-	}
-	RibbonImpl::EditButtons& RibbonImpl::editButtons()
-	{
-		return m_editButtons;
+		if (m_instance)
+			return m_instance->m_projectButtons;
+		static ProjectButtons empty;
+		return empty;
 	}
 }

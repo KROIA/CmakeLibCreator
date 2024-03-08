@@ -9,36 +9,35 @@ namespace CLC {
 		Q_OBJECT
 	public:
 		RibbonImpl(QWidget* parent = nullptr);
+		~RibbonImpl();
 
 
 
-		struct SettingsButtons
+		struct TemplateManagementButtons
 		{
-			RibbonWidget::RibbonButton* settings1;
-			RibbonWidget::RibbonButton* settingsOK;
-			RibbonWidget::RibbonButton* settingsCancel;
-			RibbonWidget::RibbonButton* settingsSave;
+			RibbonWidget::RibbonButton* openTemplatePath = nullptr;
+			RibbonWidget::RibbonButton* downloadTemplate = nullptr;
 		};
 
-		struct WorkButtons
+		struct ProjectButtons
 		{
-			RibbonWidget::InformativeToolButton* open;
-			RibbonWidget::InformativeToolButton* save;
-		};
-
-		struct EditButtons
-		{
-			RibbonWidget::RibbonButton* undo;
-			RibbonWidget::RibbonButton* redo;
+			RibbonWidget::RibbonButton* openExistingProject = nullptr;
+			RibbonWidget::RibbonButton* saveExistingProject = nullptr;
+			RibbonWidget::RibbonButton* saveAsNewProject = nullptr;
 		};
 
 
-		SettingsButtons& settingsButtons();
-		WorkButtons& workButtons();
-		EditButtons& editButtons();
+		static TemplateManagementButtons& getTemplateManagementButtons();
+		static ProjectButtons& getProjectButtons();
 	private:
-		SettingsButtons m_settingsButtons;
-		WorkButtons m_workButtons;
-		EditButtons m_editButtons;
+		static RibbonImpl* m_instance;
+
+		TemplateManagementButtons m_templateButtons;
+		ProjectButtons m_projectButtons;
+
+		RibbonWidget::RibbonTab* m_mainTab;
+
+		RibbonWidget::RibbonButtonGroup* m_templateGroup;
+		RibbonWidget::RibbonButtonGroup* m_projectGroup;
 	};
 }

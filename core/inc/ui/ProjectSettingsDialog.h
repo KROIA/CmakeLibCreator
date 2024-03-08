@@ -4,6 +4,7 @@
 #include <QWidget>
 #include "ui_ProjectSettingsDialog.h"
 #include "ProjectSettings.h"
+#include "CheckBoxSelectionDialog.h"
 
 namespace CLC
 {
@@ -19,9 +20,19 @@ namespace CLC
 		void setSettings(const ProjectSettings& settings);
 		const ProjectSettings &getSettings() const;
 
+	private slots:
+		void on_qtModules_pushButton_clicked();
+		void on_dependencies_pushButton_clicked();
+
+		void onQtModulesSelected(const QVector<CheckBoxSelectionDialog::Element>& selectedItems);
+		void onDependenciesSelected(const QVector<CheckBoxSelectionDialog::Element>& selectedItems);
 	private:
 		Ui::ProjectSettingsDialog ui;
 
 		ProjectSettings m_settings;
+
+		CheckBoxSelectionDialog *m_qtModulesDialog;
+		CheckBoxSelectionDialog *m_dependenciesDialog;
+		
 	};
 }

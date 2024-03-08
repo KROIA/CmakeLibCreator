@@ -14,6 +14,7 @@ int main(int argc, char* argv[])
 	QApplication app(argc, argv);
 	CLC::MainWindow mainWindow;
 	mainWindow.show();
+	//CLC::LibraryInfo::createInfoWidget()->show();
 	
 	return app.exec();
 }

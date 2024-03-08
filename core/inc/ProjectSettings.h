@@ -3,6 +3,8 @@
 #include "CmakeLibraryCreator_base.h"
 #include <QString>
 #include <QVector>
+#include "QTModule.h"
+#include "Dependency.h"
 
 namespace CLC 
 {
@@ -34,7 +36,7 @@ namespace CLC
 			bool qt_enable;
 			bool qt_deploy;
 
-			QVector<QString> qModules;
+			QVector<QTModule> qModules;
 
 			QString debugPostFix;
 			QString staticPostFix;
@@ -46,7 +48,7 @@ namespace CLC
 			bool compile_examples;
 			bool compile_unittests;
 
-			QVector<QString> dependencies;
+			QVector<Dependency> dependencies;
 			CMAKE_settings();
 			void autosetLibDefine();
 			void autosetLibProfileDefine();

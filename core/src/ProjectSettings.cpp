@@ -18,11 +18,11 @@ namespace CLC
 	{
 		m_CMAKE_settings = settings;
 	}
-	const LibrarySettings& ProjectSettings::getLibrarySettings() const
+	const ProjectSettings::LibrarySettings& ProjectSettings::getLibrarySettings() const
 	{
 		return m_librarySettings;
 	}
-	const CMAKE_settings& ProjectSettings::getCMAKE_settings() const
+	const ProjectSettings::CMAKE_settings& ProjectSettings::getCMAKE_settings() const
 	{
 		return m_CMAKE_settings;
 	}
@@ -47,7 +47,7 @@ namespace CLC
 		autosetLibProfileDefine();
 		qt_enable = true;
 		qt_deploy = true;
-		qModules = QVector<QString>();
+		qModules = QVector<QTModule>();
 
 		debugPostFix = "-d";
 		staticPostFix = "-s";
@@ -56,7 +56,7 @@ namespace CLC
 		cxxStandardRequired = true;
 		compile_examples = true;
 		compile_unittests = true;
-		dependencies = QVector<QString>();
+		dependencies = QVector<Dependency>();
 	}
 	void ProjectSettings::CMAKE_settings::autosetLibDefine()
 	{
