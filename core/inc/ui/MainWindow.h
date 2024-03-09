@@ -26,5 +26,6 @@ namespace CLC
 		Ui::MainWindow ui;
 		RibbonImpl* m_ribbon;
 		ProjectSettingsDialog * m_projectSettingsDialog;
+		bool m_existingProjectLoaded = false;
 	};
 }

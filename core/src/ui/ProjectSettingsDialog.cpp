@@ -12,6 +12,9 @@ namespace CLC
 
 		m_qtModulesDialog = new CheckBoxSelectionDialog("QT Modules");
 		m_dependenciesDialog = new CheckBoxSelectionDialog("Dependencies");
+
+		connect(m_qtModulesDialog, &CheckBoxSelectionDialog::okButtonClicked, this, &ProjectSettingsDialog::onQtModulesSelected);
+		connect(m_dependenciesDialog, &CheckBoxSelectionDialog::okButtonClicked, this, &ProjectSettingsDialog::onDependenciesSelected);
 	}
 
 	ProjectSettingsDialog::~ProjectSettingsDialog()
@@ -22,10 +25,13 @@ namespace CLC
 
 	void ProjectSettingsDialog::setSettings(const ProjectSettings& settings)
 	{
+		m_ignoreNameChangeEvents = true;
 		m_settings = settings;
 		const ProjectSettings::LibrarySettings &libSettings = m_settings.getLibrarySettings();
 		const ProjectSettings::CMAKE_settings &cmakeSettings = m_settings.getCMAKE_settings();
 		ui.libraryName_lineEdit->setText(cmakeSettings.libraryName);
+		ui.namespaceName_lineEdit->setText(libSettings.namespaceName);
+		ui.exportName_lineEdit->setText(libSettings.exportName);
 		ui.major_spinBox->setValue(libSettings.version.major);
 		ui.minor_spinBox->setValue(libSettings.version.minor);
 		ui.patch_spinBox->setValue(libSettings.version.patch);
@@ -46,10 +52,39 @@ namespace CLC
 		ui.cxxStandard_spinBox->setValue(cmakeSettings.cxxStandard);
 		ui.compileExamples_checkBox->setChecked(cmakeSettings.compile_examples);
 		ui.compileUnitTests_checkBox->setChecked(cmakeSettings.compile_unittests);
-
+		m_ignoreNameChangeEvents = false;
 	}
-	const ProjectSettings& ProjectSettingsDialog::getSettings() const
+	const ProjectSettings& ProjectSettingsDialog::getSettings()
 	{
+		ProjectSettings::LibrarySettings libSettings = m_settings.getLibrarySettings();
+		libSettings.version.major = ui.major_spinBox->value();
+		libSettings.version.minor = ui.minor_spinBox->value();
+		libSettings.version.patch = ui.patch_spinBox->value();
+
+		libSettings.author = ui.author_lineEdit->text();
+		libSettings.email = ui.email_lineEdit->text();
+		libSettings.website = ui.website_lineEdit->text();
+		libSettings.license = ui.license_lineEdit->text();
+
+		libSettings.namespaceName = ui.namespaceName_lineEdit->text();
+		libSettings.exportName = ui.exportName_lineEdit->text();
+
+		ProjectSettings::CMAKE_settings cmakeSettings = m_settings.getCMAKE_settings();
+		cmakeSettings.libraryName = ui.libraryName_lineEdit->text();
+		cmakeSettings.lib_define = ui.libDefine_lineEdit->text();
+		cmakeSettings.lib_profile_define = ui.libProfileDefine_lineEdit->text();
+		cmakeSettings.qt_enable = ui.qtEnable_checkBox->isChecked();
+		cmakeSettings.qt_deploy = ui.qtDeploy_checkBox->isChecked();
+		cmakeSettings.debugPostFix = ui.debugPostFix_lineEdit->text();
+		cmakeSettings.staticPostFix = ui.staticPostFix_lineEdit->text();
+		cmakeSettings.profilingPostFix = ui.profilingPostFix_lineEdit->text();
+		cmakeSettings.cxxStandard = ui.cxxStandard_spinBox->value();
+		cmakeSettings.compile_examples = ui.compileExamples_checkBox->isChecked();
+		cmakeSettings.compile_unittests = ui.compileUnitTests_checkBox->isChecked();
+		
+		m_settings.setLibrarySettings(libSettings);
+		m_settings.setCMAKE_settings(cmakeSettings);
+
 		return m_settings;
 	}
 
@@ -104,6 +139,20 @@ namespace CLC
 			}
 		}
 		m_dependenciesDialog->setItems(elements);
+	}
+	void ProjectSettingsDialog::on_libraryName_lineEdit_textChanged(const QString& text)
+	{
+		if (m_ignoreNameChangeEvents)
+			return;
+		ProjectSettings::CMAKE_settings cmakeSettings = m_settings.getCMAKE_settings();
+		cmakeSettings.libraryName = text;
+		m_settings.setCMAKE_settings(cmakeSettings);
+		m_settings.autosetLibDefine();
+		m_settings.autosetLibProfileDefine();
+		m_settings.autosetLibShortDefine();
+		cmakeSettings = m_settings.getCMAKE_settings();
+		ui.libDefine_lineEdit->setText(cmakeSettings.lib_define);
+		ui.libProfileDefine_lineEdit->setText(cmakeSettings.lib_profile_define);
 	}
 
 	void ProjectSettingsDialog::onQtModulesSelected(const QVector<CheckBoxSelectionDialog::Element>& selectedItems)

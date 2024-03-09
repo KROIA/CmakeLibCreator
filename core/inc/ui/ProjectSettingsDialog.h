@@ -18,11 +18,12 @@ namespace CLC
 		~ProjectSettingsDialog();
 
 		void setSettings(const ProjectSettings& settings);
-		const ProjectSettings &getSettings() const;
+		const ProjectSettings &getSettings();
 
 	private slots:
 		void on_qtModules_pushButton_clicked();
 		void on_dependencies_pushButton_clicked();
+		void on_libraryName_lineEdit_textChanged(const QString& text);
 
 		void onQtModulesSelected(const QVector<CheckBoxSelectionDialog::Element>& selectedItems);
 		void onDependenciesSelected(const QVector<CheckBoxSelectionDialog::Element>& selectedItems);
@@ -33,6 +34,8 @@ namespace CLC
 
 		CheckBoxSelectionDialog *m_qtModulesDialog;
 		CheckBoxSelectionDialog *m_dependenciesDialog;
+
+		bool m_ignoreNameChangeEvents = false;
 		
 	};
 }

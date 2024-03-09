@@ -29,7 +29,7 @@ namespace CLC
 	{
 		QVector<QTModule> modules;
 		modules.append(QTModule("Core", "QtCore"));
-		modules.append(QTModule("GUI", "QtGui"));
+		modules.append(QTModule("Gui", "QtGui"));
 		modules.append(QTModule("Widgets", "QtWidgets"));
 		modules.append(QTModule("Network", "QtNetwork"));
 		modules.append(QTModule("OpenGL", "QtOpenGL"));

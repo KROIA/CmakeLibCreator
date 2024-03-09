@@ -6,6 +6,7 @@
 #include "Resources.h"
 #include <QDebug>
 #include "Utilities.h"
+#include "ProjectExporter.h"
 
 namespace CLC
 {
@@ -105,7 +106,7 @@ namespace CLC
 	{
 		// Open file dialog to select a folder
 		QString folderPath = QFileDialog::getExistingDirectory(this, tr("Open Library Path"),
-			Resources::getTemplateSourcePath(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+			Resources::getLibrarySourcePath(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 		if (folderPath.size() == 0)
 		{
 			return;
@@ -117,9 +118,24 @@ namespace CLC
 			return;
 		}
 		Resources::setLibrarySourcePath(folderPath);
+		ProjectSettings settings;
+		ProjectExporter::readProjectData(settings, folderPath);
+		m_projectSettingsDialog->setSettings(settings);
+		m_existingProjectLoaded = true;
 	}
 	void MainWindow::onSaveExistingProject_clicked()
 	{
+		if (!m_existingProjectLoaded)
+		{
+			QMessageBox box(QMessageBox::Warning, "Error", "No project loaded", QMessageBox::Ok, this);
+			return;
+		}
+		QString templateSourcePath = QDir::currentPath() + "/" + Resources::getTemplateSourcePath();
+		ProjectExporter::exportExistingProject(m_projectSettingsDialog->getSettings(), templateSourcePath, Resources::getLibrarySourcePath());
+
+		ProjectSettings settings;
+		ProjectExporter::readProjectData(settings, Resources::getLibrarySourcePath());
+		m_projectSettingsDialog->setSettings(settings);
 
 	}
 
@@ -138,7 +154,15 @@ namespace CLC
 			QMessageBox box(QMessageBox::Warning, "Error", "The selected folder does not exist", QMessageBox::Ok, this);
 			return;
 		}
+		QString templateSourcePath = QDir::currentPath() + "/" + Resources::getTemplateSourcePath();
+		Resources::setLibrarySourcePath(folderPath);
+		const auto& settings = m_projectSettingsDialog->getSettings();
+		ProjectExporter::exportNewProject(settings, templateSourcePath, folderPath);
 		
+		ProjectSettings settings2;
+		ProjectExporter::readProjectData(settings2, folderPath+"/"+ settings.getCMAKE_settings().libraryName);
+		m_projectSettingsDialog->setSettings(settings2);
+		m_existingProjectLoaded = true;
 	}
 
 

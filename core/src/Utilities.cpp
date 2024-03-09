@@ -37,6 +37,28 @@ namespace CLC
 			dir.removeRecursively();
 		return 1;
 	}
+	bool Utilities::copyFile(const QString& from, const QString& to, bool overrideMode)
+	{
+		QFile file(to);
+		if (file.exists())
+		{
+			if(overrideMode)
+				file.remove();
+			else
+				return false;
+		}
+		return QFile::copy(from, to);
+	}
+	bool Utilities::createFolder(const QString& folder)
+	{
+		QDir dir;
+		return dir.mkpath(folder);
+	}
+	bool Utilities::deleteFile(const QString& file)
+	{
+		QFile f(file);
+		return f.remove();
+	}
 	bool Utilities::deleteFolderRecursively(const QString& folder)
 	{
 		QDir dir(folder);
@@ -51,8 +73,32 @@ namespace CLC
 			it.next();
 			const auto fileInfo = it.fileInfo();
 			if (!fileInfo.isHidden()) { //filters dot and dotdot
-				if (fileInfo.fileName().contains(filter))
+				if (filter == "*.*" || filter == "")
+				{
 					files.push_back(fileInfo.absoluteFilePath());
+				}
+				else
+					if (fileInfo.fileName().contains(filter))
+						files.push_back(fileInfo.absoluteFilePath());
+			}
+		}
+		return files;
+	}
+	QVector<QString> Utilities::getFilesInFolderRecursive(const QString& folder, const QString& filter)
+	{
+		QVector<QString> files;
+		QDirIterator it(folder, QDir::Files, QDirIterator::Subdirectories);
+		while (it.hasNext()) {
+			it.next();
+			const auto fileInfo = it.fileInfo();
+			if (!fileInfo.isHidden()) { //filters dot and dotdot
+				if (filter == "*.*" || filter == "")
+				{
+					files.push_back(fileInfo.absoluteFilePath());
+				}
+				else
+					if (fileInfo.fileName().contains(filter))
+						files.push_back(fileInfo.absoluteFilePath());
 			}
 		}
 		return files;
@@ -60,15 +106,31 @@ namespace CLC
 	QVector<QString> Utilities::getFoldersInFolder(const QString& folder, const QString& filter)
 	{
 		QVector<QString> folders;
-		QDirIterator it(folder, QDir::Dirs, QDirIterator::Subdirectories);
-		while (it.hasNext()) {
-			it.next();
-			const auto fileInfo = it.fileInfo();
-			if (!fileInfo.isHidden()) { //filters dot and dotdot
-				if (fileInfo.fileName().contains(filter))
-					folders.push_back(fileInfo.absoluteFilePath());
-			}
+
+		QDir directory(folder);
+
+		// Check if the provided path is a valid directory
+		if (!directory.exists()) {
+			qWarning("Directory does not exist.");
+			return folders;
 		}
+
+		// Set filter to include only directories and skip hidden directories
+		directory.setFilter(QDir::Dirs | QDir::NoDotAndDotDot | QDir::NoSymLinks);
+
+		// Apply custom filter if provided
+		if (!filter.isEmpty())
+			directory.setNameFilters(QStringList(filter));
+
+		// Get list of directories
+		QStringList folderList = directory.entryList();
+
+		// Append directory names to the vector
+		for (const QString& folderName : folderList) {
+			QString folderPath = directory.absoluteFilePath(folderName);
+			folders.push_back(folderPath);
+		}
+
 		return folders;
 	}
 	QVector<QString> Utilities::getFileContents(const QString& file)
@@ -103,42 +165,329 @@ namespace CLC
 		
 		if (index1 == -1)
 			return false;
-		QString left = line.left(index1);
-		QString right = line.right(index1);
+		QString left = line.mid(0, index1);
+		QString right = line.mid(index1);
 		int index2 = right.indexOf(toPattern);
 		if(index2 == -1)
 			return false;
 		
-		right = right.right(index2);
+		right = right.mid(index2);
 		line = left + replacement + right;
 		return true;
 	}
-
-	int Utilities::getLineIndex(const QVector<QString>& lines, const QString& pattern)
+	bool Utilities::replaceAll(QVector<QString>& lines, const QString& target, const QString& replacement)
 	{
-		for(int i=0; i<lines.size(); i++)
+		for (QString& line : lines)
 		{
-			if(lines[i].contains(pattern))
+			int pos = line.indexOf(target);
+			while (pos != -1)
+			{
+				line.replace(target, replacement);
+				pos = line.indexOf(target, pos + replacement.size());
+			}
+		}
+		return true;
+	}
+	bool Utilities::replaceAllIfLineContains(QVector<QString>& lines, const QString& target, const QString& replacement, const QString& mustContainInLine)
+	{
+		for (QString& line : lines)
+		{
+			if (line.contains(mustContainInLine))
+			{
+				int pos = line.indexOf(target);
+				while (pos != -1)
+				{
+					line.replace(target, replacement);
+					pos = line.indexOf(target, pos + replacement.size());
+				}
+			}
+		}
+		return true;
+	}
+
+	int Utilities::getLineIndex(const QVector<QString>& lines, const QString& pattern, bool onlyCompleteWord)
+	{
+		return getLineIndex(lines, pattern, 0, onlyCompleteWord);
+	}
+	int Utilities::getLineIndex(const QVector<QString>& lines, const QVector<QString>& patterns, bool onlyCompleteWord)
+	{
+		return getLineIndex(lines, patterns, 0, onlyCompleteWord);
+	}
+	int Utilities::getLineIndex(const QVector<QString>& lines, const QString& pattern, int startIndex, bool onlyCompleteWord)
+	{
+		for (int i = startIndex; i < lines.size(); i++)
+		{
+			if (lines[i].contains(pattern))
+			{
+				if (onlyCompleteWord)
+				{
+					const QString& line = lines[i];
+					int index = line.indexOf(pattern);
+					QChar before = (index == 0 ? ' ' : line[index - 1]);
+					QChar after = (index + pattern.size() >= line.size() ? ' ' : line[index + pattern.size()]);
+					if (before.isLetterOrNumber() || after.isLetterOrNumber())
+						continue;
+					else
+						return i;
+				}
+				else
+					return i;
+			}
+		}
+		return -1;
+	}
+	int Utilities::getLineIndex(const QVector<QString>& lines, const QVector<QString>& patterns, int startIndex, bool onlyCompleteWord)
+	{
+		for (int i = startIndex; i < lines.size(); i++)
+		{
+			bool foundAll = true;
+			for (const auto& pattern : patterns)
+			{
+				if (lines[i].contains(pattern))
+				{
+					if (onlyCompleteWord)
+					{
+						const QString& line = lines[i];
+						int index = line.indexOf(pattern);
+						QChar before = (index == 0 ? ' ' : line[index - 1]);
+						QChar after = (index + pattern.size() >= line.size() ? ' ' : line[index + pattern.size()]);
+						if (before.isLetterOrNumber() || after.isLetterOrNumber())
+							foundAll = false;
+					}
+				}
+				else
+				{
+					foundAll = false;
+				}
+
+			}
+			if (foundAll)
 				return i;
 		}
 		return -1;
 	}
 
-	bool Utilities::replaceCmakeVariable(QVector<QString>& lines, const QString& variable, const QString& value)
+	bool Utilities::replaceCmakeVariable(QVector<QString>& lines, QString variable, const QString& value)
 	{
-		int lineIndex = getLineIndex(lines, variable);
+		int lineIndex = getLineIndex(lines, variable, true);
 		if (lineIndex == -1)
 		{
 			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in CMakeLists.txt");
 			return false;
 		}
-		// Replace the cmake parameter with the pattern: set(LIB_DEFINE CMAKE_LIB_CREATOR_LIB)  
-		QString left = lines[lineIndex].left(lines[lineIndex].indexOf(variable));
-		QString replacement = "set(" + variable + " " + value + ")";
+		QString line = lines[lineIndex];
+		QString left = line.mid(0, line.indexOf(variable));
+		line = line.mid(line.indexOf(variable) + variable.length());
+		QString right = line.mid(line.indexOf(")")+1);
+		QString replacement = left + variable +" "+ value + ")" + right;
+		lines[lineIndex] = replacement;
+		return true;
 	}
-	bool Utilities::replaceCmakeVariable(QVector<QString>& lines, const QString& variable, const QVector<QString>& values)
+	bool Utilities::replaceCmakeVariable(QVector<QString>& lines, QString variable, const QVector<QString>& values)
 	{
+		int startLineIndex = getLineIndex(lines, variable, true);
+		if (startLineIndex == -1)
+		{
+			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			return false;
+		}
+		int endLineIndex = getLineIndex(lines, ")", startLineIndex);
+		if (endLineIndex == -1)
+		{
+			QMessageBox::critical(nullptr, "Error", "Could not find end of variable " + variable + " in CMakeLists.txt");
+			return false;
+		}
+		QString left = lines[startLineIndex].mid(0, lines[startLineIndex].indexOf(variable));
+		//int lineCount = endLineIndex - startLineIndex;
+		lines.erase(lines.begin() + startLineIndex, lines.begin() + endLineIndex + 1);
+		QVector<QString> replacement;
+		
+		for (const auto& value : values)
+			replacement.push_back("  " + value);
+		if(replacement.size())
+			replacement[0] = left + variable + "\n" + replacement[0];
+		else
+			replacement.push_back(left + variable);
+		replacement[replacement.size()-1] += ")";
+		for(int i=replacement.size()-1; i>=0; i--)
+			lines.insert(lines.begin() + startLineIndex, replacement[i]);
 
+		return true;
+	}
+
+	bool Utilities::readCmakeVariable(const QVector<QString>& lines, QString variable, QString& value)
+	{
+		int lineIndex = getLineIndex(lines, variable, true);
+		if (lineIndex == -1)
+		{
+			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			return false;
+		}
+		QString line = lines[lineIndex];
+		line = line.mid(line.indexOf(variable) + variable.length());
+		value = line.mid(0, line.indexOf(")")).trimmed();
+		return true;
+	}
+	bool Utilities::readCmakeVariable(const QVector<QString>& lines, QString variable, bool& value)
+	{
+		int lineIndex = getLineIndex(lines, variable, true);
+		if (lineIndex == -1)
+		{
+			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			return false;
+		}
+		QString line = lines[lineIndex];
+		line = line.mid(line.indexOf(variable) + variable.length());
+		QString valueStr = line.mid(0, line.indexOf(")")).toLower().trimmed();
+
+		if(valueStr == "on" ||
+		   valueStr == "true")
+			value = true;
+		else
+			value = false;
+
+		return true;
+	}
+	bool Utilities::readCmakeVariable(const QVector<QString>& lines, QString variable, int& value)
+	{
+		int lineIndex = getLineIndex(lines, variable, true);
+		if (lineIndex == -1)
+		{
+			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			return false;
+		}
+		QString line = lines[lineIndex];
+		line = line.mid(line.indexOf(variable) + variable.length());
+		QString valueStr = line.mid(0, line.indexOf(")")).trimmed();
+
+		bool success = true;
+		value = valueStr.toInt(&success);
+		return success;
+	}
+	bool Utilities::readCmakeVariable(const QVector<QString>& lines, QString variable, unsigned int& value)
+	{
+		int lineIndex = getLineIndex(lines, variable, true);
+		if (lineIndex == -1)
+		{
+			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			return false;
+		}
+		QString line = lines[lineIndex];
+		line = line.mid(line.indexOf(variable) + variable.length());
+		QString valueStr = line.mid(0, line.indexOf(")")).trimmed();
+
+		bool success = true;
+		value = valueStr.toUInt(&success);
+		return success;
+	}
+	bool Utilities::readCmakeVariables(const QVector<QString>& lines, QString variable, QVector<QString>& values)
+	{
+		int lineIndex = getLineIndex(lines, variable, true);
+		if (lineIndex == -1)
+		{
+			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			return false;
+		}
+		int endLineIndex = getLineIndex(lines, ")", lineIndex, false);
+		if (endLineIndex == -1)
+		{
+			QMessageBox::critical(nullptr, "Error", "Could not find end of variable " + variable + " in CMakeLists.txt");
+			return false;
+		}
+		QString firstElement = lines[lineIndex];
+		firstElement = firstElement.mid(firstElement.indexOf(variable) + variable.length());
+		bool multiLine = true;
+		if (firstElement.contains(")"))
+		{
+			firstElement = firstElement.mid(0, firstElement.indexOf(")"));
+			multiLine = false;
+		}
+		// split by space
+		int spacePos = -1;
+		while ((spacePos = firstElement.indexOf(" ")) != -1)
+		{
+			values.push_back(firstElement.mid(0, spacePos).trimmed());
+			firstElement = firstElement.mid(spacePos + 1);
+		}
+		if(firstElement.size())
+			values.push_back(firstElement.trimmed());
+		if (multiLine)
+		{
+			for (int i = lineIndex + 1; i <= endLineIndex; i++)
+			{
+				QString line = lines[i];
+				if(line.indexOf(")") != -1)
+					line = line.mid(0, line.indexOf(")"));
+				values.push_back(line.trimmed());
+			}
+		}
+
+		return true;
+	}
+
+	bool Utilities::replaceHeaderVariable(QVector<QString>& lines, const QString& variable, const QString& value)
+	{
+		int lineIndex = getLineIndex(lines, { variable, "=", ";"}, false);
+		if (lineIndex == -1)
+		{
+			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in header file");
+			return false;
+		}
+		QString line = lines[lineIndex];
+		QString left = line.mid(0,line.indexOf("="));
+		QString right = line.mid(line.indexOf(";")+1);
+		QString replacement = left + "= " + value + ";" + right;
+		lines[lineIndex] = replacement;
+		return true;
+	}
+	bool Utilities::readHeaderVariable(QVector<QString>& lines, const QString& variable, QString& value)
+	{
+		int lineIndex = getLineIndex(lines, { variable, "=", ";" }, false);
+		if (lineIndex == -1)
+		{
+			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in header file");
+			return false;
+		}
+		QString line = lines[lineIndex];
+		line = line.mid(line.indexOf("=") + 1);
+		value = line.mid(0, line.indexOf(";")).trimmed();
+		if (value.contains("\""))
+		{
+			if (value.indexOf("\"") != 0)
+			{
+				QMessageBox::critical(nullptr, "Error", "Invalid string format for variable " + variable + " in header file. Value = "+ value);
+				return false;
+			}
+			if (value.lastIndexOf("\"") != value.size() - 1)
+			{
+				QMessageBox::critical(nullptr, "Error", "Invalid string format for variable " + variable + " in header file. Value = " + value);
+				return false;
+			}
+			value = value.mid(1, value.size() - 2);
+		}
+		return true;
+	}
+	bool Utilities::readHeaderVariable(QVector<QString>& lines, const QString& variable, int& value)
+	{
+		int lineIndex = getLineIndex(lines, { variable, "=", ";" }, false);
+		if (lineIndex == -1)
+		{
+			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in header file");
+			return false;
+		}
+		QString line = lines[lineIndex];
+		line = line.mid(line.indexOf("=") + 1);
+		value = line.mid(0, line.indexOf(";")).trimmed().toInt();
+		return true;
+	}
+	bool Utilities::getAllIncludes(const QVector<QString>& lines, QVector<QString>& includes)
+	{
+		for (const auto& line : lines)
+		{
+			if (line.contains("#include"))
+				includes.push_back(line);
+		}
+		return true;
 	}
 
 }
