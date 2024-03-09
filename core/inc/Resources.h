@@ -22,8 +22,15 @@ namespace CLC
 		static void setTemplateSourcePath(const QString& path);
 		static const QString &getTemplateSourcePath();
 
-		static void setLibrarySourcePath(const QString& path);
-		static const QString &getLibrarySourcePath();
+		static void setDependenciesSourcePath(const QString& path);
+		static const QString &getDependenciesSourcePath();
+
+		static void setQtModulesSourcePath(const QString& path);
+		static const QString &getQtModulesSourcePath();	
+
+		static void setStyleSheetSourcePath(const QString& path);
+		static const QString &getStyleSheetSourcePath();
+		static QString getStyleSheet();
 
 		static void setTmpPath(const QString& path);
 		static const QString &getTmpPath();
@@ -39,6 +46,7 @@ namespace CLC
 		QString m_templateSourcePath;
 		QString m_dependenciesSourcePath;
 		QString m_qtModulesSourcePath;
+		QString m_styleSheetSourcePath;
 		QString m_tmpPath;
 		
 		QString m_templateGitRepo;

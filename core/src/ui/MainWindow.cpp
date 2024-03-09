@@ -14,6 +14,8 @@ namespace CLC
 		: QMainWindow(parent)
 	{
 		ui.setupUi(this);
+		qApp->setStyleSheet(Resources::getStyleSheet());
+
 
 		m_ribbon = new CLC::RibbonImpl(ui.ribbon_widget);
 		m_projectSettingsDialog = new ProjectSettingsDialog(this);
@@ -106,7 +108,7 @@ namespace CLC
 	{
 		// Open file dialog to select a folder
 		QString folderPath = QFileDialog::getExistingDirectory(this, tr("Open Library Path"),
-			Resources::getLibrarySourcePath(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+			Resources::getDependenciesSourcePath(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 		if (folderPath.size() == 0)
 		{
 			return;
@@ -117,7 +119,7 @@ namespace CLC
 			QMessageBox box(QMessageBox::Warning, "Error", "The selected folder does not exist", QMessageBox::Ok, this);
 			return;
 		}
-		Resources::setLibrarySourcePath(folderPath);
+		Resources::setDependenciesSourcePath(folderPath);
 		ProjectSettings settings;
 		ProjectExporter::readProjectData(settings, folderPath);
 		m_projectSettingsDialog->setSettings(settings);
@@ -131,10 +133,10 @@ namespace CLC
 			return;
 		}
 		QString templateSourcePath = QDir::currentPath() + "/" + Resources::getTemplateSourcePath();
-		ProjectExporter::exportExistingProject(m_projectSettingsDialog->getSettings(), templateSourcePath, Resources::getLibrarySourcePath());
+		ProjectExporter::exportExistingProject(m_projectSettingsDialog->getSettings(), templateSourcePath, Resources::getDependenciesSourcePath());
 
 		ProjectSettings settings;
-		ProjectExporter::readProjectData(settings, Resources::getLibrarySourcePath());
+		ProjectExporter::readProjectData(settings, Resources::getDependenciesSourcePath());
 		m_projectSettingsDialog->setSettings(settings);
 
 	}
@@ -155,8 +157,9 @@ namespace CLC
 			return;
 		}
 		QString templateSourcePath = QDir::currentPath() + "/" + Resources::getTemplateSourcePath();
-		Resources::setLibrarySourcePath(folderPath);
-		const auto& settings = m_projectSettingsDialog->getSettings();
+		Resources::setDependenciesSourcePath(folderPath);
+		auto settings = m_projectSettingsDialog->getSettings();
+		settings.setPlaceholder(ProjectSettings::s_defaultPlaceholder);
 		ProjectExporter::exportNewProject(settings, templateSourcePath, folderPath);
 		
 		ProjectSettings settings2;

@@ -21,6 +21,7 @@ function(exampleMaster
 			QT_ENABLE 
 			QT_DEPLOY 
 			QT_MODULES
+            ADDITIONAL_SOURCES
             INSTALL_BIN_PATH)
 
 			
@@ -87,7 +88,7 @@ if(QT_ENABLE)
 
 endif()
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES} ${ADDITIONAL_SOURCES})
 
 
 if(${PROFILING_NAME})

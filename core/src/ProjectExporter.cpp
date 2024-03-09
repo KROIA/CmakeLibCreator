@@ -64,8 +64,9 @@ namespace CLC
 			return false;
 		}
 		
+		if (success) success &= copyTemplateSourceFiles(settings, templateSourceDir, projectDirPath);
 		if(success) success &= copyTemplateLibraryFiles(settings, templateSourceDir, projectDirPath);
-		if(success) success &= copyTemplateSourceFiles(settings, templateSourceDir, projectDirPath);
+		
 		if (success) success &= replaceTemplateFileNames(settings, projectDirPath);
 
 		if(success) success &= replaceTemplateVariables(settings, projectDirPath);

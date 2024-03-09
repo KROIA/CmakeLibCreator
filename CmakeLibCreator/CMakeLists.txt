@@ -11,5 +11,7 @@ set(QT_MODULES
 
 set(use_qt ON)
 set(deploy_qt ON)
+set(APP_ICON "${CMAKE_CURRENT_SOURCE_DIR}/AppIcon.rc")
+list(APPEND ADDITONAL_SOURCES ${APP_ICON})
 
-exampleMaster(${LIBRARY_NAME} ${LIB_PROFILE_DEFINE} use_qt deploy_qt "${QT_MODULES}" ${INSTALL_BIN_PATH})
+exampleMaster(${LIBRARY_NAME} ${LIB_PROFILE_DEFINE} use_qt deploy_qt "${QT_MODULES}" "${ADDITONAL_SOURCES}" ${INSTALL_BIN_PATH})
