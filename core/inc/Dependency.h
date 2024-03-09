@@ -22,6 +22,8 @@ namespace CLC
 
 		void setDescription(const QString& description);
 		const QString& getDescription() const;
+
+		bool loadFromCmakeFile(const QString& filePath);
 	private:
 		QString m_name;
 		QString m_description;

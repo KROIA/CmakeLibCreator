@@ -63,4 +63,21 @@ namespace CLC
 	{
 		return m_description;
 	}
+	bool QTModule::loadFromJson(const QJsonObject& json)
+	{
+		if (json.contains("moduleName") && json.contains("description"))
+		{
+			m_name = json["moduleName"].toString();
+			m_description = json["description"].toString();
+			return true;
+		}
+		return false;
+	}
+	QJsonObject QTModule::toJson() const
+	{
+		QJsonObject obj;
+		obj["moduleName"] = m_name;
+		obj["description"] = m_description;
+		return obj;
+	}
 }

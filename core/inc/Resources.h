@@ -4,6 +4,8 @@
 #include "QTModule.h"
 #include "Dependency.h"
 #include <QVector>
+#include <QJsonObject>
+
 
 namespace CLC
 {
@@ -29,11 +31,20 @@ namespace CLC
 		static void setTemplateGitRepo(const QString& repo);
 		static const QString &getTemplateGitRepo();
 	private:
+		void loadQTModules();
+		void loadDependencies();
+		QJsonObject loadJsonFile(const QString& path);
+
+
 		QString m_templateSourcePath;
-		QString m_librarySourcePath;
+		QString m_dependenciesSourcePath;
+		QString m_qtModulesSourcePath;
 		QString m_tmpPath;
 		
 		QString m_templateGitRepo;
+
+		QVector<QTModule> m_qtModules;
+		QVector<Dependency> m_dependencies;
 
 	};
 }

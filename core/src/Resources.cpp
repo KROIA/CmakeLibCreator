@@ -1,12 +1,15 @@
 #include "Resources.h"
 #include <QDir>
+#include <QJsonDocument>
+#include <QDebug>
 
 namespace CLC
 {
 	Resources::Resources()
 	{
 		m_templateSourcePath = "data/template";
-		m_librarySourcePath = "data/libraries";
+		m_dependenciesSourcePath = "data/depencencies";
+		m_qtModulesSourcePath = "data/qtModules";
 		m_tmpPath = "data/temp";
 		m_templateGitRepo = "https://github.com/KROIA/QT_cmake_library_template.git";
 
@@ -15,10 +18,16 @@ namespace CLC
 		{
 			dir.mkpath(m_templateSourcePath);
 		}
-		if(!dir.exists(m_librarySourcePath))
+		if(!dir.exists(m_dependenciesSourcePath))
 		{
-			dir.mkpath(m_librarySourcePath);
+			dir.mkpath(m_dependenciesSourcePath);
 		}
+		if (!dir.exists(m_qtModulesSourcePath))
+		{
+			dir.mkpath(m_qtModulesSourcePath);
+		}
+		loadQTModules();
+		loadDependencies();
 	}
 	Resources& Resources::instance()
 	{
@@ -27,7 +36,50 @@ namespace CLC
 	}
 	QVector<QTModule> Resources::getQTModules()
 	{
-		QVector<QTModule> modules;
+		return instance().m_qtModules;
+	}
+	QVector<Dependency> Resources::getDependencies()
+	{
+		return instance().m_dependencies;
+	}
+
+	void Resources::setTemplateSourcePath(const QString& path)
+	{
+		instance().m_templateSourcePath = path;
+	}
+	const QString &Resources::getTemplateSourcePath()
+	{
+		return instance().m_templateSourcePath;
+	}
+
+	void Resources::setLibrarySourcePath(const QString& path)
+	{
+		instance().m_dependenciesSourcePath = path;
+	}
+	const QString &Resources::getLibrarySourcePath()
+	{
+		return instance().m_dependenciesSourcePath;
+	}
+	void Resources::setTmpPath(const QString& path)
+	{
+		instance().m_tmpPath = path;	
+	}
+	const QString& Resources::getTmpPath()
+	{
+		return instance().m_tmpPath;
+	}
+
+	void Resources::setTemplateGitRepo(const QString& repo)
+	{
+		instance().m_templateGitRepo = repo;
+	}
+	const QString& Resources::getTemplateGitRepo()
+	{
+		return instance().m_templateGitRepo;
+	}
+	void Resources::loadQTModules()
+	{
+		/*QVector<QTModule> modules;
 		modules.append(QTModule("Core", "QtCore"));
 		modules.append(QTModule("Gui", "QtGui"));
 		modules.append(QTModule("Widgets", "QtWidgets"));
@@ -53,49 +105,64 @@ namespace CLC
 		modules.append(QTModule("AxContainer", "QtAxContainer"));
 		modules.append(QTModule("AxServer", "QtAxServer"));
 		modules.append(QTModule("AxBase", "QtAxBase"));
-		return modules;
-	}
-	QVector<Dependency> Resources::getDependencies()
-	{
-		QVector<Dependency> dependencies;
-		dependencies.append(Dependency("easy_profiler", "easy_profiler library"));
-		dependencies.append(Dependency("RibbonWidget",  "RibbonWidget library"));
 
-		return dependencies;
-	}
+		for (const QTModule& module : modules)
+		{
+			QJsonObject json = module.toJson();
+			QFile file(m_qtModulesSourcePath + "/" + module.getName() + ".json");
+			if (!file.open(QIODevice::WriteOnly))
+			{
+				qDebug() << "Failed to open file for writing: " << file.fileName();
+				continue;
+			}
+			QJsonDocument doc(json);
+			file.write(doc.toJson());
+			file.close();
+		}*/
 
-	void Resources::setTemplateSourcePath(const QString& path)
-	{
-		instance().m_templateSourcePath = path;
-	}
-	const QString &Resources::getTemplateSourcePath()
-	{
-		return instance().m_templateSourcePath;
-	}
 
-	void Resources::setLibrarySourcePath(const QString& path)
-	{
-		instance().m_librarySourcePath = path;
+		m_qtModules.clear();
+		// Load from json file
+		QStringList files = QDir(m_qtModulesSourcePath).entryList(QStringList() << "*.json", QDir::Files);
+		for (const QString& file : files)
+		{
+			QJsonObject json = loadJsonFile(m_qtModulesSourcePath + "/" + file);
+			if (json.isEmpty())
+			{
+				qDebug() << "Failed to load json file: " << file;
+				continue;
+			}
+			QTModule module;
+			if(module.loadFromJson(json))
+				m_qtModules.append(module);
+			else
+				qDebug() << "Failed to load module from json file: " << file << " data: "<< json;
+		}
 	}
-	const QString &Resources::getLibrarySourcePath()
+	void Resources::loadDependencies()
 	{
-		return instance().m_librarySourcePath;
+		QStringList files = QDir(m_dependenciesSourcePath).entryList(QStringList() << "*.cmake", QDir::Files);
+		m_dependencies.clear();
+		for (const QString& file : files)
+		{
+			Dependency dep;
+			if (dep.loadFromCmakeFile(m_dependenciesSourcePath + "/" + file))
+			{
+				m_dependencies.append(dep);
+			}
+			else
+				qDebug() << "Failed to load dependency from cmake file: " << file;
+		}
 	}
-	void Resources::setTmpPath(const QString& path)
+	QJsonObject Resources::loadJsonFile(const QString& path)
 	{
-		instance().m_tmpPath = path;	
-	}
-	const QString& Resources::getTmpPath()
-	{
-		return instance().m_tmpPath;
-	}
-
-	void Resources::setTemplateGitRepo(const QString& repo)
-	{
-		instance().m_templateGitRepo = repo;
-	}
-	const QString& Resources::getTemplateGitRepo()
-	{
-		return instance().m_templateGitRepo;
+		QFile file(path);
+		if (!file.open(QIODevice::ReadOnly))
+		{
+			return QJsonObject();
+		}
+		QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+		file.close();
+		return doc.object();
 	}
 }

@@ -1,4 +1,7 @@
 #include "Dependency.h"
+#include <QFile>
+#include <QTextStream>
+#include <QDebug>
 
 namespace CLC
 {
@@ -63,4 +66,37 @@ namespace CLC
 	{
 		return m_description;
 	}
+	bool Dependency::loadFromCmakeFile(const QString& filePath)
+	{
+		// Read file
+		QFile file(filePath);
+		if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+		{
+			qDebug() << "Failed to open file: " << filePath;
+			return false;
+		}
+		// Read file name
+		m_name = file.fileName().split("/").last().split(".").first();
+		// read lines
+		QTextStream in(&file);
+		QString line;
+		bool descriptionFound = false;
+		while (!in.atEnd())
+		{
+			line = in.readLine();
+			if (line.contains("#"))
+			{
+				line = line.mid(line.indexOf("#"));
+				if (line.toLower().contains("description:"))
+				{
+					m_description = line.mid(line.indexOf(":") + 1).trimmed();
+					descriptionFound = true;
+					file.close();
+					return descriptionFound;
+				}
+			}
+		}
+		return descriptionFound;
+	}
+
 }
