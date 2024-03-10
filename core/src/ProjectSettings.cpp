@@ -64,6 +64,14 @@ namespace CLC
 	{
 		m_CMAKE_settings.autosetLibShortDefine();
 	}
+	void ProjectSettings::autoSetNamespaceName()
+	{
+		m_librarySettings.autoSetNamespaceName(m_CMAKE_settings.libraryName);
+	}
+	void ProjectSettings::autoSetExportName()
+	{
+		m_librarySettings.autoSetExportName(m_CMAKE_settings.libraryName);
+	}
 
 	ProjectSettings::LibrarySettings::LibrarySettings()
 	{
@@ -71,6 +79,27 @@ namespace CLC
 		email = "";
 		website = "";
 		license = "MIT";
+	}
+	void ProjectSettings::LibrarySettings::autoSetNamespaceName(const QString& libraryName)
+	{
+		namespaceName = libraryName;
+	}
+	void ProjectSettings::LibrarySettings::autoSetExportName(const QString& libraryName)
+	{
+		QString name;
+		name.reserve(libraryName.size()*2);
+		// convert each letter to upper case and if it was already uppercase, add a '_'
+		for (int i = 0; i < libraryName.size(); i++)
+		{
+			if (libraryName[i] >= 'A' && libraryName[i] <= "Z" && i > 0)
+			{
+				if((libraryName[i - 1] >= 'a' && libraryName[i - 1] <= "z") ||
+				   (libraryName[i - 1] >= '0' && libraryName[i - 1] <= "9"))
+					name += '_';
+			}
+			name += libraryName[i].toUpper();
+		}
+		name += "_EXPORT";
 	}
 	ProjectSettings::LibrarySettings::Version::Version()
 	{

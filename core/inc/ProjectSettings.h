@@ -29,6 +29,9 @@ namespace CLC
 			QString namespaceName;
 			QString exportName;
 			LibrarySettings();
+
+			void autoSetNamespaceName(const QString &libraryName);
+			void autoSetExportName(const QString& libraryName);
 		};
 		struct CMAKE_settings
 		{
@@ -85,6 +88,8 @@ namespace CLC
 		void autosetLibDefine();
 		void autosetLibProfileDefine();
 		void autosetLibShortDefine();
+		void autoSetNamespaceName();
+		void autoSetExportName();
 
 		static const Placeholder s_defaultPlaceholder;
 	private:

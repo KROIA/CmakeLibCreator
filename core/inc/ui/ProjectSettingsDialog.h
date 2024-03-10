@@ -25,6 +25,7 @@ namespace CLC
 		void on_dependencies_pushButton_clicked();
 		void on_libraryName_lineEdit_textChanged(const QString& text);
 
+
 		void onQtModulesSelected(const QVector<CheckBoxSelectionDialog::Element>& selectedItems);
 		void onDependenciesSelected(const QVector<CheckBoxSelectionDialog::Element>& selectedItems);
 	private:

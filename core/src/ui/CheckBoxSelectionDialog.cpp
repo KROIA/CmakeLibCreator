@@ -8,6 +8,7 @@ namespace CLC
 	{
 		ui.setupUi(this);
 		ui.scrollAreaWidgetContents->layout()->setAlignment(Qt::AlignTop);
+		ui.search_label->setPixmap(QIcon(":/icons/search.png").pixmap(20,20));
 		setWindowTitle(windowTitle);
 		hide();
 	}
@@ -31,6 +32,7 @@ namespace CLC
 			m_checkBoxes.append(checkBox);
 			ui.scrollAreaWidgetContents->layout()->addWidget(checkBox);
 		}
+		on_search_lineEdit_textChanged(ui.search_lineEdit->text());
 		show();
 	}
 
@@ -53,6 +55,14 @@ namespace CLC
 		}
 		emit okButtonClicked(items);
 		hide();
+	}
+	void CheckBoxSelectionDialog::on_search_lineEdit_textChanged(const QString& text)
+	{
+		// Filter the list of visible checkboxes
+		for (QCheckBox* checkBox : m_checkBoxes)
+		{
+			checkBox->setVisible(checkBox->text().contains(text, Qt::CaseInsensitive));
+		}
 	}
 	void CheckBoxSelectionDialog::closeEvent(QCloseEvent* event)
 	{

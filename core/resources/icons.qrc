@@ -4,5 +4,6 @@
         <file>icons/download.png</file>
         <file>icons/folder-open.png</file>
         <file>icons/save.png</file>
+        <file>icons/search.png</file>
     </qresource>
 </RCC>

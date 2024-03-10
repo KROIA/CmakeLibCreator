@@ -14,7 +14,7 @@ namespace CLC
 		: QMainWindow(parent)
 	{
 		ui.setupUi(this);
-		qApp->setStyleSheet(Resources::getStyleSheet());
+		//qApp->setStyleSheet(Resources::getStyleSheet());
 
 
 		m_ribbon = new CLC::RibbonImpl(ui.ribbon_widget);

@@ -28,14 +28,54 @@
      <property name="midLineWidth">
       <number>1</number>
      </property>
-     <layout class="QGridLayout" name="gridLayout" rowstretch="1,0,0,0,0,0,0,0,0" columnminimumwidth="100,0,0,0">
+     <layout class="QGridLayout" name="gridLayout" rowstretch="1,0,0,0,0,0,0,0,0" columnminimumwidth="100,0,0,0,0">
       <property name="sizeConstraint">
        <enum>QLayout::SetDefaultConstraint</enum>
       </property>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_5">
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_23">
         <property name="text">
-         <string>Library Name</string>
+         <string>Export macro</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>License</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_22">
+        <property name="text">
+         <string>Namespace Name</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Version</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Author</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -78,32 +118,8 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="3">
-       <widget class="QLineEdit" name="email_lineEdit">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="3">
-       <widget class="QLineEdit" name="namespaceName_lineEdit">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>Website</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="3">
-       <widget class="QLineEdit" name="license_lineEdit">
+      <item row="3" column="3">
+       <widget class="QLineEdit" name="exportName_lineEdit">
         <property name="text">
          <string/>
         </property>
@@ -119,7 +135,34 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="3">
+      <item row="7" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Website</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Library Name</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="4">
+       <widget class="QLabel" name="label_24">
+        <property name="text">
+         <string>_EXPORT</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3" colspan="2">
        <widget class="QFrame" name="version_frame">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -222,81 +265,45 @@
         </layout>
        </widget>
       </item>
-      <item row="1" column="3">
-       <widget class="QLineEdit" name="libraryName_lineEdit">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Version</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="3">
-       <widget class="QLineEdit" name="website_lineEdit">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_22">
-        <property name="text">
-         <string>Namespace Name</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>Author</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="3">
+      <item row="5" column="3" colspan="2">
        <widget class="QLineEdit" name="author_lineEdit">
         <property name="text">
          <string/>
         </property>
        </widget>
       </item>
-      <item row="8" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>License</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="3">
-       <widget class="QLineEdit" name="exportName_lineEdit">
+      <item row="6" column="3" colspan="2">
+       <widget class="QLineEdit" name="email_lineEdit">
         <property name="text">
          <string/>
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_23">
+      <item row="7" column="3" colspan="2">
+       <widget class="QLineEdit" name="website_lineEdit">
         <property name="text">
-         <string>Export macro</string>
+         <string/>
         </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </widget>
+      </item>
+      <item row="8" column="3" colspan="2">
+       <widget class="QLineEdit" name="license_lineEdit">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3" colspan="2">
+       <widget class="QLineEdit" name="namespaceName_lineEdit">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3" colspan="2">
+       <widget class="QLineEdit" name="libraryName_lineEdit">
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>
@@ -448,13 +455,6 @@
          <property name="bottomMargin">
           <number>0</number>
          </property>
-         <item row="1" column="2">
-          <widget class="QLineEdit" name="profilingPostFix_lineEdit">
-           <property name="text">
-            <string>-p</string>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="2">
           <widget class="QLabel" name="label_18">
            <property name="maximumSize">
@@ -501,13 +501,6 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="staticPostFix_lineEdit">
-           <property name="text">
-            <string>-s</string>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="0">
           <widget class="QLabel" name="label_16">
            <property name="maximumSize">
@@ -531,10 +524,24 @@
            </property>
           </widget>
          </item>
+         <item row="1" column="2">
+          <widget class="QLineEdit" name="profilingPostFix_lineEdit">
+           <property name="text">
+            <string>-p</string>
+           </property>
+          </widget>
+         </item>
          <item row="1" column="0">
           <widget class="QLineEdit" name="debugPostFix_lineEdit">
            <property name="text">
             <string>-d</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="staticPostFix_lineEdit">
+           <property name="text">
+            <string>-s</string>
            </property>
           </widget>
          </item>

@@ -28,6 +28,7 @@ namespace CLC
 	private slots:
 		void on_cancel_pushButton_clicked();
 		void on_ok_pushButton_clicked();
+		void on_search_lineEdit_textChanged(const QString &text);
 
 		
 	private:
