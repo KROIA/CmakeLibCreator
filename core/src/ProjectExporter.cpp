@@ -20,76 +20,63 @@ namespace CLC
 		return instance;
 	}
 
-	bool ProjectExporter::exportNewProject(
+	bool ProjectExporter::exportProject(
 		const ProjectSettings& settings, 
 		const QString& templateSourceDir,
-		const QString& libraryRootDir)
+		const QString& projectDirPath,
+		const ExportSettings& expSettings)
 	{
-		return instance().exportNewProject_intern(settings, templateSourceDir, libraryRootDir);
-	}
-	bool ProjectExporter::exportExistingProject(const ProjectSettings& settings,
-		const QString& templateSourceDir,
-		const QString& projectDirPath)
-	{
-		return instance().exportExistingProject_internal(settings, templateSourceDir, projectDirPath);
+		return instance().exportProject_intern(settings, templateSourceDir, projectDirPath, expSettings);
 	}
 	bool ProjectExporter::readProjectData(ProjectSettings& settings, const QString& projectDirPath)
 	{
 		return instance().readProjectData_intern(settings, projectDirPath);
 	}
 
-	bool ProjectExporter::exportNewProject_intern(
+	bool ProjectExporter::exportProject_intern(
 		const ProjectSettings& settings, 
 		const QString& templateSourceDir,
-		const QString& libraryRootDir)
+		const QString& projectDirPath,
+		const ExportSettings& expSettings)
 	{
 		bool success = true;
 		//const ProjectSettings::LibrarySettings &librarySettings = settings.getLibrarySettings();
-		const ProjectSettings::CMAKE_settings &cmakeSettings = settings.getCMAKE_settings();
-		QString projectDirPath = libraryRootDir + "/" + cmakeSettings.libraryName;
+		//const ProjectSettings::CMAKE_settings &cmakeSettings = settings.getCMAKE_settings();
 
-		// Create the project directory
-		QDir dir;
-		QDir projectDir(projectDirPath);
-		if (dir.exists(projectDirPath))
+		if (expSettings.copyTemplateFiles)
 		{
-			if (!QMessageBox::question(0, "Folder already exists", "The folder already exists. Do you want to overwrite it?"))
+			// Create the project directory
+			QDir dir;
+			QDir projectDir(projectDirPath);
+			if (dir.exists(projectDirPath))
+			{
+				if (!QMessageBox::question(0, "Folder already exists", "The folder already exists. Do you want to overwrite it?"))
+					return false;
+				success &= Utilities::deleteFolderRecursively(projectDirPath);
+			}
+
+			if (!dir.mkpath(projectDirPath))
+			{
+				QMessageBox::critical(0, "Error", "Failed to create project directory:\n" + projectDirPath);
 				return false;
-			success &= Utilities::deleteFolderRecursively(projectDirPath);
-		}
+			}
 
-		if (!dir.mkpath(projectDirPath))
+			if (success) success &= copyTemplateSourceFiles(settings, templateSourceDir, projectDirPath);
+		}
+		if (expSettings.replaceTemplateFiles)
 		{
-			QMessageBox::critical(0, "Error", "Failed to create project directory:\n" + projectDirPath);
-			return false;
+			if (success) success &= copyTemplateLibraryFiles(settings, templateSourceDir, projectDirPath);
+			if (success) success &= replaceTemplateFileNames(settings, projectDirPath);
 		}
-		
-		if (success) success &= copyTemplateSourceFiles(settings, templateSourceDir, projectDirPath);
-		if(success) success &= copyTemplateLibraryFiles(settings, templateSourceDir, projectDirPath);
-		
-		if (success) success &= replaceTemplateFileNames(settings, projectDirPath);
-
-		if(success) success &= replaceTemplateVariables(settings, projectDirPath);
-		if(success) success &= replaceTemplateCodePlaceholders(settings, projectDirPath);
-		
-		
-		return success;
-	}
-	bool ProjectExporter::exportExistingProject_internal(const ProjectSettings& settings,
-		const QString& templateSourceDir,
-		const QString& projectDirPath)
-	{
-		bool success = true;
-		//const ProjectSettings::LibrarySettings& librarySettings = settings.getLibrarySettings();
-		//const ProjectSettings::CMAKE_settings& cmakeSettings = settings.getCMAKE_settings();
-
-		// Update cmake files
-		success &= Utilities::copyAndReplaceFolderContents(templateSourceDir + "/cmake", projectDirPath + "/cmake");
-
-		if (success) success &= copyTemplateLibraryFiles(settings, templateSourceDir, projectDirPath);
-		if (success) success &= replaceTemplateFileNames(settings, projectDirPath);
-		if (success) success &= replaceTemplateVariables(settings, projectDirPath);
-		if (success) success &= replaceTemplateCodePlaceholders(settings, projectDirPath);
+		if (expSettings.replaceTemplateVariables)
+		{
+			if (success) success &= replaceTemplateVariables(settings, projectDirPath);
+		}
+		if (expSettings.replaceTemplateCodePlaceholders)
+		{
+			if (success) success &= replaceTemplateCodePlaceholders(settings, projectDirPath);
+		}	
+		if (success) success &= replaceTemplateUserSectionsIn_cmakeLists(settings, projectDirPath);
 		
 		return success;
 	}
@@ -98,8 +85,10 @@ namespace CLC
 		bool success = true;
 		if(success) success &= readCmakeLists(settings, projectDirPath);
 		if(!success) return false;
-		if(success) success &= readLibraryInfo(settings, projectDirPath);
-		if(success) success &= readDependencies(settings, projectDirPath);
+		success &= readLibraryInfo(settings, projectDirPath);
+		success &= readDependencies(settings, projectDirPath);
+
+
 
 		ProjectSettings::Placeholder placeholder;
 		const ProjectSettings::LibrarySettings &librarySettings = settings.getLibrarySettings();
@@ -116,7 +105,7 @@ namespace CLC
 	bool ProjectExporter::copyTemplateLibraryFiles(
 		const ProjectSettings& settings, 
 		const QString& templateSourceDir,
-		const QString& libraryDir)
+		const QString& projectDirPath)
 	{
 		
 		bool success = true;
@@ -127,30 +116,30 @@ namespace CLC
 		for (const auto& sourceDir : sourceDirs)
 		{
 			QString source = templateSourceDir + "/" + sourceDir;
-			QString target = libraryDir + "/" + sourceDir;
+			QString target = projectDirPath + "/" + sourceDir;
 			success &= Utilities::copyAndReplaceFolderContents(source, target);
 		}
 
 		QString depsPath = templateSourceDir + "/dependencies";
-		if (!Utilities::createFolder(libraryDir + "/dependencies"))
+		if (!Utilities::createFolder(projectDirPath + "/dependencies"))
 		{
 			QMessageBox::critical(0, "Error", "Failed to create folder:\n" + depsPath);
 			return false;
 		}
-		if (!Utilities::copyFile(depsPath + "/.gitignore", libraryDir + "/dependencies/.gitignore", true))
+		if (!Utilities::copyFile(depsPath + "/.gitignore", projectDirPath + "/dependencies/.gitignore", true))
 		{
 			QMessageBox::critical(0, "Error", "Failed to copy file:\n" + depsPath + "/.gitignore");
 			return false;
 		}
 
 		// Remove all existing dependencies
-		QVector<QString> existingDeps = Utilities::getFilesInFolder(libraryDir + "/dependencies/", ".cmake");
+		QVector<QString> existingDeps = Utilities::getFilesInFolder(projectDirPath + "/dependencies/", ".cmake");
 		for (const auto& dep : existingDeps)
 		{
 			success &= Utilities::deleteFile(dep);
 		}
 		// Remove cache
-		QVector<QString> cachePaths = Utilities::getFoldersInFolder(libraryDir + "/dependencies/");
+		QVector<QString> cachePaths = Utilities::getFoldersInFolder(projectDirPath + "/dependencies/");
 		for (const auto& cache : cachePaths)
 		{
 			success &= Utilities::deleteFolderRecursively(cache);
@@ -161,7 +150,7 @@ namespace CLC
 		{
 			QString depFileName = dep.getName() + ".cmake";
 			QString source = templateSourceDir + "/dependencies/" + depFileName;
-			QString target = libraryDir + "/dependencies/" + depFileName;
+			QString target = projectDirPath + "/dependencies/" + depFileName;
 			if (!Utilities::copyFile(source, target, true))
 			{
 				QMessageBox::critical(0, "Error", "Failed to copy file:\n" + source);
@@ -178,7 +167,7 @@ namespace CLC
 		for (const auto& file : fileList)
 		{
 			QString source = templateSourceDir + "/" + file;
-			QString target = libraryDir + "/" + file;
+			QString target = projectDirPath + "/" + file;
 			if (!Utilities::copyFile(source, target, true))
 			{
 				QMessageBox::critical(0, "Error", "Failed to copy file:\n" + source);
@@ -187,7 +176,7 @@ namespace CLC
 		}
 
 		// override the core CMakeLists.txt
-		if (!Utilities::copyFile(templateSourceDir+"/core/CMakeLists.txt", libraryDir + "/core/CMakeLists.txt", true))
+		if (!Utilities::copyFile(templateSourceDir+"/core/CMakeLists.txt", projectDirPath + "/core/CMakeLists.txt", true))
 		{
 			QMessageBox::critical(0, "Error", "Failed to copy file:\n" + templateSourceDir + "/core/CMakeLists.txt");
 		}
@@ -197,7 +186,7 @@ namespace CLC
 	}
 	bool ProjectExporter::copyTemplateSourceFiles(const ProjectSettings& settings,
 		const QString& templateSourceDir,
-		const QString& libraryDir)
+		const QString& projectDirPath)
 	{
 		CLC_UNUSED(settings);
 		bool success = true;
@@ -210,7 +199,7 @@ namespace CLC
 		for (const auto& sourceDir : sourceDirs)
 		{
 			QString source = templateSourceDir + "/" + sourceDir;
-			QString target = libraryDir + "/" + sourceDir;
+			QString target = projectDirPath + "/" + sourceDir;
 			success &= Utilities::copyAndReplaceFolderContents(source, target);
 		}
 
@@ -218,22 +207,22 @@ namespace CLC
 	}
 
 	bool ProjectExporter::replaceTemplateVariables(const ProjectSettings& settings,
-												   const QString& libraryDir)
+												   const QString& projectDirPath)
 	{
 		bool success = true;
-		if(success) success &= replaceTemplateVariablesIn_mainCmakeLists(settings, libraryDir);
-		if(success) success &= replaceTemplateVariablesIn_cmakeSettings(settings, libraryDir);
-		if(success) success &= replaceTemplateVariablesIn_libraryInfo(settings, libraryDir);
+		if(success) success &= replaceTemplateVariablesIn_mainCmakeLists(settings, projectDirPath);
+		if(success) success &= replaceTemplateVariablesIn_cmakeSettings(settings, projectDirPath);
+		if(success) success &= replaceTemplateVariablesIn_libraryInfo(settings, projectDirPath);
 
 		return success;
 	}
 	bool ProjectExporter::replaceTemplateFileNames(
 		const ProjectSettings& settings,
-		const QString& libraryDir)
+		const QString& projectDirPath)
 	{
 		QString targetFileNameContains = settings.getPlaceholder().LibraryName;
-		QVector<QString> fileList1 = Utilities::getFilesInFolderRecursive(libraryDir, ".h");
-		QVector<QString> fileList2 = Utilities::getFilesInFolderRecursive(libraryDir, ".cpp");
+		QVector<QString> fileList1 = Utilities::getFilesInFolderRecursive(projectDirPath, ".h");
+		QVector<QString> fileList2 = Utilities::getFilesInFolderRecursive(projectDirPath, ".cpp");
 		QVector<QString> allFiles = fileList1 + fileList2;
 
 		int counter = 0;
@@ -258,10 +247,10 @@ namespace CLC
 
 	bool ProjectExporter::replaceTemplateVariablesIn_mainCmakeLists(
 		const ProjectSettings& settings,
-		const QString& libraryDir)
+		const QString& projectDirPath)
 	{
 		bool success = true;
-		QString cmakeListsPath = libraryDir + "/CMakeLists.txt";
+		QString cmakeListsPath = projectDirPath + "/CMakeLists.txt";
 		QVector<QString> fileContent = Utilities::getFileContents(cmakeListsPath);
 		if (fileContent.size() == 0)
 		{
@@ -303,9 +292,9 @@ namespace CLC
 	}
 
 	bool ProjectExporter::replaceTemplateVariablesIn_cmakeSettings(const ProjectSettings& settings,
-																   const QString& libraryDir)
+																   const QString& projectDirPath)
 	{
-		QString cmakeListsPath = libraryDir + "/CMakeSettings.json";
+		QString cmakeListsPath = projectDirPath + "/CMakeSettings.json";
 		// Read json file:
 		QJsonDocument doc;
 		QFile file(cmakeListsPath);
@@ -343,10 +332,10 @@ namespace CLC
 	}
 
 	bool ProjectExporter::replaceTemplateVariablesIn_libraryInfo(const ProjectSettings& settings,
-																 const QString& libraryDir)
+																 const QString& projectDirPath)
 	{
 		bool success = true;
-		QString header = libraryDir + "/core/inc/" + settings.getCMAKE_settings().libraryName + "_info.h";
+		QString header = projectDirPath + "/core/inc/" + settings.getCMAKE_settings().libraryName + "_info.h";
 		QVector<QString> fileContent = Utilities::getFileContents(header);
 		if (fileContent.size() == 0)
 		{
@@ -375,7 +364,7 @@ namespace CLC
 	}
 
 	bool ProjectExporter::replaceTemplateCodePlaceholders(const ProjectSettings& settings,
-														  const QString& libraryDir)
+														  const QString& projectDirPath)
 	{
 		struct File
 		{
@@ -383,8 +372,8 @@ namespace CLC
 			QVector<QString> data;
 		};
 		QVector<File> files;
-		QVector<QString> fileList1 = Utilities::getFilesInFolderRecursive(libraryDir, ".h");
-		QVector<QString> fileList2 = Utilities::getFilesInFolderRecursive(libraryDir, ".cpp");
+		QVector<QString> fileList1 = Utilities::getFilesInFolderRecursive(projectDirPath, ".h");
+		QVector<QString> fileList2 = Utilities::getFilesInFolderRecursive(projectDirPath, ".cpp");
 		for (const auto& file : fileList1)
 		{
 			File f;
@@ -423,13 +412,34 @@ namespace CLC
 		}
 		return true;
 	}
+	bool ProjectExporter::replaceTemplateUserSectionsIn_cmakeLists(
+		const ProjectSettings& settings,
+		const QString& projectDirPath)
+	{
+		CLC_UNUSED(projectDirPath);
+		//QVector<QString> smakeListsFiles = Utilities::getFilesInFolderRecursive(projectDirPath, "CMakeLists.txt");
+		const QVector<ProjectSettings::QMakeFileUserSections> &userSections = settings.getUserSections();
+		bool success = true;
+		for (const ProjectSettings::QMakeFileUserSections& sectionList : userSections)
+		{
+			// Check if the file exists
+			if (!QFile::exists(sectionList.file))
+			{
+				QMessageBox::critical(0, "Error", "Failed to find file:\n" + sectionList.file+"\nto replace user sections");
+				success &= false;
+				continue;
+			}
+			success &= Utilities::replaceCmakeUserSections(sectionList.file, sectionList.sections);
+		}
+		return success;
+	}
 
 
 	/*bool ProjectExporter::saveConfiguration(const ProjectSettings& settings,
-											const QString& libraryDir)
+											const QString& projectDirPath)
 	{
 		bool success = true;
-		QString cmakeListsPath = libraryDir + "/CMakeLists.txt";
+		QString cmakeListsPath = projectDirPath + "/CMakeLists.txt";
 		QVector<QString> fileContent = Utilities::getFileContents(cmakeListsPath);
 		if (fileContent.size() == 0)
 		{
@@ -485,6 +495,24 @@ namespace CLC
 		success &= Utilities::readCmakeVariable(fileContent, "COMPILE_UNITTESTS", cmakeSettings.compile_unittests);
 
 		settings.setCMAKE_settings(cmakeSettings);
+
+		// Read User sections
+		QVector<QString> cmakeListsFiles = Utilities::getFilesInFolderRecursive(projectDirPath, "CMakeLists.txt");
+		QVector<ProjectSettings::QMakeFileUserSections> userSections;
+		for (const auto& file : cmakeListsFiles)
+		{
+			QVector<Utilities::CmakeUserSection> sections;
+			Utilities::readCmakeUserSections(file, sections);
+			if (sections.size() > 0)
+			{
+				ProjectSettings::QMakeFileUserSections userSection;
+				userSection.file = file;
+				userSection.sections = sections;
+				userSections.push_back(userSection);
+			}
+		}
+		settings.setUserSections(userSections);
+
 		return success;
 	}
 	bool ProjectExporter::readLibraryInfo(ProjectSettings& settings, const QString& projectDirPath)

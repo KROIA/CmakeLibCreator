@@ -5,6 +5,7 @@
 #include <QVector>
 #include "QTModule.h"
 #include "Dependency.h"
+#include "Utilities.h"
 
 namespace CLC 
 {
@@ -74,6 +75,12 @@ namespace CLC
 
 		};
 
+		struct QMakeFileUserSections
+		{
+			QString file;
+			QVector<Utilities::CmakeUserSection> sections;
+		};
+
 		ProjectSettings();
 		~ProjectSettings();
 
@@ -82,9 +89,11 @@ namespace CLC
 		void setLibrarySettings(const LibrarySettings& settings);
 		void setCMAKE_settings(const CMAKE_settings& settings);
 		void setPlaceholder(const Placeholder& placeholder);
+		void setUserSections(const QVector<QMakeFileUserSections>& sections);
 		const LibrarySettings& getLibrarySettings() const;
 		const CMAKE_settings& getCMAKE_settings() const;
 		const Placeholder& getPlaceholder() const;
+		const QVector<QMakeFileUserSections>& getUserSections() const;
 		void autosetLibDefine();
 		void autosetLibProfileDefine();
 		void autosetLibShortDefine();
@@ -98,5 +107,7 @@ namespace CLC
 		LibrarySettings m_librarySettings;
 		CMAKE_settings m_CMAKE_settings;
 		Placeholder m_placeholder;
+
+		QVector<QMakeFileUserSections> m_cmakeFileUserSections;
 	};
 } // namespace CLC

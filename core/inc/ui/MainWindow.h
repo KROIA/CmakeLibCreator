@@ -4,6 +4,7 @@
 #include "ui_MainWindow.h"
 #include "RibbonImpl.h"
 #include "ProjectSettingsDialog.h"
+#include "SettingsDialog.h"
 
 namespace CLC
 {
@@ -22,10 +23,16 @@ namespace CLC
 		void onOpenExistingProject_clicked();
 		void onSaveExistingProject_clicked();
 		void onSaveAsNewProject_clicked();
+
+		void on_actionVersion_triggered();
+		void on_actionAbout_triggered();
+
+		void on_actionSettings_triggered();
 	private:
 		Ui::MainWindow ui;
 		RibbonImpl* m_ribbon;
 		ProjectSettingsDialog * m_projectSettingsDialog;
+		SettingsDialog * m_settingsDialog;
 		bool m_existingProjectLoaded = false;
 	};
 }

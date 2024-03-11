@@ -2,6 +2,7 @@
 
 #include "CmakeLibraryCreator_base.h"
 #include <QString>
+#include <QStringList>
 
 namespace CLC
 {
@@ -10,6 +11,11 @@ namespace CLC
 		Utilities() = delete;
 		Utilities(const Utilities&) = delete;
 	public:
+		struct CmakeUserSection
+		{
+			int sectionIndex;
+			QStringList lines;
+		};
 
 		static bool copyAndReplaceFolderContents(const QString& absolutFromDir, const QString& absolutToDir, bool copyAndRemove = false);
 		static bool copyFile(const QString& from, const QString& to, bool overrideMode = false);
@@ -33,15 +39,22 @@ namespace CLC
 		
 		static bool replaceCmakeVariable(QVector<QString> &lines, QString variable, const QString& value);
 		static bool replaceCmakeVariable(QVector<QString> &lines, QString variable, const QVector<QString>& values);
+		static bool replaceCmakeUserSections(const QString& filePath, const QVector<CmakeUserSection>& sections);
+		static bool replaceCmakeUserSections(QVector<QString> &lines, const QVector<CmakeUserSection>& sections);
 		static bool readCmakeVariable(const QVector<QString>& lines, QString variable, QString& value);
 		static bool readCmakeVariable(const QVector<QString>& lines, QString variable, bool& value);
 		static bool readCmakeVariable(const QVector<QString>& lines, QString variable, int& value);
 		static bool readCmakeVariable(const QVector<QString>& lines, QString variable, unsigned int& value);
 		static bool readCmakeVariables(const QVector<QString>& lines, QString variable, QVector<QString>& values);
+		static bool readCmakeUserSections(const QString &filePath, QVector<CmakeUserSection>& sections);
+		static bool readCmakeUserSections(const QVector<QString>& lines, QVector<CmakeUserSection>& sections);
 
 		static bool replaceHeaderVariable(QVector<QString>& lines, const QString& variable, const QString& value);
 		static bool readHeaderVariable(QVector<QString>& lines, const QString& variable, QString& value);
 		static bool readHeaderVariable(QVector<QString>& lines, const QString& variable, int& value);
 		static bool getAllIncludes(const QVector<QString>& lines, QVector<QString>& includes);
+	
+		static bool downloadGitRepository(const QString& url, const QString &branch, const QString& folder, QString tmpFolder);
+		static bool downloadGitRepository(const QString& url, const QString &branch, QString folder);
 	};
 }

@@ -314,6 +314,62 @@ namespace CLC
 
 		return true;
 	}
+	bool Utilities::replaceCmakeUserSections(const QString& filePath, const QVector<CmakeUserSection>& sections)
+	{
+		QVector<QString> lines = getFileContents(filePath);
+		bool success = replaceCmakeUserSections(lines, sections);
+		if (success)
+			saveFileContents(filePath, lines);
+		return success;
+	}
+	bool Utilities::replaceCmakeUserSections(QVector<QString>& lines, const QVector<CmakeUserSection>& sections)
+	{
+		QVector<QString> newLines;
+		bool success = true;
+		for (int i = 0; i < lines.size(); i++)
+		{
+			const QString startPattern = "USER_SECTION_START";
+			if (lines[i].contains(startPattern) && success)
+			{
+				int sectionIndex = -1;
+				bool ok = false;
+				sectionIndex = lines[i].mid(lines[i].indexOf(startPattern) + startPattern.size()).trimmed().toInt(&ok);
+				if (!ok)
+				{
+					QMessageBox::critical(nullptr, "Error", "Invalid user section index in CMakeLists.txt Line: " + QString::number(i) + " : " + lines[i]);
+					sectionIndex = -1;
+				}
+				int sectionListIndex = -1;
+				for (int j=0; j<sections.size(); ++j)
+				{
+					if (sections[j].sectionIndex == sectionIndex)
+					{
+						sectionListIndex = j;
+						break;
+					}
+				}
+				if (sectionListIndex != -1)
+				{
+
+					for (const auto& line : sections[sectionListIndex].lines)
+						newLines.push_back(line);
+				}
+				
+				int endIndex = getLineIndex(lines, "USER_SECTION_END", i, false);
+				if (endIndex == -1)
+				{
+					QMessageBox::critical(nullptr, "Error", "Could not find end of user section in CMakeLists.txt");
+					success = false;
+				}
+				else
+					i = endIndex;
+				continue;
+			}
+			newLines.push_back(lines[i]);
+		}
+		lines = newLines;
+		return success;
+	}
 
 	bool Utilities::readCmakeVariable(const QVector<QString>& lines, QString variable, QString& value)
 	{
@@ -424,6 +480,43 @@ namespace CLC
 
 		return true;
 	}
+	bool Utilities::readCmakeUserSections(const QString& filePath, QVector<CmakeUserSection>& sections)
+	{
+		QVector<QString> lines = getFileContents(filePath);
+		return readCmakeUserSections(lines, sections);
+	}
+	bool Utilities::readCmakeUserSections(const QVector<QString>& lines, QVector<CmakeUserSection>& sections)
+	{
+		bool success = true;
+		for (int i = 0; i < lines.size(); i++)
+		{
+			const QString startPattern = "USER_SECTION_START";
+			if (lines[i].contains(startPattern))
+			{
+				CmakeUserSection section;
+				QString index = lines[i].mid(lines[i].indexOf(startPattern) + startPattern.size()).trimmed();
+				bool ok = false;
+				section.sectionIndex = index.toInt(&ok);
+				if (!ok)
+				{
+					QMessageBox::critical(nullptr, "Error", "Invalid user section index in CMakeLists.txt Line: " + QString::number(i)+" : "+lines[i]);
+					section.sectionIndex = -1;
+				}
+				success &= ok;
+
+				section.lines.push_back(lines[i]);
+				i++;
+				while (!lines[i].contains("USER_SECTION_END"))
+				{
+					section.lines.push_back(lines[i]);
+					i++;
+				}
+				section.lines.push_back(lines[i]);
+				sections.push_back(section);
+			}
+		}
+		return success;
+	}
 
 	bool Utilities::replaceHeaderVariable(QVector<QString>& lines, const QString& variable, const QString& value)
 	{
@@ -489,5 +582,57 @@ namespace CLC
 		}
 		return true;
 	}
+	bool Utilities::downloadGitRepository(const QString& url, const QString& branch, const QString& folder, QString tmpFolder)
+	{
+		if(!downloadGitRepository(url, branch, tmpFolder))
+			return false;
 
+		QDir dir;
+		QDir folderDir(folder);
+		// Remove all files in folderPath
+		if (folderDir.exists())
+		{
+			QStringListIterator it(folderDir.entryList(QDir::Files));
+			while (it.hasNext())
+			{
+				QString file = it.next();
+				folderDir.remove(file);
+			}
+		}
+		else
+		{
+			dir.mkpath(folder);
+		}
+		// copy all files and folders from tmpPath to folderPath
+		QString currentDir = QDir::currentPath();
+		copyAndReplaceFolderContents(currentDir + "/" + tmpFolder, currentDir + "/" + folder, true);
+		// Remove tmpPath
+		QDir tmpDir(tmpFolder+"/"+branch);
+		tmpDir.removeRecursively();
+		return true;
+	}
+	bool Utilities::downloadGitRepository(const QString& url, const QString& branch, QString folder)
+	{
+		// Download a git repository
+		folder = folder + "/" + branch;
+		QDir tmpDir(folder);
+		if (tmpDir.exists())
+		{
+			tmpDir.removeRecursively();
+		}
+		QDir dir;
+		dir.mkpath(folder);
+
+		QString gitCommand = "git clone --branch " + branch + " " + url + " " + folder;
+
+		qDebug() << gitCommand;
+		system(gitCommand.toStdString().c_str());
+		QStringList files = tmpDir.entryList(QDir::Files);
+		if (files.size() == 0)
+		{
+			QMessageBox box(QMessageBox::Warning, "Error", "No files found in the git repository", QMessageBox::Ok);
+			return false;
+		}
+		return true;
+	}
 }

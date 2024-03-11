@@ -2,11 +2,13 @@
 #include <QFileDialog>
 #include <QDir>
 #include <QMessageBox>
+#include <QDialog>
 #include <QDirIterator>
 #include "Resources.h"
 #include <QDebug>
 #include "Utilities.h"
 #include "ProjectExporter.h"
+#include "CmakeLibraryCreator_info.h"
 
 namespace CLC
 {
@@ -14,6 +16,7 @@ namespace CLC
 		: QMainWindow(parent)
 	{
 		ui.setupUi(this);
+		setWindowTitle("CMake Library Creator");
 		//qApp->setStyleSheet(Resources::getStyleSheet());
 
 
@@ -29,12 +32,14 @@ namespace CLC
 		connect(projectButtons.saveExistingProject, &QPushButton::clicked, this, &MainWindow::onSaveExistingProject_clicked);
 		connect(projectButtons.saveAsNewProject, &QPushButton::clicked, this, &MainWindow::onSaveAsNewProject_clicked);
 
+		m_settingsDialog = new SettingsDialog();
 	}
 
 	MainWindow::~MainWindow()
 	{
 		delete m_ribbon;
 		delete m_projectSettingsDialog;
+		delete m_settingsDialog;
 	}
 
 
@@ -58,57 +63,33 @@ namespace CLC
 	void MainWindow::onDownloadTemplate_clicked()
 	{
 		// Download a git repository
-		QString gitRepoUrl = Resources::getTemplateGitRepo();
-		QString folderPath = Resources::getTemplateSourcePath();
+		const Resources::GitResources &gitResources = Resources::getTemplateGitRepo();
+		QString gitRepoUrl = gitResources.repo;
+		QString gitRepoBranch = gitResources.templateBranch;
 		QString tmpPath = Resources::getTmpPath()+ "/git";
-		QDir tmpDir(tmpPath);
-		if(tmpDir.exists())
-		{
-			tmpDir.removeRecursively();
-		}
-		QDir dir;
-		dir.mkpath(tmpPath);
+		Utilities::downloadGitRepository(gitRepoUrl, gitRepoBranch, Resources::getTemplateSourcePath(), tmpPath);
+		Utilities::downloadGitRepository(gitRepoUrl, "dependencies", tmpPath);
+		Utilities::downloadGitRepository(gitRepoUrl, "qtModules", tmpPath);
 
-		QString gitCommand = "git clone " + gitRepoUrl + " " + tmpPath;
-		qDebug() << gitCommand;
-		system(gitCommand.toStdString().c_str());
+		// Copy the dependencies and qtModules to the template source path
+		QString workingDir = QDir::currentPath();
+		Utilities::copyAndReplaceFolderContents(workingDir + "/"+ tmpPath + "/dependencies/dependencies", workingDir + "/" + Resources::getDependenciesSourcePath());
+		Utilities::copyAndReplaceFolderContents(workingDir + "/"+ tmpPath + "/qtModules/qtModules", workingDir + "/" + Resources::getQtModulesSourcePath());
 		
-		// Check if tmpPath contains files
-		
-		QStringList files = tmpDir.entryList(QDir::Files);
-		if(files.size() == 0)
-		{
-			QMessageBox box(QMessageBox::Warning, "Error", "No files found in the git repository", QMessageBox::Ok, this);
-			return;
-		}
-
-		QDir folderDir(folderPath);
-		// Remove all files in folderPath
-		if(folderDir.exists())
-		{
-			QStringListIterator it(folderDir.entryList(QDir::Files));
-			while(it.hasNext())
-			{
-				QString file = it.next();
-				folderDir.remove(file);
-			}
-		}
-		else
-		{
-			dir.mkpath(folderPath);
-		}
-		// copy all files and folders from tmpPath to folderPath
-		QString currentDir = QDir::currentPath();
-		Utilities::copyAndReplaceFolderContents(currentDir+"/"+tmpPath, currentDir + "/" + folderPath, true);
-		// Remove tmpPath
-		tmpDir.removeRecursively();
+		QDir tmpDir1(workingDir + "/" + tmpPath + "/dependencies");
+		tmpDir1.removeRecursively();
+		QDir tmpDir2(workingDir + "/" + tmpPath + "/qtModules");
+		tmpDir2.removeRecursively();
+	
+		Resources::loadQTModules();
+		Resources::loadDependencies();
 	}
 	
 	void MainWindow::onOpenExistingProject_clicked()
 	{
 		// Open file dialog to select a folder
 		QString folderPath = QFileDialog::getExistingDirectory(this, tr("Open Library Path"),
-			Resources::getDependenciesSourcePath(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+			Resources::getLoadedProjectPath(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 		if (folderPath.size() == 0)
 		{
 			return;
@@ -119,7 +100,7 @@ namespace CLC
 			QMessageBox box(QMessageBox::Warning, "Error", "The selected folder does not exist", QMessageBox::Ok, this);
 			return;
 		}
-		Resources::setDependenciesSourcePath(folderPath);
+		Resources::setLoadedProjectPath(folderPath);
 		ProjectSettings settings;
 		ProjectExporter::readProjectData(settings, folderPath);
 		m_projectSettingsDialog->setSettings(settings);
@@ -132,11 +113,24 @@ namespace CLC
 			QMessageBox box(QMessageBox::Warning, "Error", "No project loaded", QMessageBox::Ok, this);
 			return;
 		}
-		QString templateSourcePath = QDir::currentPath() + "/" + Resources::getTemplateSourcePath();
-		ProjectExporter::exportExistingProject(m_projectSettingsDialog->getSettings(), templateSourcePath, Resources::getDependenciesSourcePath());
+		QString templateSourcePath = Resources::getCurrentTemplateAbsSourcePath();
+		QDir dir;
+		if(!dir.exists(templateSourcePath))
+		{
+			QMessageBox box(QMessageBox::Warning, "Error", "The template source path does not exist,\ndownload the template first", QMessageBox::Ok, this);
+			return;
+		}
+
+
+		ProjectExporter::ExportSettings exportSettings;
+		exportSettings.copyTemplateFiles = false;
+		exportSettings.replaceTemplateFiles = true;
+		exportSettings.replaceTemplateVariables = true;
+		exportSettings.replaceTemplateCodePlaceholders = true;
+		ProjectExporter::exportProject(m_projectSettingsDialog->getSettings(), templateSourcePath, Resources::getLoadedProjectPath(), exportSettings);
 
 		ProjectSettings settings;
-		ProjectExporter::readProjectData(settings, Resources::getDependenciesSourcePath());
+		ProjectExporter::readProjectData(settings, Resources::getLoadedProjectPath());
 		m_projectSettingsDialog->setSettings(settings);
 
 	}
@@ -145,7 +139,7 @@ namespace CLC
 	{
 		// Open file dialog to select a folder
 		QString folderPath = QFileDialog::getExistingDirectory(this, tr("Open Libraries root path"),
-			Resources::getTemplateSourcePath(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+			Resources::getLoadedProjectPath(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 		if (folderPath.size() == 0)
 		{
 			return;
@@ -156,16 +150,58 @@ namespace CLC
 			QMessageBox box(QMessageBox::Warning, "Error", "The selected folder does not exist", QMessageBox::Ok, this);
 			return;
 		}
-		QString templateSourcePath = QDir::currentPath() + "/" + Resources::getTemplateSourcePath();
-		Resources::setDependenciesSourcePath(folderPath);
+		
+		QString templateSourcePath = Resources::getCurrentTemplateAbsSourcePath();
+		if (!dir.exists(templateSourcePath))
+		{
+			QMessageBox box(QMessageBox::Warning, "Error", "The template source path does not exist,\ndownload the template first", QMessageBox::Ok, this);
+			return;
+		}
+		
 		auto settings = m_projectSettingsDialog->getSettings();
 		settings.setPlaceholder(ProjectSettings::s_defaultPlaceholder);
-		ProjectExporter::exportNewProject(settings, templateSourcePath, folderPath);
+		folderPath += "/" + settings.getCMAKE_settings().libraryName;
+
+		ProjectExporter::ExportSettings exportSettings;
+		exportSettings.copyTemplateFiles = true;
+		exportSettings.replaceTemplateFiles = true;
+		exportSettings.replaceTemplateVariables = true;
+		exportSettings.replaceTemplateCodePlaceholders = true;
+
+		Resources::setLoadedProjectPath(folderPath);
+		ProjectExporter::exportProject(settings, templateSourcePath, folderPath, exportSettings);
 		
 		ProjectSettings settings2;
 		ProjectExporter::readProjectData(settings2, folderPath+"/"+ settings.getCMAKE_settings().libraryName);
 		m_projectSettingsDialog->setSettings(settings2);
 		m_existingProjectLoaded = true;
+	}
+	void MainWindow::on_actionVersion_triggered()
+	{
+		// Display UI with version information		
+		QWidget *w = LibraryInfo::createInfoWidget();
+		w->setWindowTitle("Version");
+		// auto delete on close
+		w->setAttribute(Qt::WA_DeleteOnClose);
+		w->show();
+	}
+	void MainWindow::on_actionAbout_triggered()
+	{
+		// Display UI with version information		
+		QWidget *w = LibraryInfo::createInfoWidget();
+		w->setWindowTitle("About");
+		// Add label with description 
+		QHBoxLayout *layout = new QHBoxLayout();
+		QLabel *label = new QLabel("This application is a tool to create CMake based C++ libraries for QT.");
+		layout->addWidget(label);
+		w->layout()->addItem(layout);
+		// auto delete on close
+		w->setAttribute(Qt::WA_DeleteOnClose);
+		w->show();
+	}
+	void MainWindow::on_actionSettings_triggered()
+	{
+		m_settingsDialog->show();
 	}
 
 

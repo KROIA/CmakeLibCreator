@@ -7,12 +7,20 @@ namespace CLC
 {
 	Resources::Resources()
 	{
+		m_settingsFilePath = "settings.json";
+
+
 		m_templateSourcePath = "data/template";
 		m_dependenciesSourcePath = "data/depencencies";
 		m_qtModulesSourcePath = "data/qtModules";
 		m_styleSheetSourcePath = "data/stylesheet";
 		m_tmpPath = "data/temp";
-		m_templateGitRepo = "https://github.com/KROIA/QT_cmake_library_template.git";
+
+		m_gitRepo.repo = "https://github.com/KROIA/QT_cmake_library_template.git";
+		m_gitRepo.templateBranch = "main";
+		m_gitRepo.dependenciesBranch = "depencencies";
+		m_gitRepo.qtModulesBranch = "qtModules";
+
 
 		QDir dir;
 		if(!dir.exists(m_templateSourcePath))
@@ -23,13 +31,38 @@ namespace CLC
 			dir.mkpath(m_qtModulesSourcePath);
 		if (!dir.exists(m_styleSheetSourcePath))
 			dir.mkpath(m_styleSheetSourcePath);
-		loadQTModules();
-		loadDependencies();
+
+		QFile file(m_settingsFilePath);
+		if (!file.exists())
+		{
+			saveSettings_intern();
+		}
+		else
+			loadSettings_intern();
+		//loadQTModules();
+		//loadDependencies();
 	}
 	Resources& Resources::instance()
 	{
 		static Resources instance;
 		return instance;
+	}
+
+	void Resources::loadSettings()
+	{
+		instance().loadSettings_intern();
+	}
+	void Resources::saveSettings()
+	{
+		instance().saveSettings_intern();
+	}
+	void Resources::loadQTModules()
+	{
+		instance().loadQTModules_intern();
+	}
+	void Resources::loadDependencies()
+	{
+		instance().loadDependencies_intern();
 	}
 	QVector<QTModule> Resources::getQTModules()
 	{
@@ -48,11 +81,16 @@ namespace CLC
 	{
 		return instance().m_templateSourcePath;
 	}
+	QString Resources::getCurrentTemplateAbsSourcePath()
+	{
+		const Resources& res = instance();
+		return QDir::currentPath() + "/" + res.m_templateSourcePath + "/" + res.m_gitRepo.templateBranch;
+	}
 
 	void Resources::setDependenciesSourcePath(const QString& path)
 	{
 		instance().m_dependenciesSourcePath = path;
-		instance().loadDependencies();
+		instance().loadDependencies_intern();
 	}
 	const QString &Resources::getDependenciesSourcePath()
 	{
@@ -61,7 +99,7 @@ namespace CLC
 	void Resources::setQtModulesSourcePath(const QString& path)
 	{
 		instance().m_qtModulesSourcePath = path;	
-		instance().loadQTModules();
+		instance().loadQTModules_intern();
 	}
 	const QString& Resources::getQtModulesSourcePath()
 	{
@@ -101,15 +139,82 @@ namespace CLC
 		return instance().m_tmpPath;
 	}
 
-	void Resources::setTemplateGitRepo(const QString& repo)
+	void Resources::setTemplateGitRepo(const GitResources& repo)
 	{
-		instance().m_templateGitRepo = repo;
+		instance().m_gitRepo = repo;
 	}
-	const QString& Resources::getTemplateGitRepo()
+	const Resources::GitResources& Resources::getTemplateGitRepo()
 	{
-		return instance().m_templateGitRepo;
+		return instance().m_gitRepo;
 	}
-	void Resources::loadQTModules()
+	void Resources::setLoadedProjectPath(const QString& path)
+	{
+		instance().m_loadedProjectPath = path;
+	}
+	const QString& Resources::getLoadedProjectPath()
+	{
+		return instance().m_loadedProjectPath;
+	}
+	void Resources::loadSettings_intern()
+	{
+		QJsonObject settings;
+		QFile file(m_settingsFilePath);
+		if (!file.open(QIODevice::ReadOnly))
+		{
+			qDebug() << "Failed to open file for reading: " << file.fileName();
+			return;
+		}
+		QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+		file.close();
+		settings = doc.object();
+		m_templateSourcePath = settings["templateSourcePath"].toString();
+		m_dependenciesSourcePath = settings["dependenciesSourcePath"].toString();
+		m_qtModulesSourcePath = settings["qtModulesSourcePath"].toString();
+		m_styleSheetSourcePath = settings["styleSheetSourcePath"].toString();
+		m_tmpPath = settings["tmpPath"].toString();
+
+		m_gitRepo.load(settings["git"].toObject());
+		loadQTModules_intern();
+		loadDependencies_intern();
+	}
+	void Resources::saveSettings_intern()
+	{
+		QJsonObject settings;
+		settings["templateSourcePath"] = m_templateSourcePath;
+		settings["dependenciesSourcePath"] = m_dependenciesSourcePath;
+		settings["qtModulesSourcePath"] = m_qtModulesSourcePath;
+		settings["styleSheetSourcePath"] = m_styleSheetSourcePath;
+		settings["tmpPath"] = m_tmpPath;
+		settings["git"] = m_gitRepo.save();
+
+		QJsonDocument doc(settings);
+		QFile file(m_settingsFilePath);
+		if (!file.open(QIODevice::WriteOnly))
+		{
+			qDebug() << "Failed to open file for writing: " << file.fileName();
+			return;
+		}
+		file.write(doc.toJson());
+		file.close();
+	}
+
+	void Resources::GitResources::load(const QJsonObject& obj)
+	{
+		repo = obj["repo"].toString();
+		templateBranch = obj["templateBranch"].toString();
+		dependenciesBranch = obj["dependenciesBranch"].toString();
+		qtModulesBranch = obj["qtModulesBranch"].toString();
+	}
+	QJsonObject Resources::GitResources::save() const
+	{
+		QJsonObject obj;
+		obj["repo"] = repo;
+		obj["templateBranch"] = templateBranch;
+		obj["dependenciesBranch"] = dependenciesBranch;
+		obj["qtModulesBranch"] = qtModulesBranch;
+		return obj;
+	}
+	void Resources::loadQTModules_intern()
 	{
 		/*QVector<QTModule> modules;
 		modules.append(QTModule("Core", "QtCore"));
@@ -173,7 +278,7 @@ namespace CLC
 				qDebug() << "Failed to load module from json file: " << file << " data: "<< json;
 		}
 	}
-	void Resources::loadDependencies()
+	void Resources::loadDependencies_intern()
 	{
 		QStringList files = QDir(m_dependenciesSourcePath).entryList(QStringList() << "*.cmake", QDir::Files);
 		//Sort files alphabeticly

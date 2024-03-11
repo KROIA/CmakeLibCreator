@@ -16,11 +16,28 @@ namespace CLC
 
 		static Resources& instance();
 	public:
+		struct GitResources
+		{
+			QString repo;
+
+			QString templateBranch;
+			QString dependenciesBranch;
+			QString qtModulesBranch;
+
+			void load(const QJsonObject& obj);
+			QJsonObject save() const;
+		};
+		static void loadSettings();
+		static void saveSettings();
+		static void loadQTModules();
+		static void loadDependencies();
+
 		static QVector<QTModule> getQTModules();
 		static QVector<Dependency> getDependencies();
 
 		static void setTemplateSourcePath(const QString& path);
 		static const QString &getTemplateSourcePath();
+		static QString getCurrentTemplateAbsSourcePath();
 
 		static void setDependenciesSourcePath(const QString& path);
 		static const QString &getDependenciesSourcePath();
@@ -35,11 +52,20 @@ namespace CLC
 		static void setTmpPath(const QString& path);
 		static const QString &getTmpPath();
 
-		static void setTemplateGitRepo(const QString& repo);
-		static const QString &getTemplateGitRepo();
+		static void setTemplateGitRepo(const GitResources& repo);
+		static const GitResources& getTemplateGitRepo();
+
+		static void setLoadedProjectPath(const QString& path);
+		static const QString &getLoadedProjectPath();
+
+
 	private:
-		void loadQTModules();
-		void loadDependencies();
+		void loadSettings_intern();
+		void saveSettings_intern();
+		void loadQTModules_intern();
+		void loadDependencies_intern();
+		
+
 		QJsonObject loadJsonFile(const QString& path);
 
 
@@ -49,10 +75,14 @@ namespace CLC
 		QString m_styleSheetSourcePath;
 		QString m_tmpPath;
 		
-		QString m_templateGitRepo;
+		GitResources m_gitRepo;
 
 		QVector<QTModule> m_qtModules;
 		QVector<Dependency> m_dependencies;
+
+		QString m_loadedProjectPath;
+
+		QString m_settingsFilePath;
 
 	};
 }

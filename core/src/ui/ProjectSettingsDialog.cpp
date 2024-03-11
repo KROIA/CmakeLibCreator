@@ -32,7 +32,8 @@ namespace CLC
 		ui.libraryName_lineEdit->setText(cmakeSettings.libraryName);
 		ui.namespaceName_lineEdit->setText(libSettings.namespaceName);
 		QString exportSubstr = libSettings.exportName;
-		if (int idx = exportSubstr.indexOf("_EXPORT") != -1)
+		int idx = exportSubstr.indexOf("_EXPORT");
+		if (idx != -1)
 		{
 			exportSubstr = exportSubstr.mid(0, idx);
 		}
@@ -157,9 +158,12 @@ namespace CLC
 		m_settings.autosetLibShortDefine();
 		m_settings.autoSetNamespaceName();
 		m_settings.autoSetExportName();
+		const ProjectSettings::LibrarySettings& libSettings = m_settings.getLibrarySettings();
 		cmakeSettings = m_settings.getCMAKE_settings();
 		ui.libDefine_lineEdit->setText(cmakeSettings.lib_define);
 		ui.libProfileDefine_lineEdit->setText(cmakeSettings.lib_profile_define);
+		ui.namespaceName_lineEdit->setText(libSettings.namespaceName);
+		ui.exportName_lineEdit->setText(libSettings.exportName);
 	}
 
 	void ProjectSettingsDialog::onQtModulesSelected(const QVector<CheckBoxSelectionDialog::Element>& selectedItems)

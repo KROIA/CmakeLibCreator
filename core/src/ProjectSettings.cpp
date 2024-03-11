@@ -26,6 +26,7 @@ namespace CLC
 		m_librarySettings = other.m_librarySettings;
 		m_CMAKE_settings = other.m_CMAKE_settings;
 		m_placeholder = other.m_placeholder;
+		m_cmakeFileUserSections = other.m_cmakeFileUserSections;
 		return *this;
 	}
 	void ProjectSettings::setLibrarySettings(const LibrarySettings& settings)
@@ -40,6 +41,10 @@ namespace CLC
 	{
 		m_placeholder = placeholder;
 	}
+	void ProjectSettings::setUserSections(const QVector<QMakeFileUserSections>& sections)
+	{
+		m_cmakeFileUserSections = sections;
+	}
 	const ProjectSettings::LibrarySettings& ProjectSettings::getLibrarySettings() const
 	{
 		return m_librarySettings;
@@ -51,6 +56,10 @@ namespace CLC
 	const ProjectSettings::Placeholder& ProjectSettings::getPlaceholder() const
 	{
 		return m_placeholder;
+	}
+	const QVector<ProjectSettings::QMakeFileUserSections>& ProjectSettings::getUserSections() const
+	{
+		return m_cmakeFileUserSections;
 	}
 	void ProjectSettings::autosetLibDefine()
 	{
@@ -100,6 +109,7 @@ namespace CLC
 			name += libraryName[i].toUpper();
 		}
 		name += "_EXPORT";
+		exportName = name;
 	}
 	ProjectSettings::LibrarySettings::Version::Version()
 	{

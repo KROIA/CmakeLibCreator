@@ -12,13 +12,13 @@ namespace CLC
 		LibraryInfo(const LibraryInfo&) = delete;
 	public:
 		// Current version of the library
-		static constexpr int versionMajor				= 0;
+		static constexpr int versionMajor				= 1;
 		static constexpr int versionMinor				= 0;
 		static constexpr int versionPatch				= 0;
 
 		// Library name
-		static constexpr const char* name				= "LibraryName";
-		static constexpr const char* author				= "";
+		static constexpr const char* name				= "CMake Library Creator";
+		static constexpr const char* author				= "Alex Krieg";
 		static constexpr const char* email				= "";
 		static constexpr const char* website			= "";
 		static constexpr const char* license			= "MIT";
