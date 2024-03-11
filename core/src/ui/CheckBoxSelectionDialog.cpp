@@ -27,6 +27,11 @@ namespace CLC
 		for (const auto& item : items)
 		{
 			QCheckBox* checkBox = new QCheckBox(item.name);
+			// set backgorund color
+			
+			checkBox->setAutoFillBackground(true);
+			checkBox->setStyleSheet("QCheckBox { background-color: " + item.color.name() + "; }");
+			
 			checkBox->setChecked(item.selected);
 			checkBox->setToolTip(item.tooltip);
 			m_checkBoxes.append(checkBox);

@@ -68,7 +68,7 @@ namespace CLC
 	QVector<QString> Utilities::getFilesInFolder(const QString& folder, const QString& filter)
 	{
 		QVector<QString> files;
-		QDirIterator it(folder, QDir::Files, QDirIterator::Subdirectories);
+		QDirIterator it(folder, QDir::Files, QDirIterator::NoIteratorFlags);
 		while (it.hasNext()) {
 			it.next();
 			const auto fileInfo = it.fileInfo();

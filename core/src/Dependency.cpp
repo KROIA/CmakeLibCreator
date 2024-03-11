@@ -80,6 +80,7 @@ namespace CLC
 		// read lines
 		QTextStream in(&file);
 		QString line;
+		m_description = "No description available";
 		bool descriptionFound = false;
 		while (!in.atEnd())
 		{

@@ -32,8 +32,9 @@ namespace CLC
 		static void loadQTModules();
 		static void loadDependencies();
 
-		static QVector<QTModule> getQTModules();
-		static QVector<Dependency> getDependencies();
+		static const QVector<QTModule> &getQTModules();
+		static const QVector<Dependency> &getDependencies();
+		static bool isOriginalDependency(const QString& name);
 
 		static void setTemplateSourcePath(const QString& path);
 		static const QString &getTemplateSourcePath();
@@ -41,6 +42,7 @@ namespace CLC
 
 		static void setDependenciesSourcePath(const QString& path);
 		static const QString &getDependenciesSourcePath();
+		static QString getDependenciesAbsSourcePath();
 
 		static void setQtModulesSourcePath(const QString& path);
 		static const QString &getQtModulesSourcePath();	

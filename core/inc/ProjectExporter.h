@@ -21,26 +21,25 @@ namespace CLC
 		
 
 		static bool exportProject(const ProjectSettings& settings, 
-									 const QString &templateSourceDir,
 									 const QString & projectDirPath,
 									 const ExportSettings &expSettings);
 
 		static bool readProjectData(ProjectSettings& settings, const QString& projectDirPath);
 	
 	private:
-		bool exportProject_intern(const ProjectSettings& settings, 
-									 const QString &templateSourceDir,
+		bool exportProject_intern(const ProjectSettings& settings,
 								     const QString& projectDirPath,
 									 const ExportSettings& expSettings);
 
 		bool readProjectData_intern(ProjectSettings& settings, const QString& projectDirPath);
 	
-		bool copyTemplateLibraryFiles(const ProjectSettings& settings, 
-							   const QString& templateSourceDir,
+		bool copyTemplateLibraryFiles(const ProjectSettings& settings,
 							   const QString& projectDirPath);
 		bool copyTemplateSourceFiles(const ProjectSettings& settings,
-								const QString& templateSourceDir,
 								const QString& projectDirPath);
+		bool copyTemplateDependencies(const ProjectSettings& settings,
+									  const QString& projectDirPath);
+
 	
 		bool replaceTemplateVariables(const ProjectSettings& settings, 
 									  const QString& projectDirPath);

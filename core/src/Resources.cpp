@@ -11,14 +11,14 @@ namespace CLC
 
 
 		m_templateSourcePath = "data/template";
-		m_dependenciesSourcePath = "data/depencencies";
+		m_dependenciesSourcePath = "data/dependencies";
 		m_qtModulesSourcePath = "data/qtModules";
 		m_styleSheetSourcePath = "data/stylesheet";
 		m_tmpPath = "data/temp";
 
 		m_gitRepo.repo = "https://github.com/KROIA/QT_cmake_library_template.git";
 		m_gitRepo.templateBranch = "main";
-		m_gitRepo.dependenciesBranch = "depencencies";
+		m_gitRepo.dependenciesBranch = "dependencies";
 		m_gitRepo.qtModulesBranch = "qtModules";
 
 
@@ -64,13 +64,23 @@ namespace CLC
 	{
 		instance().loadDependencies_intern();
 	}
-	QVector<QTModule> Resources::getQTModules()
+	const QVector<QTModule> &Resources::getQTModules()
 	{
 		return instance().m_qtModules;
 	}
-	QVector<Dependency> Resources::getDependencies()
+	const QVector<Dependency> &Resources::getDependencies()
 	{
 		return instance().m_dependencies;
+	}
+	bool Resources::isOriginalDependency(const QString& name)
+	{
+		const QVector<Dependency>& deps = Resources::getDependencies();
+		for (const Dependency& dep : deps)
+		{
+			if (dep.getName() == name)
+				return true;
+		}
+		return false;
 	}
 
 	void Resources::setTemplateSourcePath(const QString& path)
@@ -92,9 +102,13 @@ namespace CLC
 		instance().m_dependenciesSourcePath = path;
 		instance().loadDependencies_intern();
 	}
-	const QString &Resources::getDependenciesSourcePath()
+	const QString& Resources::getDependenciesSourcePath()
 	{
 		return instance().m_dependenciesSourcePath;
+	}
+	QString Resources::getDependenciesAbsSourcePath()
+	{
+		return QDir::currentPath() + "/" + getDependenciesSourcePath();
 	}
 	void Resources::setQtModulesSourcePath(const QString& path)
 	{

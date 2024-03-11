@@ -127,7 +127,7 @@ namespace CLC
 		exportSettings.replaceTemplateFiles = true;
 		exportSettings.replaceTemplateVariables = true;
 		exportSettings.replaceTemplateCodePlaceholders = true;
-		ProjectExporter::exportProject(m_projectSettingsDialog->getSettings(), templateSourcePath, Resources::getLoadedProjectPath(), exportSettings);
+		ProjectExporter::exportProject(m_projectSettingsDialog->getSettings(), Resources::getLoadedProjectPath(), exportSettings);
 
 		ProjectSettings settings;
 		ProjectExporter::readProjectData(settings, Resources::getLoadedProjectPath());
@@ -169,7 +169,7 @@ namespace CLC
 		exportSettings.replaceTemplateCodePlaceholders = true;
 
 		Resources::setLoadedProjectPath(folderPath);
-		ProjectExporter::exportProject(settings, templateSourcePath, folderPath, exportSettings);
+		ProjectExporter::exportProject(settings, folderPath, exportSettings);
 		
 		ProjectSettings settings2;
 		ProjectExporter::readProjectData(settings2, folderPath+"/"+ settings.getCMAKE_settings().libraryName);

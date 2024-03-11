@@ -122,7 +122,7 @@ namespace CLC
 	}
 	void ProjectSettingsDialog::on_dependencies_pushButton_clicked()
 	{
-		QVector<Dependency> dependencies = Resources::getDependencies();
+		const QVector<Dependency>& dependencies = Resources::getDependencies();
 		const QVector<Dependency>& currentlyUsedDependencies = m_settings.getCMAKE_settings().dependencies;
 		QVector<CheckBoxSelectionDialog::Element> elements;
 		for (const Dependency& dep : dependencies)
@@ -131,17 +131,38 @@ namespace CLC
 			e.name = dep.getName();
 			e.tooltip = dep.getDescription();
 			e.selected = false;
+			e.color = QColor(255, 255, 255);
 			elements.push_back(e);
 		}
-		for (const Dependency& dep : currentlyUsedDependencies)
+		QVector<bool> selected(currentlyUsedDependencies.size(), false);
+		for (int i=0; i<currentlyUsedDependencies.size(); ++i)
 		{
 			for (CheckBoxSelectionDialog::Element& e : elements)
 			{
-				if (e.name == dep.getName())
+				if (e.name == currentlyUsedDependencies[i].getName())
 				{
 					e.selected = true;
+					selected[i] = true;
 					break;
 				}
+			}
+		}
+		// Add dependencies that are not in the official list but are still used
+		for (int i = 0; i < selected.size(); ++i)
+		{
+			if (!selected[i])
+			{
+				CheckBoxSelectionDialog::Element e;
+				e.name = currentlyUsedDependencies[i].getName();
+				QString desc = currentlyUsedDependencies[i].getDescription();
+				if (desc.size() == 0)
+				{
+					desc = "No description available";
+				}
+				e.tooltip = desc;
+				e.selected = true;
+				e.color = QColor(255, 255, 0);
+				elements.push_back(e);
 			}
 		}
 		m_dependenciesDialog->setItems(elements);

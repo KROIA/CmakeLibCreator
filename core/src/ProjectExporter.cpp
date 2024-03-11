@@ -1,4 +1,5 @@
 #include "ProjectExporter.h"
+#include "Resources.h"
 #include <QDir>
 #include "Utilities.h"
 #include <QMessageBox>
@@ -21,12 +22,11 @@ namespace CLC
 	}
 
 	bool ProjectExporter::exportProject(
-		const ProjectSettings& settings, 
-		const QString& templateSourceDir,
+		const ProjectSettings& settings,
 		const QString& projectDirPath,
 		const ExportSettings& expSettings)
 	{
-		return instance().exportProject_intern(settings, templateSourceDir, projectDirPath, expSettings);
+		return instance().exportProject_intern(settings, projectDirPath, expSettings);
 	}
 	bool ProjectExporter::readProjectData(ProjectSettings& settings, const QString& projectDirPath)
 	{
@@ -34,8 +34,7 @@ namespace CLC
 	}
 
 	bool ProjectExporter::exportProject_intern(
-		const ProjectSettings& settings, 
-		const QString& templateSourceDir,
+		const ProjectSettings& settings,
 		const QString& projectDirPath,
 		const ExportSettings& expSettings)
 	{
@@ -61,13 +60,14 @@ namespace CLC
 				return false;
 			}
 
-			if (success) success &= copyTemplateSourceFiles(settings, templateSourceDir, projectDirPath);
+			if (success) success &= copyTemplateSourceFiles(settings, projectDirPath);
 		}
 		if (expSettings.replaceTemplateFiles)
 		{
-			if (success) success &= copyTemplateLibraryFiles(settings, templateSourceDir, projectDirPath);
+			if (success) success &= copyTemplateLibraryFiles(settings, projectDirPath);
 			if (success) success &= replaceTemplateFileNames(settings, projectDirPath);
 		}
+		if(success) success &= copyTemplateDependencies(settings, projectDirPath);
 		if (expSettings.replaceTemplateVariables)
 		{
 			if (success) success &= replaceTemplateVariables(settings, projectDirPath);
@@ -104,59 +104,25 @@ namespace CLC
 
 	bool ProjectExporter::copyTemplateLibraryFiles(
 		const ProjectSettings& settings, 
-		const QString& templateSourceDir,
 		const QString& projectDirPath)
 	{
-		
+		CLC_UNUSED(settings);
 		bool success = true;
+		QString templateSourcePath = Resources::getCurrentTemplateAbsSourcePath();
 		QVector<QString> sourceDirs{
 			"cmake",
 		};
 
 		for (const auto& sourceDir : sourceDirs)
 		{
-			QString source = templateSourceDir + "/" + sourceDir;
+			QString source = templateSourcePath + "/" + sourceDir;
 			QString target = projectDirPath + "/" + sourceDir;
 			success &= Utilities::copyAndReplaceFolderContents(source, target);
 		}
 
-		QString depsPath = templateSourceDir + "/dependencies";
-		if (!Utilities::createFolder(projectDirPath + "/dependencies"))
-		{
-			QMessageBox::critical(0, "Error", "Failed to create folder:\n" + depsPath);
-			return false;
-		}
-		if (!Utilities::copyFile(depsPath + "/.gitignore", projectDirPath + "/dependencies/.gitignore", true))
-		{
-			QMessageBox::critical(0, "Error", "Failed to copy file:\n" + depsPath + "/.gitignore");
-			return false;
-		}
-
-		// Remove all existing dependencies
-		QVector<QString> existingDeps = Utilities::getFilesInFolder(projectDirPath + "/dependencies/", ".cmake");
-		for (const auto& dep : existingDeps)
-		{
-			success &= Utilities::deleteFile(dep);
-		}
-		// Remove cache
-		QVector<QString> cachePaths = Utilities::getFoldersInFolder(projectDirPath + "/dependencies/");
-		for (const auto& cache : cachePaths)
-		{
-			success &= Utilities::deleteFolderRecursively(cache);
-		}
 		
-		QVector<Dependency> dependencies = settings.getCMAKE_settings().dependencies;
-		for (const auto& dep : dependencies)
-		{
-			QString depFileName = dep.getName() + ".cmake";
-			QString source = templateSourceDir + "/dependencies/" + depFileName;
-			QString target = projectDirPath + "/dependencies/" + depFileName;
-			if (!Utilities::copyFile(source, target, true))
-			{
-				QMessageBox::critical(0, "Error", "Failed to copy file:\n" + source);
-				//return false;
-			}
-		}
+		
+		
 
 		QVector<QString> fileList{
 			".gitignore",
@@ -166,7 +132,7 @@ namespace CLC
 		};
 		for (const auto& file : fileList)
 		{
-			QString source = templateSourceDir + "/" + file;
+			QString source = templateSourcePath + "/" + file;
 			QString target = projectDirPath + "/" + file;
 			if (!Utilities::copyFile(source, target, true))
 			{
@@ -176,16 +142,16 @@ namespace CLC
 		}
 
 		// override the core CMakeLists.txt
-		if (!Utilities::copyFile(templateSourceDir+"/core/CMakeLists.txt", projectDirPath + "/core/CMakeLists.txt", true))
+		if (!Utilities::copyFile(templateSourcePath +"/core/CMakeLists.txt", projectDirPath + "/core/CMakeLists.txt", true))
 		{
-			QMessageBox::critical(0, "Error", "Failed to copy file:\n" + templateSourceDir + "/core/CMakeLists.txt");
+			QMessageBox::critical(0, "Error", "Failed to copy file:\n" + templateSourcePath + "/core/CMakeLists.txt");
 		}
 		
 
 		return success;
 	}
-	bool ProjectExporter::copyTemplateSourceFiles(const ProjectSettings& settings,
-		const QString& templateSourceDir,
+	bool ProjectExporter::copyTemplateSourceFiles(
+		const ProjectSettings& settings,
 		const QString& projectDirPath)
 	{
 		CLC_UNUSED(settings);
@@ -195,14 +161,83 @@ namespace CLC
 			"examples",
 			"unittests",
 		};
-
+		QString templateSourcePath = Resources::getCurrentTemplateAbsSourcePath();
 		for (const auto& sourceDir : sourceDirs)
 		{
-			QString source = templateSourceDir + "/" + sourceDir;
+			QString source = templateSourcePath + "/" + sourceDir;
 			QString target = projectDirPath + "/" + sourceDir;
 			success &= Utilities::copyAndReplaceFolderContents(source, target);
 		}
 
+		return success;
+	}
+	bool ProjectExporter::copyTemplateDependencies(const ProjectSettings& settings,
+		const QString& projectDirPath)
+	{
+		bool success = true;
+		QString depsPath = Resources::getDependenciesAbsSourcePath();
+		QString templateSourcePath = Resources::getCurrentTemplateAbsSourcePath();
+		
+		if (!Utilities::createFolder(projectDirPath + "/dependencies"))
+		{
+			QMessageBox::critical(0, "Error", "Failed to create folder:\n" + depsPath);
+			return false;
+		}
+		if (!Utilities::copyFile(templateSourcePath+"/dependencies/.gitignore", projectDirPath + "/dependencies/.gitignore", true))
+		{
+			QMessageBox::critical(0, "Error", "Failed to copy file:\n" + depsPath + "/.gitignore");
+			return false;
+		}
+
+		//const QVector<Dependency> &possibleDeps = Resources::getDependencies();
+		// Remove all existing dependencies if they are official dependencies from the manager
+		const QVector<Dependency> &dependencies = settings.getCMAKE_settings().dependencies;
+		QVector<QString> existingDeps = Utilities::getFilesInFolder(projectDirPath + "/dependencies/", ".cmake");
+		for (const auto& dep : existingDeps)
+		{
+			
+			QString depFileName = QFileInfo(dep).fileName();
+			if (dep.indexOf(".cmake") != -1)
+				depFileName = depFileName.mid(0, depFileName.indexOf(".cmake"));
+			
+			if (!Resources::isOriginalDependency(depFileName))
+			{
+				// Remove it if it is no longer selected
+				bool found = false;
+				for (const auto& selectedDep : dependencies)
+				{
+					if (selectedDep.getName() == depFileName)
+					{
+						found = true;
+						break;
+					}
+				}
+				if(!found)
+					success &= Utilities::deleteFile(dep);
+			}
+			else
+				success &= Utilities::deleteFile(dep);
+		}
+		// Remove cache
+		QVector<QString> cachePaths = Utilities::getFoldersInFolder(projectDirPath + "/dependencies/");
+		for (const auto& cache : cachePaths)
+		{
+			success &= Utilities::deleteFolderRecursively(cache);
+		}
+
+		for (const auto& dep : dependencies)
+		{
+			if (!Resources::isOriginalDependency(dep.getName()))
+				continue;
+			QString depFileName = dep.getName() + ".cmake";
+			QString source = depsPath + "/" + depFileName;
+			QString target = projectDirPath + "/dependencies/" + depFileName;
+			if (!Utilities::copyFile(source, target, true))
+			{
+				QMessageBox::critical(0, "Error", "Failed to copy file:\n" + source);
+				return false;
+			}
+		}
 		return success;
 	}
 
@@ -584,7 +619,7 @@ namespace CLC
 		for (const auto& file : fileList)
 		{
 			Dependency dep;
-			dep.setName(QFileInfo(file).baseName());
+			dep.loadFromCmakeFile(file);
 			dependencies.push_back(dep);
 		}
 		cmakeSettings.dependencies = dependencies;
