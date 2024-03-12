@@ -28,10 +28,12 @@ namespace CLC
 		void on_actionAbout_triggered();
 
 		void on_actionSettings_triggered();
+		void onExportDialogOkButtonClicked(const QVector<CheckBoxSelectionDialog::Element>& selectedItems);
 	private:
 		Ui::MainWindow ui;
 		RibbonImpl* m_ribbon;
 		ProjectSettingsDialog * m_projectSettingsDialog;
+		CheckBoxSelectionDialog* m_exportSettingsDialog;
 		SettingsDialog * m_settingsDialog;
 		bool m_existingProjectLoaded = false;
 	};

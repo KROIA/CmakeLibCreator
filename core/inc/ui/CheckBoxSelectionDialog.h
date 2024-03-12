@@ -16,7 +16,7 @@ namespace CLC
 			QString name;
 			bool selected;
 			QString tooltip;
-			QColor color;
+			QColor color = QColor(255,255,255);
 		};
 		CheckBoxSelectionDialog(const QString &windowTitle, QWidget *parent = nullptr);
 		~CheckBoxSelectionDialog();

@@ -29,6 +29,11 @@ namespace CLC {
 	RibbonImpl::~RibbonImpl()
 	{
 		m_instance = nullptr;
+		delete m_templateButtons.openTemplatePath;
+		delete m_templateButtons.downloadTemplate;
+		delete m_projectButtons.openExistingProject;
+		delete m_projectButtons.saveExistingProject;
+		delete m_projectButtons.saveAsNewProject;
 		delete m_templateGroup;
 		delete m_projectGroup;
 		delete m_mainTab;

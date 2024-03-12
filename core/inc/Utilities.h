@@ -11,7 +11,7 @@ namespace CLC
 		Utilities() = delete;
 		Utilities(const Utilities&) = delete;
 	public:
-		struct CmakeUserSection
+		struct UserSection
 		{
 			int sectionIndex;
 			QStringList lines;
@@ -39,15 +39,15 @@ namespace CLC
 		
 		static bool replaceCmakeVariable(QVector<QString> &lines, QString variable, const QString& value);
 		static bool replaceCmakeVariable(QVector<QString> &lines, QString variable, const QVector<QString>& values);
-		static bool replaceCmakeUserSections(const QString& filePath, const QVector<CmakeUserSection>& sections);
-		static bool replaceCmakeUserSections(QVector<QString> &lines, const QVector<CmakeUserSection>& sections);
+		static bool replaceUserSections(const QString& filePath, const QVector<UserSection>& sections);
+		static bool replaceUserSections(QVector<QString> &lines, const QVector<UserSection>& sections);
 		static bool readCmakeVariable(const QVector<QString>& lines, QString variable, QString& value);
 		static bool readCmakeVariable(const QVector<QString>& lines, QString variable, bool& value);
 		static bool readCmakeVariable(const QVector<QString>& lines, QString variable, int& value);
 		static bool readCmakeVariable(const QVector<QString>& lines, QString variable, unsigned int& value);
 		static bool readCmakeVariables(const QVector<QString>& lines, QString variable, QVector<QString>& values);
-		static bool readCmakeUserSections(const QString &filePath, QVector<CmakeUserSection>& sections);
-		static bool readCmakeUserSections(const QVector<QString>& lines, QVector<CmakeUserSection>& sections);
+		static bool readUserSections(const QString &filePath, QVector<UserSection>& sections);
+		static bool readUserSections(const QVector<QString>& lines, QVector<UserSection>& sections);
 
 		static bool replaceHeaderVariable(QVector<QString>& lines, const QString& variable, const QString& value);
 		static bool readHeaderVariable(QVector<QString>& lines, const QString& variable, QString& value);

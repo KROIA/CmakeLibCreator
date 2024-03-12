@@ -33,6 +33,19 @@ namespace CLC
 		connect(projectButtons.saveAsNewProject, &QPushButton::clicked, this, &MainWindow::onSaveAsNewProject_clicked);
 
 		m_settingsDialog = new SettingsDialog();
+
+		m_exportSettingsDialog = new CheckBoxSelectionDialog("Export Settings");
+		QVector<CheckBoxSelectionDialog::Element> elements = {
+			//{"Copy template files", false},
+			{"Replace template CMake files", false, "Replaces the cmake files from the template with the existing ones in the library.\nCode in the user sections will be preserved."},
+			{"Replace template code files", false, "Replaces the src files from the core folder of the template with the existing ones in the library.\nCode in the user sections will be preserved."},
+			{"Replace template variables", false, "Replaces placeholder variables in cmake files, such as:\n\"LIBRARY_NAME\", \"QT_MODULES\", ..."},
+			{"Replace template code placeholders", false, "Replaces placeholder variables in source code files, such as:\n\"LibraryNamespace\", \"LIBRARY_NAME_EXPORT\", \"LIBRARY_NAME_LIB\", ..."}
+		};
+		m_exportSettingsDialog->setItems(elements);
+		m_exportSettingsDialog->hide();
+		connect(m_exportSettingsDialog, &CheckBoxSelectionDialog::okButtonClicked, this, &MainWindow::onExportDialogOkButtonClicked);
+
 	}
 
 	MainWindow::~MainWindow()
@@ -120,26 +133,31 @@ namespace CLC
 			QMessageBox box(QMessageBox::Warning, "Error", "The template source path does not exist,\ndownload the template first", QMessageBox::Ok, this);
 			return;
 		}
-
-
+		m_exportSettingsDialog->show();
+	}
+	void MainWindow::onExportDialogOkButtonClicked(const QVector<CheckBoxSelectionDialog::Element>& selectedItems)
+	{
 		ProjectExporter::ExportSettings exportSettings;
-		exportSettings.copyTemplateFiles = false;
-		exportSettings.replaceTemplateFiles = true;
-		exportSettings.replaceTemplateVariables = true;
-		exportSettings.replaceTemplateCodePlaceholders = true;
+		exportSettings.copyAllTemplateFiles = false;
+		exportSettings.replaceTemplateCmakeFiles = selectedItems[0].selected;
+		exportSettings.replaceTemplateCodeFiles = selectedItems[1].selected;
+		exportSettings.replaceTemplateVariables = selectedItems[2].selected;
+		exportSettings.replaceTemplateCodePlaceholders = selectedItems[3].selected;
 		ProjectExporter::exportProject(m_projectSettingsDialog->getSettings(), Resources::getLoadedProjectPath(), exportSettings);
 
 		ProjectSettings settings;
 		ProjectExporter::readProjectData(settings, Resources::getLoadedProjectPath());
 		m_projectSettingsDialog->setSettings(settings);
-
 	}
+
 
 	void MainWindow::onSaveAsNewProject_clicked()
 	{
 		// Open file dialog to select a folder
+		QString loadedProjectPath = Resources::getLoadedProjectPath();
+		loadedProjectPath = QFileInfo(loadedProjectPath).path();
 		QString folderPath = QFileDialog::getExistingDirectory(this, tr("Open Libraries root path"),
-			Resources::getLoadedProjectPath(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+			loadedProjectPath, QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 		if (folderPath.size() == 0)
 		{
 			return;
@@ -163,8 +181,9 @@ namespace CLC
 		folderPath += "/" + settings.getCMAKE_settings().libraryName;
 
 		ProjectExporter::ExportSettings exportSettings;
-		exportSettings.copyTemplateFiles = true;
-		exportSettings.replaceTemplateFiles = true;
+		exportSettings.copyAllTemplateFiles = true;
+		exportSettings.replaceTemplateCmakeFiles = true;
+		exportSettings.replaceTemplateCodeFiles = true;
 		exportSettings.replaceTemplateVariables = true;
 		exportSettings.replaceTemplateCodePlaceholders = true;
 
@@ -172,7 +191,7 @@ namespace CLC
 		ProjectExporter::exportProject(settings, folderPath, exportSettings);
 		
 		ProjectSettings settings2;
-		ProjectExporter::readProjectData(settings2, folderPath+"/"+ settings.getCMAKE_settings().libraryName);
+		ProjectExporter::readProjectData(settings2, folderPath);
 		m_projectSettingsDialog->setSettings(settings2);
 		m_existingProjectLoaded = true;
 	}
@@ -203,8 +222,7 @@ namespace CLC
 	{
 		m_settingsDialog->show();
 	}
-
-
+	
 
 	
 }

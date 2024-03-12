@@ -38,6 +38,7 @@ namespace CLC
 			exportSubstr = exportSubstr.mid(0, idx);
 		}
 		ui.exportName_lineEdit->setText(exportSubstr);
+		ui.libraryNameShort_lineEdit->setText(cmakeSettings.lib_short_define);
 		ui.major_spinBox->setValue(libSettings.version.major);
 		ui.minor_spinBox->setValue(libSettings.version.minor);
 		ui.patch_spinBox->setValue(libSettings.version.patch);
@@ -79,6 +80,7 @@ namespace CLC
 		cmakeSettings.libraryName = ui.libraryName_lineEdit->text();
 		cmakeSettings.lib_define = ui.libDefine_lineEdit->text();
 		cmakeSettings.lib_profile_define = ui.libProfileDefine_lineEdit->text();
+		cmakeSettings.lib_short_define = ui.libraryNameShort_lineEdit->text();
 		cmakeSettings.qt_enable = ui.qtEnable_checkBox->isChecked();
 		cmakeSettings.qt_deploy = ui.qtDeploy_checkBox->isChecked();
 		cmakeSettings.debugPostFix = ui.debugPostFix_lineEdit->text();
@@ -185,6 +187,7 @@ namespace CLC
 		ui.libProfileDefine_lineEdit->setText(cmakeSettings.lib_profile_define);
 		ui.namespaceName_lineEdit->setText(libSettings.namespaceName);
 		ui.exportName_lineEdit->setText(libSettings.exportName);
+		ui.libraryNameShort_lineEdit->setText(cmakeSettings.lib_short_define);
 	}
 
 	void ProjectSettingsDialog::onQtModulesSelected(const QVector<CheckBoxSelectionDialog::Element>& selectedItems)

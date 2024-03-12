@@ -47,6 +47,10 @@ namespace CLC
 			else
 				return false;
 		}
+		// create path if it does not exist
+		QDir dir;
+		dir.mkpath(QFileInfo(to).absolutePath());
+
 		return QFile::copy(from, to);
 	}
 	bool Utilities::createFolder(const QString& folder)
@@ -154,8 +158,12 @@ namespace CLC
 			return false;
 
 		QTextStream out(&f);
-		for (const auto& line : contents)
-			out << line << "\n";
+		for (int i = 0; i < contents.size(); ++i)
+		{
+			out << contents[i];
+			if (i < contents.size() - 1)
+				out << "\n";
+		}
 		f.close();
 		return true;
 	}
@@ -314,15 +322,15 @@ namespace CLC
 
 		return true;
 	}
-	bool Utilities::replaceCmakeUserSections(const QString& filePath, const QVector<CmakeUserSection>& sections)
+	bool Utilities::replaceUserSections(const QString& filePath, const QVector<UserSection>& sections)
 	{
 		QVector<QString> lines = getFileContents(filePath);
-		bool success = replaceCmakeUserSections(lines, sections);
+		bool success = replaceUserSections(lines, sections);
 		if (success)
 			saveFileContents(filePath, lines);
 		return success;
 	}
-	bool Utilities::replaceCmakeUserSections(QVector<QString>& lines, const QVector<CmakeUserSection>& sections)
+	bool Utilities::replaceUserSections(QVector<QString>& lines, const QVector<UserSection>& sections)
 	{
 		QVector<QString> newLines;
 		bool success = true;
@@ -348,7 +356,12 @@ namespace CLC
 						break;
 					}
 				}
-				if (sectionListIndex != -1)
+				if (sectionListIndex == -1)
+				{
+					newLines.push_back(lines[i]);
+					continue;
+				}
+				else
 				{
 
 					for (const auto& line : sections[sectionListIndex].lines)
@@ -451,18 +464,20 @@ namespace CLC
 			return false;
 		}
 		QString firstElement = lines[lineIndex];
-		firstElement = firstElement.mid(firstElement.indexOf(variable) + variable.length());
+		firstElement = firstElement.mid(firstElement.indexOf(variable) + variable.length()).trimmed();
 		bool multiLine = true;
 		if (firstElement.contains(")"))
 		{
-			firstElement = firstElement.mid(0, firstElement.indexOf(")"));
+			firstElement = firstElement.mid(0, firstElement.indexOf(")")).trimmed();
 			multiLine = false;
 		}
 		// split by space
 		int spacePos = -1;
 		while ((spacePos = firstElement.indexOf(" ")) != -1)
 		{
-			values.push_back(firstElement.mid(0, spacePos).trimmed());
+			QString element = firstElement.mid(0, spacePos).trimmed();
+			if (element.size())
+				values.push_back(element.trimmed());
 			firstElement = firstElement.mid(spacePos + 1);
 		}
 		if(firstElement.size())
@@ -473,19 +488,20 @@ namespace CLC
 			{
 				QString line = lines[i];
 				if(line.indexOf(")") != -1)
-					line = line.mid(0, line.indexOf(")"));
-				values.push_back(line.trimmed());
+					line = line.mid(0, line.indexOf(")")).trimmed();
+				if(line.size())
+					values.push_back(line.trimmed());
 			}
 		}
 
 		return true;
 	}
-	bool Utilities::readCmakeUserSections(const QString& filePath, QVector<CmakeUserSection>& sections)
+	bool Utilities::readUserSections(const QString& filePath, QVector<UserSection>& sections)
 	{
 		QVector<QString> lines = getFileContents(filePath);
-		return readCmakeUserSections(lines, sections);
+		return readUserSections(lines, sections);
 	}
-	bool Utilities::readCmakeUserSections(const QVector<QString>& lines, QVector<CmakeUserSection>& sections)
+	bool Utilities::readUserSections(const QVector<QString>& lines, QVector<UserSection>& sections)
 	{
 		bool success = true;
 		for (int i = 0; i < lines.size(); i++)
@@ -493,7 +509,7 @@ namespace CLC
 			const QString startPattern = "USER_SECTION_START";
 			if (lines[i].contains(startPattern))
 			{
-				CmakeUserSection section;
+				UserSection section;
 				QString index = lines[i].mid(lines[i].indexOf(startPattern) + startPattern.size()).trimmed();
 				bool ok = false;
 				section.sectionIndex = index.toInt(&ok);

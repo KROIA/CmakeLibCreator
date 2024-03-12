@@ -56,6 +56,7 @@ namespace CLC
 			item.name = m_checkBoxes[i]->text();
 			item.selected = m_checkBoxes[i]->isChecked();
 			item.tooltip = m_checkBoxes[i]->toolTip();
+			//item.color = QColor(255, 255, 255);
 			items.append(item);
 		}
 		emit okButtonClicked(items);

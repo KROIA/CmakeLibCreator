@@ -27,6 +27,7 @@ namespace CLC
 		m_CMAKE_settings = other.m_CMAKE_settings;
 		m_placeholder = other.m_placeholder;
 		m_cmakeFileUserSections = other.m_cmakeFileUserSections;
+		m_codeUserSections = other.m_codeUserSections;
 		return *this;
 	}
 	void ProjectSettings::setLibrarySettings(const LibrarySettings& settings)
@@ -41,9 +42,13 @@ namespace CLC
 	{
 		m_placeholder = placeholder;
 	}
-	void ProjectSettings::setUserSections(const QVector<QMakeFileUserSections>& sections)
+	void ProjectSettings::setCmakeUserSections(const QVector<CMakeFileUserSections>& sections)
 	{
 		m_cmakeFileUserSections = sections;
+	}
+	void ProjectSettings::setCodeUserSections(const QVector<CodeUserSections>& sections)
+	{
+		m_codeUserSections = sections;
 	}
 	const ProjectSettings::LibrarySettings& ProjectSettings::getLibrarySettings() const
 	{
@@ -57,9 +62,13 @@ namespace CLC
 	{
 		return m_placeholder;
 	}
-	const QVector<ProjectSettings::QMakeFileUserSections>& ProjectSettings::getUserSections() const
+	const QVector<ProjectSettings::CMakeFileUserSections>& ProjectSettings::getCmakeUserSections() const
 	{
 		return m_cmakeFileUserSections;
+	}
+	const QVector<ProjectSettings::CodeUserSections>& ProjectSettings::getCodeUserSections() const
+	{
+		return m_codeUserSections;
 	}
 	void ProjectSettings::autosetLibDefine()
 	{

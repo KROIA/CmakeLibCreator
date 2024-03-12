@@ -12,10 +12,13 @@ namespace CLC
 	public:
 		struct ExportSettings
 		{
-			bool copyTemplateFiles = true;
-			bool replaceTemplateFiles = true;
+			bool copyAllTemplateFiles = true;
+			bool replaceTemplateCmakeFiles = true;
+			bool replaceTemplateCodeFiles = true;
 			bool replaceTemplateVariables = true;
 			bool replaceTemplateCodePlaceholders = true;
+
+
 		};
 		
 		
@@ -27,7 +30,7 @@ namespace CLC
 		static bool readProjectData(ProjectSettings& settings, const QString& projectDirPath);
 	
 	private:
-		bool exportProject_intern(const ProjectSettings& settings,
+		bool exportProject_intern(ProjectSettings settings,
 								     const QString& projectDirPath,
 									 const ExportSettings& expSettings);
 
@@ -36,7 +39,9 @@ namespace CLC
 		bool copyTemplateLibraryFiles(const ProjectSettings& settings,
 							   const QString& projectDirPath);
 		bool copyTemplateSourceFiles(const ProjectSettings& settings,
-								const QString& projectDirPath);
+									 const QString& projectDirPath,
+									 const QVector<QString> &sourceDirs,
+									 const QVector<QString> & filters);
 		bool copyTemplateDependencies(const ProjectSettings& settings,
 									  const QString& projectDirPath);
 
@@ -56,10 +61,13 @@ namespace CLC
 													const QString& projectDirPath);
 
 		bool replaceTemplateCodePlaceholders(const ProjectSettings& settings,
+											 const QVector<QString>& sourceDirs,
 										     const QString& projectDirPath);
 
 		bool replaceTemplateUserSectionsIn_cmakeLists(const ProjectSettings& settings,
 													  const QString& projectDirPath);
+		bool replaceTemplateUserSectionsIn_codeFiles(const ProjectSettings& settings,
+													 const QString& projectDirPath);
 
 		//bool saveConfiguration(const ProjectSettings& settings,
 		//					   const QString& projectDirPath);
@@ -69,6 +77,8 @@ namespace CLC
 		bool readLibraryInfo(ProjectSettings& settings, const QString& projectDirPath);
 		bool readDependencies(ProjectSettings& settings, const QString& projectDirPath);
 
+		bool readCmakeUserSections(ProjectSettings& settings, const QString& projectDirPath);
+		bool readCodeUserSections(ProjectSettings& settings, const QString& projectDirPath);
 		
 		
 
