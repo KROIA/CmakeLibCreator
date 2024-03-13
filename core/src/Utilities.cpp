@@ -148,6 +148,7 @@ namespace CLC
 		while (!in.atEnd()) {
 			lines.push_back(in.readLine());
 		}
+
 		f.close();
 		return lines;
 	}
@@ -160,9 +161,7 @@ namespace CLC
 		QTextStream out(&f);
 		for (int i = 0; i < contents.size(); ++i)
 		{
-			out << contents[i];
-			if (i < contents.size() - 1)
-				out << "\n";
+			out << contents[i] << "\n";
 		}
 		f.close();
 		return true;
