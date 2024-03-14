@@ -186,7 +186,13 @@ namespace CLC
 		ui.libDefine_lineEdit->setText(cmakeSettings.lib_define);
 		ui.libProfileDefine_lineEdit->setText(cmakeSettings.lib_profile_define);
 		ui.namespaceName_lineEdit->setText(libSettings.namespaceName);
-		ui.exportName_lineEdit->setText(libSettings.exportName);
+		QString exportSubstr = libSettings.exportName;
+		int idx = exportSubstr.indexOf("_EXPORT");
+		if (idx != -1)
+		{
+			exportSubstr = exportSubstr.mid(0, idx);
+		}
+		ui.exportName_lineEdit->setText(exportSubstr);
 		ui.libraryNameShort_lineEdit->setText(cmakeSettings.lib_short_define);
 	}
 
