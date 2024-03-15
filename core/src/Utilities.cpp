@@ -335,12 +335,15 @@ namespace CLC
 		bool success = true;
 		for (int i = 0; i < lines.size(); i++)
 		{
-			const QString startPattern = "USER_SECTION_START";
-			if (lines[i].contains(startPattern) && success)
+			const QString startPattern1 = "USER_SECTION_START";
+			const QString startPattern2 = "//";
+			int patternIndex1 = lines[i].indexOf(startPattern1);
+			int patternIndex2 = lines[i].indexOf(startPattern2);
+			if (patternIndex1 >= 0 && patternIndex2 >= 0 && patternIndex1 > patternIndex2 && success)
 			{
 				int sectionIndex = -1;
 				bool ok = false;
-				sectionIndex = lines[i].mid(lines[i].indexOf(startPattern) + startPattern.size()).trimmed().toInt(&ok);
+				sectionIndex = lines[i].mid(patternIndex1 + startPattern1.size()).trimmed().toInt(&ok);
 				if (!ok)
 				{
 					QMessageBox::critical(nullptr, "Error", "Invalid user section index in CMakeLists.txt Line: " + QString::number(i) + " : " + lines[i]);
@@ -505,13 +508,16 @@ namespace CLC
 		bool success = true;
 		for (int i = 0; i < lines.size(); i++)
 		{
-			const QString startPattern = "USER_SECTION_START";
-			if (lines[i].contains(startPattern))
+			const QString startPattern1 = "USER_SECTION_START";
+			const QString startPattern2 = "//";
+			int patternIndex1 = lines[i].indexOf(startPattern1);
+			int patternIndex2 = lines[i].indexOf(startPattern2);
+			if (patternIndex1 >= 0 && patternIndex2 >= 0 && patternIndex1 > patternIndex2 && success)
 			{
-				UserSection section;
-				QString index = lines[i].mid(lines[i].indexOf(startPattern) + startPattern.size()).trimmed();
+				int sectionIndex = -1;
 				bool ok = false;
-				section.sectionIndex = index.toInt(&ok);
+				UserSection section;
+				sectionIndex = lines[i].mid(patternIndex1 + startPattern1.size()).trimmed().toInt(&ok);
 				if (!ok)
 				{
 					QMessageBox::critical(nullptr, "Error", "Invalid user section index in CMakeLists.txt Line: " + QString::number(i)+" : "+lines[i]);
