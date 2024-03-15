@@ -603,9 +603,10 @@ namespace CLC
 			return false;
 
 		QDir dir;
-		QDir folderDir(folder);
+		//QDir folderDir(folder);
+		deleteFolderRecursively(folder+"/"+branch);
 		// Remove all files in folderPath
-		if (folderDir.exists())
+		/*if (folderDir.exists())
 		{
 			QStringListIterator it(folderDir.entryList(QDir::Files));
 			while (it.hasNext())
@@ -617,7 +618,8 @@ namespace CLC
 		else
 		{
 			dir.mkpath(folder);
-		}
+		}*/
+		dir.mkpath(folder + "/" + branch);
 		// copy all files and folders from tmpPath to folderPath
 		QString currentDir = QDir::currentPath();
 		copyAndReplaceFolderContents(currentDir + "/" + tmpFolder, currentDir + "/" + folder, true);
