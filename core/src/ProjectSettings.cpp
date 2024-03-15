@@ -3,12 +3,14 @@
 
 namespace CLC
 {
+	// Needs to be splitted into 2 chuncks because otherwise this application would replace the strings in the file if 
+	// This porject gets updatet with this tool.
 	const ProjectSettings::Placeholder ProjectSettings::s_defaultPlaceholder = {
-		"LibraryNamespace",
-		"LIBRARY_NAME_EXPORT",
-		"LibraryName",
-		"LIBRARY_NAME_LIB",
-		"LIBRARY_NAME_SHORT",
+		QString("Library")+"Namespace",
+		QString("LIBRARY")+"_NAME_EXPORT",
+		QString("Library")+"Name",
+		QString("LIBRARY")+"_NAME_LIB",
+		QString("LIBRARY")+"_NAME_SHORT",
 	};
 
 	ProjectSettings::ProjectSettings()

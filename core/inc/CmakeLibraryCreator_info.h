@@ -1,12 +1,30 @@
 #pragma once
+
+/// USER_SECTION_START 1
+
+/// USER_SECTION_END
+
 #include "CmakeLibraryCreator_base.h"
 #include <sstream>
 
+/// USER_SECTION_START 2
+
+/// USER_SECTION_END
+
 class QWidget;
+
+/// USER_SECTION_START 3
+
+/// USER_SECTION_END
 
 namespace CLC
 {
-	class CMAKE_LIB_CREATOR_EXPORT LibraryInfo
+
+/// USER_SECTION_START 4
+
+/// USER_SECTION_END
+
+	class CMAKE_LIBRARY_CREATOR_EXPORT LibraryInfo
 	{
 		LibraryInfo() = delete;
 		LibraryInfo(const LibraryInfo&) = delete;
@@ -17,7 +35,7 @@ namespace CLC
 		static constexpr int versionPatch				= 0;
 
 		// Library name
-		static constexpr const char* name				= "CMake Library Creator";
+		static constexpr const char* name				= "CmakeLibraryCreator";
 		static constexpr const char* author				= "Alex Krieg";
 		static constexpr const char* email				= "";
 		static constexpr const char* website			= "";
@@ -78,5 +96,17 @@ namespace CLC
 		// It creates a widget with the library information
 		// No button is created to close the widget
 		static QWidget *createInfoWidget(QWidget* parent = nullptr);
+
+/// USER_SECTION_START 5
+
+/// USER_SECTION_END
 	};
+
+/// USER_SECTION_START 6
+
+/// USER_SECTION_END
 }
+
+/// USER_SECTION_START 7
+
+/// USER_SECTION_END

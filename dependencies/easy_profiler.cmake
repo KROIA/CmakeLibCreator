@@ -1,20 +1,23 @@
+## description: simple profiler for applications
 cmake_minimum_required(VERSION 3.1.0)
-
-
 include(FetchContent)
 
-set(DEBUG_POSTFIX_STR "-d")
-
+# Define the git repository and tag to download from
+set(LIB_NAME EASY_PROFILER)
+set(GIT_REPO https://github.com/yse/easy_profiler.git)
+set(GIT_TAG develop)
 
 FetchContent_Declare(
-    EASY_PROFILER
-    GIT_REPOSITORY https://github.com/yse/easy_profiler.git
-    GIT_TAG        develop
+    ${LIB_NAME}
+    GIT_REPOSITORY ${GIT_REPO}
+    GIT_TAG        ${GIT_TAG}
 )
 
 set(EASY_PROFILER_NO_SAMPLES True)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build easy_profiler as static library.")
+message("Downloading dependency: ${LIB_NAME} from: ${GIT_REPO} tag: ${GIT_TAG}")
 FetchContent_MakeAvailable(EASY_PROFILER)
+set(EASY_PROFILER_IS_AVAILABLE ON)
 
 
 # Add this library to the specific profiles of this project

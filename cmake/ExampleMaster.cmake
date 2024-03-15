@@ -92,6 +92,10 @@ add_executable(${PROJECT_NAME} ${SOURCES} ${ADDITIONAL_SOURCES})
 
 
 if(${PROFILING_NAME})
+    if(NOT TARGET ${PARENT_LIBRARY_STATIC_PROFILE})
+        message("ERROR: Target: PARENT_LIBRARY_STATIC_PROFILE does not exist")
+        message("ERROR: Target: Make shure you have added the dependency: easy_profiler.cmake and set(EASY_PROFILER_IS_AVAILABLE ON)")
+    endif()
     target_link_libraries(${PROJECT_NAME} ${PARENT_LIBRARY_STATIC_PROFILE} ${QT_LIBS})
 else()
     target_link_libraries(${PROJECT_NAME} ${PARENT_LIBRARY_STATIC} ${QT_LIBS})

@@ -66,11 +66,11 @@ namespace CLC
 		// Placeholder for strings that are used in the CMakeLists.txt and code files
 		struct Placeholder
 		{
-			QString LibraryNamespace;
-			QString LIBRARY_NAME_EXPORT;
-			QString LibraryName;
-			QString LIBRARY_NAME_LIB;
-			QString LIBRARY_NAME_SHORT;
+			QString Library_Namespace;
+			QString LIBRARY__NAME_EXPORT;
+			QString Library_Name;
+			QString LIBRARY__NAME_LIB;
+			QString LIBRARY__NAME_SHORT;
 
 
 		};

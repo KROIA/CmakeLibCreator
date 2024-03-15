@@ -1,5 +1,11 @@
 #pragma once
-// Includes visible by the user of the Library:
+
+/// USER_SECTION_START 1
+
+/// USER_SECTION_END
 
 #include "CmakeLibraryCreator_info.h"
-#include "ui/MainWindow.h"
+
+/// USER_SECTION_START 2
+
+/// USER_SECTION_END

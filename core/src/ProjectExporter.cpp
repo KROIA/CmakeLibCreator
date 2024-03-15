@@ -77,8 +77,8 @@ namespace CLC
 			if (expSettings.replaceTemplateCodeFiles)
 			{
 				ProjectSettings::Placeholder placeholder = settings.getPlaceholder();
-				placeholder.LibraryName = ProjectSettings::s_defaultPlaceholder.LibraryName;
-				placeholder.LibraryNamespace = ProjectSettings::s_defaultPlaceholder.LibraryNamespace;
+				placeholder.Library_Namespace = ProjectSettings::s_defaultPlaceholder.Library_Namespace;
+				placeholder.Library_Name = ProjectSettings::s_defaultPlaceholder.Library_Name;
 				settings.setPlaceholder(placeholder);
 
 				success &= copyTemplateSourceFiles(settings, projectDirPath,
@@ -92,9 +92,9 @@ namespace CLC
 			if (expSettings.replaceTemplateCmakeFiles)
 			{
 				ProjectSettings::Placeholder placeholder = settings.getPlaceholder();
-				placeholder.LIBRARY_NAME_EXPORT = ProjectSettings::s_defaultPlaceholder.LIBRARY_NAME_EXPORT;
-				placeholder.LIBRARY_NAME_LIB = ProjectSettings::s_defaultPlaceholder.LIBRARY_NAME_LIB;
-				placeholder.LIBRARY_NAME_SHORT = ProjectSettings::s_defaultPlaceholder.LIBRARY_NAME_SHORT;
+				placeholder.LIBRARY__NAME_EXPORT = ProjectSettings::s_defaultPlaceholder.LIBRARY__NAME_EXPORT;
+				placeholder.LIBRARY__NAME_LIB = ProjectSettings::s_defaultPlaceholder.LIBRARY__NAME_LIB;
+				placeholder.LIBRARY__NAME_SHORT = ProjectSettings::s_defaultPlaceholder.LIBRARY__NAME_SHORT;
 				settings.setPlaceholder(placeholder);
 				success &= copyTemplateLibraryFiles(settings, projectDirPath);
 				success &= replaceTemplateUserSectionsIn_cmakeLists(settings, projectDirPath);
@@ -135,11 +135,11 @@ namespace CLC
 		ProjectSettings::Placeholder placeholder;
 		const ProjectSettings::LibrarySettings &librarySettings = settings.getLibrarySettings();
 		const ProjectSettings::CMAKE_settings &cmakeSettings = settings.getCMAKE_settings();
-		placeholder.LibraryNamespace = librarySettings.namespaceName;
-		placeholder.LIBRARY_NAME_EXPORT = librarySettings.exportName;
-		placeholder.LibraryName = cmakeSettings.libraryName;
-		placeholder.LIBRARY_NAME_LIB = cmakeSettings.lib_define;
-		placeholder.LIBRARY_NAME_SHORT = cmakeSettings.lib_short_define;
+		placeholder.Library_Namespace = librarySettings.namespaceName;
+		placeholder.LIBRARY__NAME_EXPORT = librarySettings.exportName;
+		placeholder.Library_Name = cmakeSettings.libraryName;
+		placeholder.LIBRARY__NAME_LIB = cmakeSettings.lib_define;
+		placeholder.LIBRARY__NAME_SHORT = cmakeSettings.lib_short_define;
 		settings.setPlaceholder(placeholder);
 		return success;
 	}
@@ -199,7 +199,7 @@ namespace CLC
 		CLC_UNUSED(projectDirPath);
 		bool success = true;
 		
-		QString templateName = ProjectSettings::s_defaultPlaceholder.LibraryName;
+		QString templateName = ProjectSettings::s_defaultPlaceholder.Library_Name;
 		QString targetName = settings.getCMAKE_settings().libraryName;
 		QString templateSourcePath = Resources::getCurrentTemplateAbsSourcePath();
 		for (const auto& sourceDir : sourceDirs)
@@ -318,7 +318,7 @@ namespace CLC
 		const ProjectSettings& settings,
 		const QString& projectDirPath)
 	{
-		QString targetFileNameContains = settings.getPlaceholder().LibraryName;
+		QString targetFileNameContains = settings.getPlaceholder().Library_Name;
 		QString libraryName = settings.getCMAKE_settings().libraryName;
 		if(targetFileNameContains == libraryName)
 			return true; // nothing to do
@@ -534,11 +534,18 @@ namespace CLC
 		const ProjectSettings::CMAKE_settings& cmakeSettings = settings.getCMAKE_settings();
 		
 		ProjectSettings::Placeholder placeholders = settings.getPlaceholder();
-		QVector<QPair<QString, QString>> replacements{
-			{placeholders.LibraryNamespace,librarySettigns.namespaceName},
-			{placeholders.LIBRARY_NAME_EXPORT,librarySettigns.exportName},
-			{placeholders.LIBRARY_NAME_SHORT,cmakeSettings.lib_short_define},
-			{placeholders.LIBRARY_NAME_LIB,cmakeSettings.lib_define},
+		struct Replacements
+		{
+			QString from;
+			QString to;
+			QVector<QVector<QString>> mustContainInLine;
+		};
+		QVector<Replacements> replacements{
+			{placeholders.Library_Namespace,librarySettigns.namespaceName,	{{"namespace"}}},
+			{placeholders.LIBRARY__NAME_EXPORT,librarySettigns.exportName,  {{placeholders.LIBRARY__NAME_EXPORT + " "}, {"#","define"}}},
+			{placeholders.LIBRARY__NAME_SHORT,cmakeSettings.lib_short_define, {{}}},
+			{placeholders.LIBRARY__NAME_LIB,cmakeSettings.lib_define, {{"#"}}},
+			{placeholders.Library_Name ,cmakeSettings.libraryName, {{"#include"}}}
 		};
 
 		for (auto& file : files)
@@ -546,16 +553,7 @@ namespace CLC
 			bool hasChanges = false;
 			for (const auto& replacement : replacements)
 			{
-				if (replacement.first != replacement.second)
-				{
-					Utilities::replaceAll(file.data, replacement.first, replacement.second);
-					hasChanges = true;
-				}
-			}
-			if (placeholders.LibraryName != cmakeSettings.libraryName)
-			{
-				Utilities::replaceAllIfLineContains(file.data, placeholders.LibraryName, cmakeSettings.libraryName, "#include");
-				hasChanges = true;
+				hasChanges |= Utilities::replaceAllIfLineContains(file.data, replacement.from, replacement.to, replacement.mustContainInLine);
 			}
 			if(hasChanges)
 				Utilities::saveFileContents(file.path, file.data);
@@ -677,7 +675,7 @@ namespace CLC
 		ProjectSettings::CMAKE_settings cmakeSettings = settings.getCMAKE_settings();
 		ProjectSettings::LibrarySettings librarySettings = settings.getLibrarySettings();
 
-		// Read LIBRARY_NAME_SHORT from the header file
+		// Read CLC from the header file
 		{
 			QString header = projectDirPath + "/core/inc/" + cmakeSettings.libraryName + "_global.h";
 			QVector<QString> globalContent = Utilities::getFileContents(header);
@@ -687,7 +685,7 @@ namespace CLC
 			{
 				// Alternative method to read the short name
 				// Searchinf for line:
-				// #define LIBRARY_NAME_SHORT_UNUSED(x) (void)x;
+				// #define CLC_UNUSED(x) (void)x;
 				shortNameIndex = Utilities::getLineIndex(globalContent, "_UNUSED(x)", false);
 				if (shortNameIndex != -1)
 				{

@@ -1,4 +1,6 @@
-﻿cmake_minimum_required(VERSION 3.20)
+## USER_SECTION_START 1
+cmake_minimum_required(VERSION 3.20)
+## USER_SECTION_END
 
 ## INFO
 ## Template version: 1.0.0
@@ -9,47 +11,53 @@
 ##
 ## ********************************************************************************
 ##  !!! IMPORTANT !!!
-##  DO NOT CHANGE/REMOVE THE COMMENTS MARKED WITH <...>
-##  THEY ARE USED BY THE SCRIPTS TO AUTOMATICALLY 
-##  CONFIGURE THE PROJECT FILES.
-##  YOU CAN ADD YOUR OWN COMMENTS, BUT DO NOT REMOVE
-##  THE EXISTING ONES.
+##  CMAKE SETTINGS WITH THE MARK "<AUTO_REPLACED>" ARE AUTOMATICLY REPLACED
+##  BY THE LIBRARY MANAGER. DO NOT CHANGE NAMES OF SUCH PARAMETERS IF YOU USE
+##  THE LIBRARY MANAGER.
+##
+##
 ## ********************************************************************************
 ##
+## You can add your own settings in between the USER SECTION START and USER SECTION END markers.
+## Do not add more USER SECTION START or USER SECTION END markers. 
+## Code outside of the USER SECTION START and USER SECTION END markers will be overwritten by the library manager.
+## 
 ## --------------------------------------------------------------------------------
 ## -------------------- Project settings ------------------------------------------
 ## --------------------------------------------------------------------------------
 
 # Name of the library
-set(LIBRARY_NAME CmakeLibCreator)                   # <LIBRARY_NAME>
+set(LIBRARY_NAME CmakeLibraryCreator)                   # <AUTO_REPLACED>
 
 # Define is only active if the library is built
-set(LIB_DEFINE CMAKE_LIB_CREATOR_LIB)                # <LIB_DEFINE>
+set(LIB_DEFINE CMAKE_LIBRARY_CREATOR_LIB)                # <AUTO_REPLACED>
 
 # macro to enable profiling
-set(LIB_PROFILE_DEFINE CLC_PROFILING)               # <LIB_PROFILE_DEFINE>  
+set(LIB_PROFILE_DEFINE CLC_PROFILING)  # <LIB_PROFILE_DEFINE>  
 
 
 # Enable/disable QT modules
-set(QT_ENABLE ON)	                            # <QT_ENABLE> 
+set(QT_ENABLE ON)	                            # <AUTO_REPLACED> 
 # Enable/disable QT deployment
-set(QT_DEPLOY ON)	                            # <QT_DEPLOY> 
+set(QT_DEPLOY ON)	                            # <AUTO_REPLACED> 
 
-# Needed QT modules
-set(QT_MODULES                                  # <QT_MODULES> 
-    Core
-    Widgets
-    # Add any other required modules here
-)
+# Needed QT modules                             # <AUTO_REPLACED> 
+set(QT_MODULES
+  Core
+  Widgets)
 
 # Library file name settings
-set(DEBUG_POSTFIX_STR  "-d")                    # <DEBUG_POSTFIX_STR> 
-set(STATIC_POSTFIX_STR "-s")                    # <STATIC_POSTFIX_STR> 
-set(PROFILING_POSTFIX_STR "-p")                 # <PROFILING_POSTFIX_STR> 
+set(DEBUG_POSTFIX_STR "-d")                    # <AUTO_REPLACED> 
+set(STATIC_POSTFIX_STR "-s")                    # <AUTO_REPLACED> 
+set(PROFILING_POSTFIX_STR "-p")                 # <AUTO_REPLACED>  
 
 # Langauge settings
-set(CMAKE_CXX_STANDARD 23)                      # <CMAKE_CXX_STANDARD> 
-set(CMAKE_CXX_STANDARD_REQUIRED ON)             # <CMAKE_CXX_STANDARD_REQUIRED> 
+set(CMAKE_CXX_STANDARD 23)                      # <AUTO_REPLACED> 
+set(CMAKE_CXX_STANDARD_REQUIRED ON)             # <AUTO_REPLACED> 
+
+## USER_SECTION_START 2
+
+## USER_SECTION_END
 
 # --------------------------------------------------------------------------------
 # -------------------- Build settings --------------------------------------------
@@ -58,6 +66,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)             # <CMAKE_CXX_STANDARD_REQUIRED>
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR})   # Default install path
 set(RELATIVE_BUILD_FOLDER build)                # Relative path to the build folder
 set(RELATIVE_INSTALL_FOLDER lib)                # Relative path to the install folder
+
+
+set(COMPILE_EXAMPLES OFF)						# <AUTO_REPLACED> 
+set(COMPILE_UNITTESTS OFF)						# <AUTO_REPLACED> 
+
+## USER_SECTION_START 3
+
+## USER_SECTION_END
 
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
@@ -76,15 +92,28 @@ set(INSTALL_BIN_PATH "${CMAKE_INSTALL_PREFIX}/bin")
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
+## USER_SECTION_START 4
+
+## USER_SECTION_END
+
 
 include(cmake/QtLocator.cmake)
 include(cmake/utility.cmake)
 include(cmake/dependencies.cmake)
 include(cmake/ExampleMaster.cmake)
 
+## USER_SECTION_START 5
+
+## USER_SECTION_END
 
 add_subdirectory(core)
-add_subdirectory(CmakeLibCreator)     
-#add_subdirectory(examples)     
-#add_subdirectory(unitTests)
+if(COMPILE_EXAMPLES AND NOT CmakeLibraryCreator_NO_EXAMPLES)
+    add_subdirectory(examples)
+endif()
+if(COMPILE_UNITTESTS AND NOT CmakeLibraryCreator_NO_UNITTESTS)
+    add_subdirectory(unitTests)
+endif()
 
+## USER_SECTION_START 6
+add_subdirectory(CmakeLibCreator)
+## USER_SECTION_END

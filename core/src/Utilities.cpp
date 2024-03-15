@@ -184,32 +184,54 @@ namespace CLC
 	}
 	bool Utilities::replaceAll(QVector<QString>& lines, const QString& target, const QString& replacement)
 	{
+		bool hasChanged = false;
 		for (QString& line : lines)
 		{
 			int pos = line.indexOf(target);
 			while (pos != -1)
 			{
 				line.replace(target, replacement);
+				hasChanged = true;
 				pos = line.indexOf(target, pos + replacement.size());
 			}
 		}
-		return true;
+		return hasChanged;
 	}
-	bool Utilities::replaceAllIfLineContains(QVector<QString>& lines, const QString& target, const QString& replacement, const QString& mustContainInLine)
+	bool Utilities::replaceAllIfLineContains(QVector<QString>& lines, const QString& target, const QString& replacement, const QVector<QVector<QString>>& mustContainInLine)
 	{
+		bool hasChanged = false;
+		if(target == replacement)
+			return false;
 		for (QString& line : lines)
 		{
-			if (line.contains(mustContainInLine))
+			bool doReplacement = false;
+			if(mustContainInLine.size() == 0)
+				doReplacement = true;
+			for (const QVector<QString>& andList : mustContainInLine)
 			{
-				int pos = line.indexOf(target);
-				while (pos != -1)
+				bool containsAll = true;
+				for (const QString& mustContain : andList)
 				{
-					line.replace(target, replacement);
-					pos = line.indexOf(target, pos + replacement.size());
+					if (!line.contains(mustContain))
+					{
+						containsAll = false;
+						break;
+					}
 				}
+				doReplacement |= containsAll;
+			}
+			if (!doReplacement)
+				continue;
+
+			int pos = line.indexOf(target);
+			while (pos != -1)
+			{
+				line.replace(target, replacement);
+				hasChanged = true;
+				pos = line.indexOf(target, pos + replacement.size());
 			}
 		}
-		return true;
+		return hasChanged;
 	}
 
 	int Utilities::getLineIndex(const QVector<QString>& lines, const QString& pattern, bool onlyCompleteWord)
@@ -523,6 +545,8 @@ namespace CLC
 					QMessageBox::critical(nullptr, "Error", "Invalid user section index in CMakeLists.txt Line: " + QString::number(i)+" : "+lines[i]);
 					section.sectionIndex = -1;
 				}
+				else
+					section.sectionIndex = sectionIndex;
 				success &= ok;
 
 				section.lines.push_back(lines[i]);

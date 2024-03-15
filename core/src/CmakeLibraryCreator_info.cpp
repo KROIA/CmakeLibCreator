@@ -1,8 +1,12 @@
 #include "CmakeLibraryCreator_info.h"
 
+/// USER_SECTION_START 1
+
+/// USER_SECTION_END
+
 #include <iostream>
 
-#if defined(QT_CORE_LIB) and defined(QT_WIDGETS_LIB)
+#if (defined(QT_CORE_LIB) && defined(QT_WIDGETS_LIB))
 	#include <QWidget>
 	#include <QLabel>
 	#include <QVBoxLayout>
@@ -10,8 +14,16 @@
 	#define QT_WIDGETS_AVAILABLE
 #endif
 
+/// USER_SECTION_START 2
+
+/// USER_SECTION_END
+
 namespace CLC
 {
+/// USER_SECTION_START 3
+
+/// USER_SECTION_END
+
 	void LibraryInfo::printInfo()
 	{
 		printInfo(std::cout);
@@ -72,7 +84,16 @@ namespace CLC
 #else
 	QWidget* LibraryInfo::createInfoWidget(QWidget* parent)
 	{
+		CLC_UNUSED(parent);
 		return nullptr;
 	}
 #endif
+
+/// USER_SECTION_START 4
+
+/// USER_SECTION_END
 }
+
+/// USER_SECTION_START 5
+
+/// USER_SECTION_END

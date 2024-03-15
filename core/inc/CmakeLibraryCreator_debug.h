@@ -1,5 +1,9 @@
 #pragma once
 
+/// USER_SECTION_START 1
+
+/// USER_SECTION_END
+
 // Debugging
 #ifdef NDEBUG
 #define CLC_CONSOLE(msg)
@@ -14,7 +18,9 @@
 #define CLC_CONSOLE_FUNCTION(msg) CLC_CONSOLE_STREAM << __PRETTY_FUNCTION__ << " " << msg;
 #endif
 
+/// USER_SECTION_START 2
 
+/// USER_SECTION_END
 
 #ifdef CLC_PROFILING
 #include "easy/profiler.h"
@@ -80,3 +86,8 @@
 #define CLC_GENERAL_PROFILING_FUNCTION(colorStage) CLC_PROFILING_FUNCTION(CONCAT_SYMBOLS(CLC_GENERAL_PROFILING_COLORBASE, colorStage))
 #define CLC_GENERAL_PROFILING_VALUE(name, value) CLC_PROFILING_VALUE(name, value)
 #define CLC_GENERAL_PROFILING_TEXT(name, value) CLC_PROFILING_TEXT(name, value)
+
+
+/// USER_SECTION_START 3
+
+/// USER_SECTION_END

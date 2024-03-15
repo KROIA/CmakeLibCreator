@@ -30,7 +30,13 @@ namespace CLC
 		static bool saveFileContents(const QString& file, const QVector<QString>& contents);
 		static bool replaceInLine(QString &line, const QString& fromPattern, const QString& toPattern, const QString &replacement);
 		static bool replaceAll(QVector<QString>& lines, const QString& target, const QString& replacement);
-		static bool replaceAllIfLineContains(QVector<QString>& lines, const QString& target, const QString& replacement, const QString &mustContainInLine);
+		
+		// QVector<QVector<QString>> &mustContainInLine is a list of strings that must be in the line to be replaced
+		// 2D to support and , or conditions
+		// Example:
+		// QVector<QVector<QString>> mustContainInLine1 = {{"if", "(", "WIN32", ")"}}; AND condition of all the strings
+		// QVector<QVector<QString>> mustContainInLine2 = {{"if", "(", "WIN32", ")"}, {"if", "(", "UNIX", ")"}}; OR condition between the 2 vectors
+ 		static bool replaceAllIfLineContains(QVector<QString>& lines, const QString& target, const QString& replacement, const QVector<QVector<QString>> &mustContainInLine);
 	
 		static int getLineIndex(const QVector<QString>& lines, const QString& pattern, bool onlyCompleteWord);
 		static int getLineIndex(const QVector<QString>& lines, const QVector<QString>& patterns, bool onlyCompleteWord);

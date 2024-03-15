@@ -40,7 +40,7 @@ namespace CLC
 			{"Replace template CMake files", false, "Replaces the cmake files from the template with the existing ones in the library.\nCode in the user sections will be preserved."},
 			{"Replace template code files", false, "Replaces the src files from the core folder of the template with the existing ones in the library.\nCode in the user sections will be preserved."},
 			{"Replace template variables", false, "Replaces placeholder variables in cmake files, such as:\n\"LIBRARY_NAME\", \"QT_MODULES\", ..."},
-			{"Replace template code placeholders", false, "Replaces placeholder variables in source code files, such as:\n\"LibraryNamespace\", \"LIBRARY_NAME_EXPORT\", \"LIBRARY_NAME_LIB\", ..."}
+			{"Replace template code placeholders", false, "Replaces placeholder variables in source code files, such as:\n\"CmakeLibraryCreator\", \"CMAKE_LIBRARY_CREATOR_EXPORT\", \"CMAKELIBRARYCREATOR_LIB\", ..."}
 		};
 		m_exportSettingsDialog->setItems(elements);
 		m_exportSettingsDialog->hide();
