@@ -17,7 +17,8 @@ namespace CLC
 	{
 		m_librarySettings = LibrarySettings();
 		m_CMAKE_settings = CMAKE_settings();
-		m_placeholder = s_defaultPlaceholder;
+		m_loadedPlaceholder = s_defaultPlaceholder;
+		m_defaultPlaceholder = s_defaultPlaceholder;
 	}
 
 	ProjectSettings::~ProjectSettings()
@@ -27,7 +28,8 @@ namespace CLC
 	{
 		m_librarySettings = other.m_librarySettings;
 		m_CMAKE_settings = other.m_CMAKE_settings;
-		m_placeholder = other.m_placeholder;
+		m_defaultPlaceholder = other.m_defaultPlaceholder;
+		m_loadedPlaceholder = other.m_loadedPlaceholder;
 		m_cmakeFileUserSections = other.m_cmakeFileUserSections;
 		m_codeUserSections = other.m_codeUserSections;
 		return *this;
@@ -40,9 +42,13 @@ namespace CLC
 	{
 		m_CMAKE_settings = settings;
 	}
-	void ProjectSettings::setPlaceholder(const Placeholder& placeholder)
+	void ProjectSettings::setDefaultPlaceholder(const Placeholder& placeholder)
 	{
-		m_placeholder = placeholder;
+		m_defaultPlaceholder = placeholder;
+	}
+	void ProjectSettings::setLoadedPlaceholder(const Placeholder& placeholder)
+	{
+		m_loadedPlaceholder = placeholder;
 	}
 	void ProjectSettings::setCmakeUserSections(const QVector<CMakeFileUserSections>& sections)
 	{
@@ -60,9 +66,13 @@ namespace CLC
 	{
 		return m_CMAKE_settings;
 	}
-	const ProjectSettings::Placeholder& ProjectSettings::getPlaceholder() const
+	const ProjectSettings::Placeholder& ProjectSettings::getDefaultPlaceholder() const
 	{
-		return m_placeholder;
+		return m_defaultPlaceholder;
+	}
+	const ProjectSettings::Placeholder& ProjectSettings::getLoadedPlaceholder() const
+	{
+		return m_loadedPlaceholder;
 	}
 	const QVector<ProjectSettings::CMakeFileUserSections>& ProjectSettings::getCmakeUserSections() const
 	{

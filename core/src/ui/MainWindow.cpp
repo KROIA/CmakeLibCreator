@@ -235,7 +235,7 @@ namespace CLC
 			{
 				QString _folderPath = folderPath;
 				auto settings = m_projectSettingsDialog->getSettings();
-				settings.setPlaceholder(ProjectSettings::s_defaultPlaceholder);
+				settings.setLoadedPlaceholder(ProjectSettings::s_defaultPlaceholder);
 				_folderPath += "/" + settings.getCMAKE_settings().libraryName;
 
 				ProjectExporter::ExportSettings exportSettings;

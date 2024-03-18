@@ -39,6 +39,7 @@ namespace CLC
 		const ExportSettings& expSettings)
 	{
 		bool success = true;
+		settings.setDefaultPlaceholder(ProjectSettings::s_defaultPlaceholder);
 		//const ProjectSettings::LibrarySettings &librarySettings = settings.getLibrarySettings();
 		//const ProjectSettings::CMAKE_settings &cmakeSettings = settings.getCMAKE_settings();
 		
@@ -66,7 +67,7 @@ namespace CLC
 					"examples",
 					"unittests",
 				},{""});
-			settings.setPlaceholder(ProjectSettings::s_defaultPlaceholder);
+			
 
 			success &= replaceTemplateUserSectionsIn_codeFiles(settings, projectDirPath);
 			success &= copyTemplateLibraryFiles(settings, projectDirPath);
@@ -76,10 +77,10 @@ namespace CLC
 		{
 			if (expSettings.replaceTemplateCodeFiles)
 			{
-				ProjectSettings::Placeholder placeholder = settings.getPlaceholder();
-				placeholder.Library_Namespace = ProjectSettings::s_defaultPlaceholder.Library_Namespace;
-				placeholder.Library_Name = ProjectSettings::s_defaultPlaceholder.Library_Name;
-				settings.setPlaceholder(placeholder);
+				//ProjectSettings::Placeholder placeholder = settings.getPlaceholder();
+				//placeholder.Library_Namespace = ProjectSettings::s_defaultPlaceholder.Library_Namespace;
+				//placeholder.Library_Name = ProjectSettings::s_defaultPlaceholder.Library_Name;
+				//settings.setPlaceholder(placeholder);
 
 				success &= copyTemplateSourceFiles(settings, projectDirPath,
 					{
@@ -91,11 +92,11 @@ namespace CLC
 			}
 			if (expSettings.replaceTemplateCmakeFiles)
 			{
-				ProjectSettings::Placeholder placeholder = settings.getPlaceholder();
-				placeholder.LIBRARY__NAME_EXPORT = ProjectSettings::s_defaultPlaceholder.LIBRARY__NAME_EXPORT;
-				placeholder.LIBRARY__NAME_LIB = ProjectSettings::s_defaultPlaceholder.LIBRARY__NAME_LIB;
-				placeholder.LIBRARY__NAME_SHORT = ProjectSettings::s_defaultPlaceholder.LIBRARY__NAME_SHORT;
-				settings.setPlaceholder(placeholder);
+				//ProjectSettings::Placeholder placeholder = settings.getPlaceholder();
+				//placeholder.LIBRARY__NAME_EXPORT = ProjectSettings::s_defaultPlaceholder.LIBRARY__NAME_EXPORT;
+				//placeholder.LIBRARY__NAME_LIB = ProjectSettings::s_defaultPlaceholder.LIBRARY__NAME_LIB;
+				//placeholder.LIBRARY__NAME_SHORT = ProjectSettings::s_defaultPlaceholder.LIBRARY__NAME_SHORT;
+				//settings.setPlaceholder(placeholder);
 				success &= copyTemplateLibraryFiles(settings, projectDirPath);
 				success &= replaceTemplateUserSectionsIn_cmakeLists(settings, projectDirPath);
 			}
@@ -140,7 +141,7 @@ namespace CLC
 		placeholder.Library_Name = cmakeSettings.libraryName;
 		placeholder.LIBRARY__NAME_LIB = cmakeSettings.lib_define;
 		placeholder.LIBRARY__NAME_SHORT = cmakeSettings.lib_short_define;
-		settings.setPlaceholder(placeholder);
+		settings.setLoadedPlaceholder(placeholder);
 		return success;
 	}
 
@@ -363,7 +364,7 @@ namespace CLC
 		const ProjectSettings& settings,
 		const QString& projectDirPath)
 	{
-		QString targetFileNameContains = settings.getPlaceholder().Library_Name;
+		QString targetFileNameContains = settings.getDefaultPlaceholder().Library_Name;
 		QString libraryName = settings.getCMAKE_settings().libraryName;
 		if(targetFileNameContains == libraryName)
 			return true; // nothing to do
@@ -578,7 +579,8 @@ namespace CLC
 		const ProjectSettings::LibrarySettings& librarySettigns = settings.getLibrarySettings();
 		const ProjectSettings::CMAKE_settings& cmakeSettings = settings.getCMAKE_settings();
 		
-		ProjectSettings::Placeholder placeholders = settings.getPlaceholder();
+		ProjectSettings::Placeholder defaultPlaceholders = settings.getDefaultPlaceholder();
+		ProjectSettings::Placeholder loadedPlaceholders = settings.getLoadedPlaceholder();
 		struct Replacements
 		{
 			QString from;
@@ -586,11 +588,17 @@ namespace CLC
 			QVector<QVector<QString>> mustContainInLine;
 		};
 		QVector<Replacements> replacements{
-			{placeholders.Library_Namespace,librarySettigns.namespaceName,	{}},
-			{placeholders.LIBRARY__NAME_EXPORT,librarySettigns.exportName,  {{placeholders.LIBRARY__NAME_EXPORT + " "}, {"#","define"}}},
-			{placeholders.LIBRARY__NAME_SHORT,cmakeSettings.lib_short_define, {}},
-			{placeholders.LIBRARY__NAME_LIB,cmakeSettings.lib_define, {{"#"}}},
-			{placeholders.Library_Name ,cmakeSettings.libraryName, {{"#include"}}}
+			{defaultPlaceholders.Library_Namespace,librarySettigns.namespaceName,	{}},
+			{defaultPlaceholders.LIBRARY__NAME_EXPORT,librarySettigns.exportName,  {{defaultPlaceholders.LIBRARY__NAME_EXPORT + " "}, {"#","define"}}},
+			{defaultPlaceholders.LIBRARY__NAME_SHORT,cmakeSettings.lib_short_define, {}},
+			{defaultPlaceholders.LIBRARY__NAME_LIB,cmakeSettings.lib_define, {{"#"}}},
+			{defaultPlaceholders.Library_Name ,cmakeSettings.libraryName, {{"#include"}}},
+
+			{loadedPlaceholders.Library_Namespace,librarySettigns.namespaceName,	{}},
+			{loadedPlaceholders.LIBRARY__NAME_EXPORT,librarySettigns.exportName,  {{loadedPlaceholders.LIBRARY__NAME_EXPORT + " "}, {"#","define"}}},
+			{loadedPlaceholders.LIBRARY__NAME_SHORT,cmakeSettings.lib_short_define, {}},
+			{loadedPlaceholders.LIBRARY__NAME_LIB,cmakeSettings.lib_define, {{"#"}}},
+			{loadedPlaceholders.Library_Name ,cmakeSettings.libraryName, {{"#include"}}}
 		};
 
 		for (auto& file : files)

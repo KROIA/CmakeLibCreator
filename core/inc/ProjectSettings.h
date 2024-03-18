@@ -93,12 +93,14 @@ namespace CLC
 
 		void setLibrarySettings(const LibrarySettings& settings);
 		void setCMAKE_settings(const CMAKE_settings& settings);
-		void setPlaceholder(const Placeholder& placeholder);
+		void setDefaultPlaceholder(const Placeholder& placeholder);
+		void setLoadedPlaceholder(const Placeholder& placeholder);
 		void setCmakeUserSections(const QVector<CMakeFileUserSections>& sections);
 		void setCodeUserSections(const QVector<CodeUserSections>& sections);
 		const LibrarySettings& getLibrarySettings() const;
 		const CMAKE_settings& getCMAKE_settings() const;
-		const Placeholder& getPlaceholder() const;
+		const Placeholder& getDefaultPlaceholder() const;
+		const Placeholder& getLoadedPlaceholder() const;
 		const QVector<CMakeFileUserSections>& getCmakeUserSections() const;
 		const QVector<CodeUserSections>& getCodeUserSections() const;
 		void autosetLibDefine();
@@ -113,7 +115,8 @@ namespace CLC
 
 		LibrarySettings m_librarySettings;
 		CMAKE_settings m_CMAKE_settings;
-		Placeholder m_placeholder;
+		Placeholder m_loadedPlaceholder;
+		Placeholder m_defaultPlaceholder;
 
 		QVector<CMakeFileUserSections> m_cmakeFileUserSections;
 		QVector<CodeUserSections> m_codeUserSections;
