@@ -1,6 +1,7 @@
 #pragma once
 #include "CmakeLibraryCreator_base.h"
 #include <QMainWindow>
+#include <QTimer>
 #include "ui_MainWindow.h"
 #include "RibbonImpl.h"
 #include "ProjectSettingsDialog.h"
@@ -29,12 +30,23 @@ namespace CLC
 
 		void on_actionSettings_triggered();
 		void onExportDialogOkButtonClicked(const QVector<CheckBoxSelectionDialog::Element>& selectedItems);
+	
+		void disableUI();
+		void enableUI();
+
+		void onTimerTimeout();
 	private:
+		
+
+
 		Ui::MainWindow ui;
 		RibbonImpl* m_ribbon;
 		ProjectSettingsDialog * m_projectSettingsDialog;
 		CheckBoxSelectionDialog* m_exportSettingsDialog;
 		SettingsDialog * m_settingsDialog;
 		bool m_existingProjectLoaded = false;
+
+		QThread *m_workerThread = nullptr;
+		QTimer m_timer;
 	};
 }

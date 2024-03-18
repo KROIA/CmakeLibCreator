@@ -4,11 +4,13 @@
 #include <QMessageBox>
 #include <QDialog>
 #include <QDirIterator>
+#include <QThread>
 #include "Resources.h"
 #include <QDebug>
 #include "Utilities.h"
 #include "ProjectExporter.h"
 #include "CmakeLibraryCreator_info.h"
+
 
 namespace CLC
 {
@@ -37,15 +39,17 @@ namespace CLC
 		m_exportSettingsDialog = new CheckBoxSelectionDialog("Export Settings");
 		QVector<CheckBoxSelectionDialog::Element> elements = {
 			//{"Copy template files", false},
-			{"Replace template CMake files", false, "Replaces the cmake files from the template with the existing ones in the library.\nCode in the user sections will be preserved."},
-			{"Replace template code files", false, "Replaces the src files from the core folder of the template with the existing ones in the library.\nCode in the user sections will be preserved."},
-			{"Replace template variables", false, "Replaces placeholder variables in cmake files, such as:\n\"LIBRARY_NAME\", \"QT_MODULES\", ..."},
-			{"Replace template code placeholders", false, "Replaces placeholder variables in source code files, such as:\n\"CmakeLibraryCreator\", \"CMAKE_LIBRARY_CREATOR_EXPORT\", \"CMAKELIBRARYCREATOR_LIB\", ..."}
+			{"Replace template CMake files", true, "Replaces the cmake files from the template with the existing ones in the library.\nCode in the user sections will be preserved."},
+			{"Replace template code files", true, "Replaces the src files from the core folder of the template with the existing ones in the library.\nCode in the user sections will be preserved."},
+			{"Replace template variables", true, "Replaces placeholder variables in cmake files, such as:\n\"LIBRARY_NAME\", \"QT_MODULES\", ..."},
+			{"Replace template code placeholders", true, "Replaces placeholder variables in source code files, such as:\n\"CmakeLibraryCreator\", \"CMAKE_LIBRARY_CREATOR_EXPORT\", \"CMAKELIBRARYCREATOR_LIB\", ..."}
 		};
 		m_exportSettingsDialog->setItems(elements);
 		m_exportSettingsDialog->hide();
 		connect(m_exportSettingsDialog, &CheckBoxSelectionDialog::okButtonClicked, this, &MainWindow::onExportDialogOkButtonClicked);
 
+		m_timer.setInterval(100);
+		connect(&m_timer, &QTimer::timeout, this, &MainWindow::onTimerTimeout);
 	}
 
 	MainWindow::~MainWindow()
@@ -75,27 +79,43 @@ namespace CLC
 	}
 	void MainWindow::onDownloadTemplate_clicked()
 	{
-		// Download a git repository
-		const Resources::GitResources &gitResources = Resources::getTemplateGitRepo();
-		QString gitRepoUrl = gitResources.repo;
-		QString gitRepoBranch = gitResources.templateBranch;
-		QString tmpPath = Resources::getTmpPath()+ "/git";
-		Utilities::downloadGitRepository(gitRepoUrl, gitRepoBranch, Resources::getTemplateSourcePath(), tmpPath);
-		Utilities::downloadGitRepository(gitRepoUrl, "dependencies", tmpPath);
-		Utilities::downloadGitRepository(gitRepoUrl, "qtModules", tmpPath);
-
-		// Copy the dependencies and qtModules to the template source path
-		QString workingDir = QDir::currentPath();
-		Utilities::copyAndReplaceFolderContents(workingDir + "/"+ tmpPath + "/dependencies/dependencies", workingDir + "/" + Resources::getDependenciesSourcePath());
-		Utilities::copyAndReplaceFolderContents(workingDir + "/"+ tmpPath + "/qtModules/qtModules", workingDir + "/" + Resources::getQtModulesSourcePath());
 		
-		QDir tmpDir1(workingDir + "/" + tmpPath + "/dependencies");
-		tmpDir1.removeRecursively();
-		QDir tmpDir2(workingDir + "/" + tmpPath + "/qtModules");
-		tmpDir2.removeRecursively();
-	
-		Resources::loadQTModules();
-		Resources::loadDependencies();
+		// Download a git repository
+		m_workerThread = new QThread;
+
+		// worker lambda
+		auto worker = [this]()
+		{
+			
+			const Resources::GitResources& gitResources = Resources::getTemplateGitRepo();
+			QString gitRepoUrl = gitResources.repo;
+			QString gitRepoBranch = gitResources.templateBranch;
+			QString tmpPath = Resources::getTmpPath() + "/git";
+			Utilities::downloadGitRepository(gitRepoUrl, gitRepoBranch, Resources::getTemplateSourcePath(), tmpPath);
+			Utilities::downloadGitRepository(gitRepoUrl, "dependencies", tmpPath);
+			Utilities::downloadGitRepository(gitRepoUrl, "qtModules", tmpPath);
+
+			// Copy the dependencies and qtModules to the template source path
+			QString workingDir = QDir::currentPath();
+			Utilities::copyAndReplaceFolderContents(workingDir + "/" + tmpPath + "/dependencies/dependencies", workingDir + "/" + Resources::getDependenciesSourcePath());
+			Utilities::copyAndReplaceFolderContents(workingDir + "/" + tmpPath + "/qtModules/qtModules", workingDir + "/" + Resources::getQtModulesSourcePath());
+
+			QDir tmpDir1(workingDir + "/" + tmpPath + "/dependencies");
+			tmpDir1.removeRecursively();
+			QDir tmpDir2(workingDir + "/" + tmpPath + "/qtModules");
+			tmpDir2.removeRecursively();
+
+			Resources::loadQTModules();
+			Resources::loadDependencies();
+			this->m_workerThread->exit();
+		};
+		// move worker to thread
+		QObject::connect(m_workerThread, &QThread::started, worker);
+		//QObject::connect(m_workerThread, &QThread::, this, &MainWindow::enableUI);
+		disableUI();
+		m_timer.start();
+		m_workerThread->start();
+
 	}
 	
 	void MainWindow::onOpenExistingProject_clicked()
@@ -150,6 +170,28 @@ namespace CLC
 		m_projectSettingsDialog->setSettings(settings);
 	}
 
+	void MainWindow::disableUI()
+	{
+		ui.centralWidget->setEnabled(false);
+	}
+	void MainWindow::enableUI()
+	{
+		ui.centralWidget->setEnabled(true);
+	}
+
+	void MainWindow::onTimerTimeout()
+	{
+		if (m_workerThread)
+		{
+			if (m_workerThread->isFinished())
+			{
+				enableUI();
+				m_timer.stop();
+				delete m_workerThread;
+				m_workerThread = nullptr;
+			}
+		}
+	}
 
 	void MainWindow::onSaveAsNewProject_clicked()
 	{
