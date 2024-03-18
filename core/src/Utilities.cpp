@@ -343,22 +343,38 @@ namespace CLC
 
 		return true;
 	}
-	bool Utilities::replaceUserSections(const QString& filePath, const QVector<UserSection>& sections)
+	bool Utilities::replaceUserCodeSections(const QString& filePath, const QVector<UserSection>& sections)
+	{
+		return replaceUserSections(filePath, sections, "//");
+	}
+	bool Utilities::replaceUserCodeSections(QVector<QString>& lines, const QVector<UserSection>& sections)
+	{
+		return replaceUserSections(lines, sections, "//");
+	}
+	bool Utilities::replaceUserCmakeSections(const QString& filePath, const QVector<UserSection>& sections)
+	{
+		return replaceUserSections(filePath, sections, "#");
+	}
+	bool Utilities::replaceUserCmakeSections(QVector<QString>& lines, const QVector<UserSection>& sections)
+	{
+		return replaceUserSections(lines, sections, "#");
+	}
+	bool Utilities::replaceUserSections(const QString& filePath, const QVector<UserSection>& sections, const QString& commentSign)
 	{
 		QVector<QString> lines = getFileContents(filePath);
-		bool success = replaceUserSections(lines, sections);
+		bool success = replaceUserSections(lines, sections, commentSign);
 		if (success)
 			saveFileContents(filePath, lines);
 		return success;
 	}
-	bool Utilities::replaceUserSections(QVector<QString>& lines, const QVector<UserSection>& sections)
+	bool Utilities::replaceUserSections(QVector<QString>& lines, const QVector<UserSection>& sections, const QString& commentSign)
 	{
 		QVector<QString> newLines;
 		bool success = true;
 		for (int i = 0; i < lines.size(); i++)
 		{
 			const QString startPattern1 = "USER_SECTION_START";
-			const QString startPattern2 = "//";
+			const QString startPattern2 = commentSign;
 			int patternIndex1 = lines[i].indexOf(startPattern1);
 			int patternIndex2 = lines[i].indexOf(startPattern2);
 			if (patternIndex1 >= 0 && patternIndex2 >= 0 && patternIndex1 > patternIndex2 && success)
@@ -520,18 +536,37 @@ namespace CLC
 
 		return true;
 	}
-	bool Utilities::readUserSections(const QString& filePath, QVector<UserSection>& sections)
+
+	bool Utilities::readUserCodeSections(const QString& filePath, QVector<UserSection>& sections)
+	{
+		return readUserSections(filePath, sections, "//");
+	}
+	bool Utilities::readUserCodeSections(const QVector<QString>& lines, QVector<UserSection>& sections)
+	{
+		return readUserSections(lines, sections, "//");
+	}
+	bool Utilities::readUserCmakeSections(const QString& filePath, QVector<UserSection>& sections)
+	{
+		return readUserSections(filePath, sections, "#");
+	}
+	bool Utilities::readUserCmakeSections(const QVector<QString>& lines, QVector<UserSection>& sections)
+	{
+		return readUserSections(lines, sections, "#");
+	}
+
+	
+	bool Utilities::readUserSections(const QString& filePath, QVector<UserSection>& sections, const QString& commentSign)
 	{
 		QVector<QString> lines = getFileContents(filePath);
-		return readUserSections(lines, sections);
+		return readUserSections(lines, sections, commentSign);
 	}
-	bool Utilities::readUserSections(const QVector<QString>& lines, QVector<UserSection>& sections)
+	bool Utilities::readUserSections(const QVector<QString>& lines, QVector<UserSection>& sections, const QString& commentSign)
 	{
 		bool success = true;
 		for (int i = 0; i < lines.size(); i++)
 		{
 			const QString startPattern1 = "USER_SECTION_START";
-			const QString startPattern2 = "//";
+			const QString startPattern2 = commentSign;
 			int patternIndex1 = lines[i].indexOf(startPattern1);
 			int patternIndex2 = lines[i].indexOf(startPattern2);
 			if (patternIndex1 >= 0 && patternIndex2 >= 0 && patternIndex1 > patternIndex2 && success)

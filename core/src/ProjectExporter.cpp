@@ -169,22 +169,38 @@ namespace CLC
 			templateSourcePath + "/CMakeLists.txt",
 		};
 		fileList += Utilities::getFilesInFolderRecursive(templateSourcePath+"/core", "CMakeLists.txt");
+		fileList += Utilities::getFilesInFolderRecursive(templateSourcePath+"/examples", "CMakeLists.txt");
+		fileList += Utilities::getFilesInFolderRecursive(templateSourcePath+"/unitTests", "CMakeLists.txt");
+
+		//const QVector<ProjectSettings::CMakeFileUserSections>&  userSections = settings.getCmakeUserSections();
 		for (const auto& source : fileList)
 		{
 
-			QString target = projectDirPath + "/" + source.mid(source.indexOf(templateSourcePath)+ templateSourcePath.size()+1);
-			if (!Utilities::copyFile(source, target, true))
+			QString destination = projectDirPath + "/" + source.mid(source.indexOf(templateSourcePath)+ templateSourcePath.size()+1);
+			if (!Utilities::copyFile(source, destination, true))
 			{
 				QMessageBox::critical(0, "Error", "Failed to copy file:\n" + source);
 				//return false;
 			}
+			/*for (const auto& sectionList : userSections)
+			{
+				if (sectionList.file == destination)
+				{
+					success &= Utilities::replaceUserCmakeSections(destination, sectionList.sections);
+				}
+			}*/
 		}
 
+		/*QVector<QPair<QString, QString>> cmakeFiles = {
+			{templateSourcePath + "/CMakeLists.txt", },
+			templateSourcePath + "/core/CMakeLists.txt"
+		};*/
+
 		// override the core CMakeLists.txt
-		if (!Utilities::copyFile(templateSourcePath +"/core/CMakeLists.txt", projectDirPath + "/core/CMakeLists.txt", true))
+		/*if (!Utilities::copyFile(templateSourcePath + "/core/CMakeLists.txt", projectDirPath + "/core/CMakeLists.txt", true))
 		{
 			QMessageBox::critical(0, "Error", "Failed to copy file:\n" + templateSourcePath + "/core/CMakeLists.txt");
-		}
+		}*/
 		
 
 		return success;
@@ -591,7 +607,7 @@ namespace CLC
 				success &= false;
 				continue;
 			}
-			success &= Utilities::replaceUserSections(sectionList.file, sectionList.sections);
+			success &= Utilities::replaceUserCmakeSections(sectionList.file, sectionList.sections);
 		}
 		return success;
 	}
@@ -613,7 +629,7 @@ namespace CLC
 				success &= false;
 				continue;
 			}
-			success &= Utilities::replaceUserSections(sectionList.file, sectionList.sections);
+			success &= Utilities::replaceUserCodeSections(sectionList.file, sectionList.sections);
 		}
 		return success;
 	}
@@ -803,13 +819,13 @@ namespace CLC
 		QVector<QString> cmakeListsFiles;
 		for(const auto &dir : sourceDirs)
 			cmakeListsFiles  += Utilities::getFilesInFolderRecursive(projectDirPath+"/"+ dir, "CMakeLists.txt");
-		cmakeListsFiles  += Utilities::getFoldersInFolder(projectDirPath, "CMakeLists.txt");
+		cmakeListsFiles  += Utilities::getFilesInFolder(projectDirPath, "CMakeLists.txt");
 
 		QVector<ProjectSettings::CMakeFileUserSections> userSections;
 		for (const auto& file : cmakeListsFiles)
 		{
 			QVector<Utilities::UserSection> sections;
-			Utilities::readUserSections(file, sections);
+			Utilities::readUserCmakeSections(file, sections);
 			if (sections.size() > 0)
 			{
 				ProjectSettings::CMakeFileUserSections userSection;
@@ -841,7 +857,7 @@ namespace CLC
 		for (const auto& file : codeFiles)
 		{
 			QVector<Utilities::UserSection> sections;
-			Utilities::readUserSections(file, sections);
+			Utilities::readUserCodeSections(file, sections);
 			if (sections.size() > 0)
 			{
 				ProjectSettings::CodeUserSections userSection;
