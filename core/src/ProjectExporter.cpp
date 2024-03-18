@@ -586,9 +586,9 @@ namespace CLC
 			QVector<QVector<QString>> mustContainInLine;
 		};
 		QVector<Replacements> replacements{
-			{placeholders.Library_Namespace,librarySettigns.namespaceName,	{{}}},
+			{placeholders.Library_Namespace,librarySettigns.namespaceName,	{}},
 			{placeholders.LIBRARY__NAME_EXPORT,librarySettigns.exportName,  {{placeholders.LIBRARY__NAME_EXPORT + " "}, {"#","define"}}},
-			{placeholders.LIBRARY__NAME_SHORT,cmakeSettings.lib_short_define, {{}}},
+			{placeholders.LIBRARY__NAME_SHORT,cmakeSettings.lib_short_define, {}},
 			{placeholders.LIBRARY__NAME_LIB,cmakeSettings.lib_define, {{"#"}}},
 			{placeholders.Library_Name ,cmakeSettings.libraryName, {{"#include"}}}
 		};
