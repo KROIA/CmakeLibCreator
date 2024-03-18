@@ -169,26 +169,41 @@ namespace CLC
 			templateSourcePath + "/CMakeLists.txt",
 		};
 		fileList += Utilities::getFilesInFolderRecursive(templateSourcePath+"/core", "CMakeLists.txt");
-		fileList += Utilities::getFilesInFolderRecursive(templateSourcePath+"/examples", "CMakeLists.txt");
-		fileList += Utilities::getFilesInFolderRecursive(templateSourcePath+"/unitTests", "CMakeLists.txt");
+		//fileList += Utilities::getFilesInFolderRecursive(templateSourcePath+"/examples", "CMakeLists.txt");
+		//fileList += Utilities::getFilesInFolderRecursive(templateSourcePath+"/unitTests", "CMakeLists.txt");
+
+		QString destinationExampleBasePath = projectDirPath + "/examples";
+		QString destinationUnitTestBasePath = projectDirPath + "/unitTests";
+		QVector<QString> exampleFiles = Utilities::getFilesInFolderRecursive(destinationExampleBasePath, "CMakeLists.txt");
+		QVector<QString> unitTestFiles = Utilities::getFilesInFolderRecursive(destinationUnitTestBasePath, "CMakeLists.txt");
 
 		//const QVector<ProjectSettings::CMakeFileUserSections>&  userSections = settings.getCmakeUserSections();
 		for (const auto& source : fileList)
 		{
-
 			QString destination = projectDirPath + "/" + source.mid(source.indexOf(templateSourcePath)+ templateSourcePath.size()+1);
 			if (!Utilities::copyFile(source, destination, true))
-			{
 				QMessageBox::critical(0, "Error", "Failed to copy file:\n" + source);
-				//return false;
-			}
-			/*for (const auto& sectionList : userSections)
-			{
-				if (sectionList.file == destination)
-				{
-					success &= Utilities::replaceUserCmakeSections(destination, sectionList.sections);
-				}
-			}*/
+		}
+
+		for (const auto& destination : exampleFiles)
+		{
+			QString subDir = destination.mid(destination.indexOf(destinationExampleBasePath) + destinationExampleBasePath.size() + 1);
+			QString source = templateSourcePath + "/examples/" + subDir;
+			if(subDir.indexOf("/") != -1 || subDir.indexOf("\\") != -1)
+				source = templateSourcePath + "/examples/LibraryExample/CMakeLists.txt";
+
+			if (!Utilities::copyFile(source, destination, true))
+				QMessageBox::critical(0, "Error", "Failed to copy file:\n" + source);
+		}
+		for (const auto& destination : unitTestFiles)
+		{
+			QString subDir = destination.mid(destination.indexOf(destinationUnitTestBasePath) + destinationUnitTestBasePath.size() + 1);
+			QString source = templateSourcePath + "/unitTests/" + subDir;
+			if (subDir.indexOf("/") != -1 || subDir.indexOf("\\") != -1)
+				source = templateSourcePath + "/unitTests/ExampleTest/CMakeLists.txt";
+
+			if (!Utilities::copyFile(source, destination, true))
+				QMessageBox::critical(0, "Error", "Failed to copy file:\n" + source);
 		}
 
 		/*QVector<QPair<QString, QString>> cmakeFiles = {
