@@ -17,11 +17,11 @@ namespace CLC {
 
 		// Create buttons
 		m_templateButtons.openTemplatePath = new RibbonWidget::RibbonButton("Open template path", "Open an existing folder which holds the template for libraries.", ":/icons/folder-open.png", true, m_templateGroup);
-		m_templateButtons.downloadTemplate = new RibbonWidget::RibbonButton("Download template", "Download the newest version of the template.", ":/icons/download.png", true, m_templateGroup);
+		m_templateButtons.downloadTemplate = new RibbonWidget::InformativeToolButton("Download template", "Download the newest version of the template.", ":/icons/download.png", true, m_templateGroup);
 
-		m_projectButtons.openExistingProject = new RibbonWidget::RibbonButton("Open", "Open an existing library", ":/icons/folder-open.png", true, m_projectGroup);
-		m_projectButtons.saveExistingProject = new RibbonWidget::RibbonButton("Save", "Save to existing library", ":/icons/save.png", true, m_projectGroup);
-		m_projectButtons.saveAsNewProject    = new RibbonWidget::RibbonButton("Save as new", "Save as new library project", ":/icons/save.png", true, m_projectGroup);
+		m_projectButtons.openExistingProject = new RibbonWidget::InformativeToolButton("Open", "Open an existing library", ":/icons/folder-open.png", true, m_projectGroup);
+		m_projectButtons.saveExistingProject = new RibbonWidget::InformativeToolButton("Save", "Save to existing library", ":/icons/save.png", true, m_projectGroup);
+		m_projectButtons.saveAsNewProject    = new RibbonWidget::InformativeToolButton("Save as new", "Save as new library project", ":/icons/save.png", true, m_projectGroup);
 
 		// Add tabs
 		addTab(m_mainTab);

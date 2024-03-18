@@ -16,14 +16,14 @@ namespace CLC {
 		struct TemplateManagementButtons
 		{
 			RibbonWidget::RibbonButton* openTemplatePath = nullptr;
-			RibbonWidget::RibbonButton* downloadTemplate = nullptr;
+			RibbonWidget::InformativeToolButton* downloadTemplate = nullptr;
 		};
 
 		struct ProjectButtons
 		{
-			RibbonWidget::RibbonButton* openExistingProject = nullptr;
-			RibbonWidget::RibbonButton* saveExistingProject = nullptr;
-			RibbonWidget::RibbonButton* saveAsNewProject = nullptr;
+			RibbonWidget::InformativeToolButton* openExistingProject = nullptr;
+			RibbonWidget::InformativeToolButton* saveExistingProject = nullptr;
+			RibbonWidget::InformativeToolButton* saveAsNewProject = nullptr;
 		};
 
 

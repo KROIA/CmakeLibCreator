@@ -83,11 +83,11 @@ namespace CLC
 		return false;
 	}
 
-	void Resources::setTemplateSourcePath(const QString& path)
+	void Resources::setRelativeTemplateSourcePath(const QString& path)
 	{
 		instance().m_templateSourcePath = path;
 	}
-	const QString &Resources::getTemplateSourcePath()
+	const QString &Resources::getRelativeTemplateSourcePath()
 	{
 		return instance().m_templateSourcePath;
 	}
@@ -97,40 +97,40 @@ namespace CLC
 		return QDir::currentPath() + "/" + res.m_templateSourcePath + "/" + res.m_gitRepo.templateBranch;
 	}
 
-	void Resources::setDependenciesSourcePath(const QString& path)
+	void Resources::setRelativeDependenciesSourcePath(const QString& path)
 	{
 		instance().m_dependenciesSourcePath = path;
 		instance().loadDependencies_intern();
 	}
-	const QString& Resources::getDependenciesSourcePath()
+	const QString& Resources::getRelativeDependenciesSourcePath()
 	{
 		return instance().m_dependenciesSourcePath;
 	}
 	QString Resources::getDependenciesAbsSourcePath()
 	{
-		return QDir::currentPath() + "/" + getDependenciesSourcePath();
+		return QDir::currentPath() + "/" + getRelativeDependenciesSourcePath();
 	}
-	void Resources::setQtModulesSourcePath(const QString& path)
+	void Resources::setRelativeQtModulesSourcePath(const QString& path)
 	{
 		instance().m_qtModulesSourcePath = path;	
 		instance().loadQTModules_intern();
 	}
-	const QString& Resources::getQtModulesSourcePath()
+	const QString& Resources::getRelativeQtModulesSourcePath()
 	{
 		return instance().m_qtModulesSourcePath;
 	}
 
-	void Resources::setStyleSheetSourcePath(const QString& path)
+	void Resources::setRelativeStyleSheetSourcePath(const QString& path)
 	{
 		instance().m_styleSheetSourcePath = path;
 	}
-	const QString& Resources::getStyleSheetSourcePath()
+	const QString& Resources::getRelativeStyleSheetSourcePath()
 	{
 		return instance().m_styleSheetSourcePath;
 	}
 	QString Resources::getStyleSheet()
 	{
-		QString path = getStyleSheetSourcePath();
+		QString path = getRelativeStyleSheetSourcePath();
 		// search for the first file in the directory
 		QDir dir(path);
 		QStringList files = dir.entryList(QStringList() << "*.*", QDir::Files);
@@ -144,11 +144,11 @@ namespace CLC
 		QString styleSheet = QLatin1String(file.readAll());
 		return styleSheet;
 	}
-	void Resources::setTmpPath(const QString& path)
+	void Resources::setRelativeTmpPath(const QString& path)
 	{
 		instance().m_tmpPath = path;	
 	}
-	const QString& Resources::getTmpPath()
+	const QString& Resources::getRelativeTmpPath()
 	{
 		return instance().m_tmpPath;
 	}

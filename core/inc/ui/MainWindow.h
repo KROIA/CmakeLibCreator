@@ -34,8 +34,9 @@ namespace CLC
 		void disableUI();
 		void enableUI();
 
-		void onTimerTimeout();
+		//void onTimerTimeout();
 	private:
+		void threadFinished();
 		
 
 
@@ -47,6 +48,6 @@ namespace CLC
 		bool m_existingProjectLoaded = false;
 
 		QThread *m_workerThread = nullptr;
-		QTimer m_timer;
+		//QTimer m_timer;
 	};
 }

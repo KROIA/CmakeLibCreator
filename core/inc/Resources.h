@@ -36,23 +36,23 @@ namespace CLC
 		static const QVector<Dependency> &getDependencies();
 		static bool isOriginalDependency(const QString& name);
 
-		static void setTemplateSourcePath(const QString& path);
-		static const QString &getTemplateSourcePath();
+		static void setRelativeTemplateSourcePath(const QString& path);
+		static const QString &getRelativeTemplateSourcePath();
 		static QString getCurrentTemplateAbsSourcePath();
 
-		static void setDependenciesSourcePath(const QString& path);
-		static const QString &getDependenciesSourcePath();
+		static void setRelativeDependenciesSourcePath(const QString& path);
+		static const QString &getRelativeDependenciesSourcePath();
 		static QString getDependenciesAbsSourcePath();
 
-		static void setQtModulesSourcePath(const QString& path);
-		static const QString &getQtModulesSourcePath();	
+		static void setRelativeQtModulesSourcePath(const QString& path);
+		static const QString &getRelativeQtModulesSourcePath();
 
-		static void setStyleSheetSourcePath(const QString& path);
-		static const QString &getStyleSheetSourcePath();
+		static void setRelativeStyleSheetSourcePath(const QString& path);
+		static const QString &getRelativeStyleSheetSourcePath();
 		static QString getStyleSheet();
 
-		static void setTmpPath(const QString& path);
-		static const QString &getTmpPath();
+		static void setRelativeTmpPath(const QString& path);
+		static const QString &getRelativeTmpPath();
 
 		static void setTemplateGitRepo(const GitResources& repo);
 		static const GitResources& getTemplateGitRepo();
