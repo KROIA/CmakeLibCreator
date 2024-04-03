@@ -15,7 +15,7 @@ First a little overview over the workflow with the tool.
 
 <img src="UI_2.png" alt="Overview" width="600"/>
    
-You can find details about what each field represents in the section: [Library Information](InputElements.md) 
+You can find details about what each field represents in the section: [Input Elements](InputElements.md) 
 
 1. Click the **Open** button and navigate to the directory where the root CMakeLists.txt file from your library is located.
    Your Project gets loaded.
