@@ -11,7 +11,7 @@ This editor is designed to create and maintain libraries created using the [temp
 -   [Upgrade an existing library Project](Documentation/UpgradeLibraryProject.md)
 -   [Build this application](Documentation/build.md)
 
-## Description {#description}
+## Description
 Because I'm a lazy person, I like to have a lot of work done for me through automation.
 For many programming projects I use self-made libraries which are all based on CMake. This has allowed me to build a flexible structure with which I can realize various projects. With a standardized template implemented in each library, I can quickly implement new projects with little effort.
 However, because the template can also be developed further on an ongoing basis, I was looking for a way to apply adaptations to the template to all existing projects with little effort.
@@ -29,8 +29,7 @@ No problem, you can specify in the application from which repository the templat
 - Create a new cmake library project
 - Upgrade existing libraries, created with the template library.
 
-
-## Installation {#installation}
+## Installation
 [Download](https://github.com/KROIA/CmakeLibCreator/releases) the compiled binary or [compile the project manually](Documentation/build.md).
 Unzip the folder to any destination. 
 
