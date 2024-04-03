@@ -10,11 +10,11 @@ Make shure you have saved any changes in your library, eg. git or any other back
 In some edge cases it is possible that the parser may interpret something wrong.
 That can create damage to your library. If you have saved all changes beforehand you can **discard all changes** using git to restore the library.
 
-# Upgrade a library project {#upgradeALibraryProject}
+# Upgrade a library project
 First a little overview over the workflow with the tool.
 ![Overview](UI_3.png)
    
-You can find details about what each field represents in the section: [Library Information](InputElements.md/) 
+You can find details about what each field represents in the section: [Library Information](InputElements.md) 
 
 1. **Download** the latest template files. This will download the contents from the template library repository.
 2. Click the **Open** button and navigate to the directory where the root CMakeLists.txt file from your library is located.

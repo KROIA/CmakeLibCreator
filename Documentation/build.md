@@ -1,4 +1,4 @@
-# Build {#build}
+# Build
 This application was developed using Visual Studio 2022.
 To minimize any problems I recommend you to also use Visual Studio.
 
@@ -15,7 +15,7 @@ It is recommended to use Visual Studio, since this is the development enviroment
 To edit QT-Widgets, the [Visual Studio plugin](https://doc.qt.io/qtvstools/index.html) is a great addon.
 
 
-## Compilation {#compilation}
+## Compilation
 1. Open the Project as CMake Project.
 2. Let CMake download the dependencies.
 3. Select the CmakeLibCreator.exe from the start target and press build.

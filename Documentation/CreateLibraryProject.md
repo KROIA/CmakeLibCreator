@@ -2,11 +2,11 @@
 **All descriptions of how to use the application and what individual files are called was made using a sample library called Logger.
 File names that contain loggers would accordingly be called differently in your project.**
 
-# Create a library project {#createALibraryProject}
+# Create a library project
 First a little overview over the workflow with the tool.
 ![Overview](UI_1.png)
    
-You can find details about what each field represents in the section: [Library Information](InputElements.md/) 
+You can find details about what each field represents in the section: [Library Information](InputElements.md) 
 
 1. **Download** the latest template files. This will download the contents from the template library repository.
 2. Fill out the fields. If you write the library name, some other fields will get filled automaticly. You can change them if you want. 
