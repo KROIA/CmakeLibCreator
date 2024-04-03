@@ -54,7 +54,7 @@ set(STATIC_POSTFIX_STR "-s")                    # <AUTO_REPLACED>
 set(PROFILING_POSTFIX_STR "-p")                 # <AUTO_REPLACED>  
 
 # Langauge settings
-set(CMAKE_CXX_STANDARD 23)                      # <AUTO_REPLACED> 
+set(CMAKE_CXX_STANDARD 14)                      # <AUTO_REPLACED> 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)             # <AUTO_REPLACED> 
 
 ## USER_SECTION_START 2
