@@ -8,7 +8,7 @@
   - [Version](#version)
   - [Author, Mail, Website, License](#author-mail-website-license)
 - [Cmake Settings](#cmake-settings)
-  - [LIB define {#libDefine}](#lib-define-libdefine)
+  - [LIB define](#lib-define)
   - [LIB\_PROFILE define](#lib_profile-define)
   - [QT enabled](#qt-enabled)
   - [QT deploy](#qt-deploy)
@@ -125,7 +125,7 @@ namespace Log
 ```
 
 # Cmake Settings
-## LIB define {#libDefine}
+## LIB define
 This is a macro definition that is only active for building the library.
 This will switch the export/import of the library dll.
 Used in **Logger_global.h**
