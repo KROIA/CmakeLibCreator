@@ -47,7 +47,7 @@ namespace CLC
 		m_exportSettingsDialog->setItems(elements);
 		m_exportSettingsDialog->hide();
 		connect(m_exportSettingsDialog, &CheckBoxSelectionDialog::okButtonClicked, this, &MainWindow::onExportDialogOkButtonClicked);
-		connect(m_exportSettingsDialog, &CheckBoxSelectionDialog::close, this, [this]() {
+		connect(m_exportSettingsDialog, &CheckBoxSelectionDialog::dialogClosed, this, [this]() {
 				RibbonImpl::ProjectButtons prjButtons = RibbonImpl::getProjectButtons();
 				if (prjButtons.saveExistingProject)
 					prjButtons.saveExistingProject->enableLoadingCircle(false);
