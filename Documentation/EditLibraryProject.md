@@ -1,11 +1,11 @@
 ### Note
-**All descriptions of how to use the application and what individual files are called was made using a sample library called Logger.
-File names that contain loggers would accordingly be called differently in your project.**
+All descriptions of how to use the application and what individual files are called was made using a sample library called Logger.
+File names that contain loggers would accordingly be called differently in your project.
 
-### Important
-<span style="color:red">
-Make shure you have saved any changes in your library, eg. git or any other backup.
-</span>
+$\color{#D29922}\textsf{\Large\&#x26A0;\kern{0.2cm}\normalsize Warning}$ 
+
+$\color{red}{\textsf{Make shure you have saved any changes in your library, eg. git or any other backup.}}$
+
 
 In some edge cases it is possible that the parser may interpret something wrong.
 That can create damage to your library. If you have saved all changes beforehand you can **discard all changes** using git to restore the library.
