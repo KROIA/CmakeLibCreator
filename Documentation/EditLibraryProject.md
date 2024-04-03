@@ -12,7 +12,7 @@ That can create damage to your library. If you have saved all changes beforehand
 
 # Edit a library project
 First a little overview over the workflow with the tool.
-![Overview](UI_2.png)
+<img src="UI_2.png" alt="Overview" width="600"/>
    
 You can find details about what each field represents in the section: [Library Information](InputElements.md) 
 

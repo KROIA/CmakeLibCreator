@@ -189,7 +189,7 @@ This will trigger the deployment.
 
 
 ## QT Modules
-![QT Modules](UI_QT_modules.PNG)
+<img src="UI_QT_modules.png" alt="QT Modules" width="300"/>
 If your library uses QT you may wan't to specify which modules are required.
 You can select the modules you need.
 **Core** and **Widgets** are the most common used modules.
@@ -206,7 +206,7 @@ set(QT_MODULES
 It would be nice to contact me so I can add any missing modules to the [repo](https://github.com/KROIA/QT_cmake_library_template/tree/qtModules) where the list from the UI gets generated from.
 
 ## Dependencies
-![Dependencies](UI_Dependencies.png)
+<img src="UI_Dependencies.png" alt="Dependencies" width="300"/>
 If you want to use some external libraries, you can select them here.
 **easy_profiler** is required to be able to build a library that uses the profiler.
 If you don't want to profile your library, you don't need the dependency.
