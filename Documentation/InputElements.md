@@ -21,19 +21,19 @@
   
 # Library Information
 ## Library Name
-**- This field is required**
-**- No special characters, just letters, numbers and "_". must start with a letter.**
+**- This field is required**<br>
+**- No special characters, just letters, numbers and "_". must start with a letter.**<br>
 As you may be already guessed, this is the name of the library. This name is used for the Cmake Build targets. It is also used to generate the names of the template header files.
 If you call your Project "Logger", you would have to include the "Logger.h" header file in your project that uses the library.
 
 ## Namespace Name
-**- This field is required**
-**- No special characters, just letters, numbers and "_". must start with a letter.**
+**- This field is required**<br>
+**- No special characters, just letters, numbers and "_". must start with a letter.**<br>
 Your entire library shuld be encapsulated inside a namespace that will have the name you put here.
 
 ## Export macro
-**- This field is required**
-**- No special characters, just upper case letters, numbers and "_". must start with a letter.**
+**- This field is required**<br>
+**- No special characters, just upper case letters, numbers and "_". must start with a letter.**<br>
 This parameter represents the export macro for your library.
 You **must not** write the "_EXPORT" ending of the name. **Only write "LOGGER"**.
 ``` c++
@@ -51,8 +51,8 @@ You **must not** write the "_EXPORT" ending of the name. **Only write "LOGGER"**
 ```
 
 ## Library name short macro
-**- This field is required**
-**- No special characters, just upper case letters, numbers and "_". must start with a letter.**
+**- This field is required**<br>
+**- No special characters, just upper case letters, numbers and "_". must start with a letter.**<br>
 This is a shorter form of the library name, used for special macros inside the library.
 You can also type the same thing as you wrote in the [Export Macro](#exportMacro) section but it is sometimes nice to have a shorter form because the macro names can sometimes become very long.
 For example: 
@@ -78,12 +78,12 @@ For example:
 There are some more examples where the short form is used. You can read about that in detail in the documentation of the [template library](https://github.com/KROIA/QT_cmake_library_template).
 
 ## Version
-Here you can put in the version of your library. 
-You also can change this parameter in code.
-versionMajor <=> Field on the left
-versionMinor <=> Field in the middle
-versionPatch <=> Field on the right
-The values get put in the file: **Logger_info.h**:
+Here you can put in the version of your library. <br>
+You also can change this parameter in code.<br>
+versionMajor <=> Field on the left<br>
+versionMinor <=> Field in the middle<br>
+versionPatch <=> Field on the right<br>
+The values get put in the file: **Logger_info.h**:<br>
 ``` c++
 namespace Log
 {
@@ -103,10 +103,10 @@ namespace Log
 ```
 
 ## Author, Mail, Website, License
-**- These fields are not required**
-Here you can put any string. 
-You also can change this parameters in code.
-The values get put in the file: **Logger_info.h**:
+**- These fields are not required**<br>
+Here you can put any string. <br>
+You also can change this parameters in code.<br>
+The values get put in the file: **Logger_info.h**:<br>
 ``` c++
 namespace Log
 {
@@ -126,9 +126,9 @@ namespace Log
 
 # Cmake Settings
 ## LIB define
-This is a macro definition that is only active for building the library.
-This will switch the export/import of the library dll.
-Used in **Logger_global.h**
+This is a macro definition that is only active for building the library.<br>
+This will switch the export/import of the library dll.<br>
+Used in **Logger_global.h**<br>
 ``` c++
 ...
 #if defined(LOGGER_LIB)
@@ -141,8 +141,8 @@ Used in **Logger_global.h**
 
 ## LIB_PROFILE define
 This is a macro definition that is only active if the configuration in Visual Studio is swithced to debug/release-profile.
-If this macro is defined, Profiling using the [easy_profiler library](https://github.com/yse/easy_profiler) is enabled. To use the profiler functionality, add the [easy_profiler dependency](#dependencies).
-Used in **Logger_debug.h**
+If this macro is defined, Profiling using the [easy_profiler library](https://github.com/yse/easy_profiler) is enabled. To use the profiler functionality, add the [easy_profiler dependency](#dependencies).<br>
+Used in **Logger_debug.h**<br>
 ``` c++
 ...
 #ifdef LOGGER_PROFILING
@@ -182,19 +182,21 @@ Used in **Logger_debug.h**
 If the library you create uses some QT5 dependencies, you have to check that checkbox.
 
 ## QT deploy
-If you want to deploy your exe files in the example/unitTest folder using **windeployqt.exe**, then check this checkbox. Using the deployment allows you to start a Qt application from within Visual Studio. The QT Creator would not need to have the QT dll's in the same folder as the executable because it already knows where to find the dll's. This is not true for Visual Studio, so deployment is needed to copy all needed resources from Qt to the binary folder.
-**If you create a clean build, you have to install your compiled binary first, to be able to run the application.**
-Install: Go to **Visual Studio -> Build->"Logger Install"**
+If you want to deploy your exe files in the example/unitTest folder using **windeployqt.exe**, then check this checkbox. Using the deployment allows you to start a Qt application from within Visual Studio. The QT Creator would not need to have the QT dll's in the same folder as the executable because it already knows where to find the dll's. This is not true for Visual Studio, so deployment is needed to copy all needed resources from Qt to the binary folder.<br>
+**If you create a clean build, you have to install your compiled binary first, to be able to run the application.**<br>
+Install: Go to **Visual Studio -> Build->"Logger Install"**<br>
 This will trigger the deployment.
 
 
 ## QT Modules
+
 <img src="UI_QT_modules.png" alt="QT Modules" width="300"/>
-If your library uses QT you may wan't to specify which modules are required.
-You can select the modules you need.
-**Core** and **Widgets** are the most common used modules.
-If you need a module that is not in this list, you can add it manually to the file:
-**LibraryRoot/CMakeLists.txt**:
+
+If your library uses QT you may wan't to specify which modules are required.<br>
+You can select the modules you need.<br>
+**Core** and **Widgets** are the most common used modules.<br>
+If you need a module that is not in this list, you can add it manually to the file:<br>
+**LibraryRoot/CMakeLists.txt**:<br>
 ``` cmake
 ...
 # Needed QT modules                             # <AUTO_REPLACED> 
@@ -202,11 +204,14 @@ set(QT_MODULES
   Core
   Widgets)
 ...
-``` 
+```
+
 It would be nice to contact me so I can add any missing modules to the [repo](https://github.com/KROIA/QT_cmake_library_template/tree/qtModules) where the list from the UI gets generated from.
 
 ## Dependencies
+
 <img src="UI_Dependencies.png" alt="Dependencies" width="300"/>
+
 If you want to use some external libraries, you can select them here.
 **easy_profiler** is required to be able to build a library that uses the profiler.
 If you don't want to profile your library, you don't need the dependency.
