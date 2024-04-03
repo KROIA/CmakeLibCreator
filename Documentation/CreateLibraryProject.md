@@ -6,7 +6,7 @@ File names that contain loggers would accordingly be called differently in your 
 First a little overview over the workflow with the tool.
 <img src="UI_1.png" alt="Overview" width="600"/>
    
-You can find details about what each field represents in the section: [Library Information](InputElements.md) 
+You can find details about what each field represents in the section: [Input elements](InputElements.md) 
 
 1. **Download** the latest template files. This will download the contents from the template library repository.
 2. Fill out the fields. If you write the library name, some other fields will get filled automaticly. You can change them if you want. 
