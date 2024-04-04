@@ -23,7 +23,7 @@ The tool provides all the required files and changes all placeholders in the cod
 The application accesses my repository with the template in order to always be able to use the latest changes.
 
 Not happy with my template?
-No problem, you can specify in the application from which repository the templates should be downloaded.
+No problem, you can specify from which repository the templates should be downloaded.
 
 ### Features
 - Create a new cmake library project
@@ -34,7 +34,7 @@ No problem, you can specify in the application from which repository the templat
 Unzip the folder to any destination. 
 
 ## Warranty
-This tool is used for automated adaptation to Qullcode. It is quite possible that the parser is still faulty and therefore replaces code incorrectly or incorrectly under certain conditions. I therefore recommend saving the library to be edited/upgraded before using this tool so that any errors can be quickly undone.
+This tool is used to make automated code changes. It is still possible that the parser not perfect and therefore replaces code incorrectly under certain conditions. I therefore recommend saving the library to be edited/upgraded before using this tool so that any errors can be quickly undone. 
 I assume no liability for any problems that may occur in such an incident.
 
 Please contact me if you notice that something has been edited incorrectly so that I can incorporate this into future versions.
