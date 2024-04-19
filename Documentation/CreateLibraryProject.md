@@ -4,6 +4,7 @@ File names that contain loggers would accordingly be called differently in your 
 
 # Create a library project
 First a little overview over the workflow with the tool.
+
 <img src="UI_1.png" alt="Overview" width="600"/>
    
 You can find details about what each field represents in the section: [Input elements](InputElements.md) 
