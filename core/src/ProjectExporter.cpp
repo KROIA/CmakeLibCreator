@@ -2,7 +2,6 @@
 #include "Resources.h"
 #include <QDir>
 #include "Utilities.h"
-#include <QMessageBox>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -50,14 +49,12 @@ namespace CLC
 			QDir projectDir(projectDirPath);
 			if (dir.exists(projectDirPath))
 			{
-				if (!QMessageBox::question(0, "Folder already exists", "The folder already exists. Do you want to overwrite it?"))
-					return false;
 				success &= Utilities::deleteFolderRecursively(projectDirPath);
 			}
 
 			if (!dir.mkpath(projectDirPath))
 			{
-				QMessageBox::critical(0, "Error", "Failed to create project directory:\n" + projectDirPath);
+				Utilities::critical("Error", "Failed to create project directory:\n" + projectDirPath);
 				return false;
 			}
 
@@ -124,8 +121,7 @@ namespace CLC
 	bool ProjectExporter::readProjectData_intern(ProjectSettings& settings, const QString& projectDirPath)
 	{
 		bool success = true;
-		if(success) success &= readCmakeLists(settings, projectDirPath);
-		if(!success) return false;
+		success &= readCmakeLists(settings, projectDirPath);
 		success &= readLibraryInfo(settings, projectDirPath);
 		success &= readDependencies(settings, projectDirPath);
 		success &= readCmakeUserSections(settings, projectDirPath);
@@ -183,7 +179,7 @@ namespace CLC
 		{
 			QString destination = projectDirPath + "/" + source.mid(source.indexOf(templateSourcePath)+ templateSourcePath.size()+1);
 			if (!Utilities::copyFile(source, destination, true))
-				QMessageBox::critical(0, "Error", "Failed to copy file:\n" + source);
+				Utilities::critical("Error", "Failed to copy file:\n" + source);
 		}
 
 		for (const auto& destination : exampleFiles)
@@ -194,7 +190,7 @@ namespace CLC
 				source = templateSourcePath + "/examples/LibraryExample/CMakeLists.txt";
 
 			if (!Utilities::copyFile(source, destination, true))
-				QMessageBox::critical(0, "Error", "Failed to copy file:\n" + source);
+				Utilities::critical("Error", "Failed to copy file:\n" + source);
 		}
 		for (const auto& destination : unitTestFiles)
 		{
@@ -204,7 +200,7 @@ namespace CLC
 				source = templateSourcePath + "/unitTests/ExampleTest/CMakeLists.txt";
 
 			if (!Utilities::copyFile(source, destination, true))
-				QMessageBox::critical(0, "Error", "Failed to copy file:\n" + source);
+				Utilities::critical("Error", "Failed to copy file:\n" + source);
 		}
 
 		/*QVector<QPair<QString, QString>> cmakeFiles = {
@@ -215,7 +211,7 @@ namespace CLC
 		// override the core CMakeLists.txt
 		/*if (!Utilities::copyFile(templateSourcePath + "/core/CMakeLists.txt", projectDirPath + "/core/CMakeLists.txt", true))
 		{
-			QMessageBox::critical(0, "Error", "Failed to copy file:\n" + templateSourcePath + "/core/CMakeLists.txt");
+			Utilities::critical("Error", "Failed to copy file:\n" + templateSourcePath + "/core/CMakeLists.txt");
 		}*/
 		
 
@@ -254,7 +250,7 @@ namespace CLC
 				target = projectDirPath + "/" + target;
 				if (!Utilities::copyFile(source, target, true))
 				{
-					QMessageBox::critical(0, "Error", "Failed to copy file:\n" + source);
+					Utilities::critical("Error", "Failed to copy file:\n" + source);
 				}
 			}
 
@@ -275,12 +271,12 @@ namespace CLC
 		
 		if (!Utilities::createFolder(projectDirPath + "/dependencies"))
 		{
-			QMessageBox::critical(0, "Error", "Failed to create folder:\n" + depsPath);
+			Utilities::critical("Error", "Failed to create folder:\n" + depsPath);
 			return false;
 		}
 		if (!Utilities::copyFile(templateSourcePath+"/dependencies/.gitignore", projectDirPath + "/dependencies/.gitignore", true))
 		{
-			QMessageBox::critical(0, "Error", "Failed to copy file:\n" + depsPath + "/.gitignore");
+			Utilities::critical("Error", "Failed to copy file:\n" + depsPath + "/.gitignore");
 			return false;
 		}
 
@@ -329,7 +325,7 @@ namespace CLC
 			QString target = projectDirPath + "/dependencies/" + depFileName;
 			if (!Utilities::copyFile(source, target, true))
 			{
-				QMessageBox::critical(0, "Error", "Failed to copy file:\n" + source);
+				Utilities::critical("Error", "Failed to copy file:\n" + source);
 				success = false;
 			}
 		}
@@ -342,7 +338,7 @@ namespace CLC
 				QString target = projectDirPath + "/unittests/UnitTest.cmake";
 				if (!Utilities::copyFile(source, target, true))
 				{
-					QMessageBox::critical(0, "Error", "Failed to copy file:\n" + source);
+					Utilities::critical("Error", "Failed to copy file:\n" + source);
 					success = false;
 				}
 			}
@@ -354,9 +350,9 @@ namespace CLC
 												   const QString& projectDirPath)
 	{
 		bool success = true;
-		if(success) success &= replaceTemplateVariablesIn_mainCmakeLists(settings, projectDirPath);
-		if(success) success &= replaceTemplateVariablesIn_cmakeSettings(settings, projectDirPath);
-		if(success) success &= replaceTemplateVariablesIn_libraryInfo(settings, projectDirPath);
+		success &= replaceTemplateVariablesIn_mainCmakeLists(settings, projectDirPath);
+		success &= replaceTemplateVariablesIn_cmakeSettings(settings, projectDirPath);
+		success &= replaceTemplateVariablesIn_libraryInfo(settings, projectDirPath);
 
 		return success;
 	}
@@ -402,7 +398,7 @@ namespace CLC
 		QVector<QString> fileContent = Utilities::getFileContents(cmakeListsPath);
 		if (fileContent.size() == 0)
 		{
-			QMessageBox::critical(0, "Error", "Failed to read file:\n"+ cmakeListsPath);
+			Utilities::critical("Error", "Failed to read file:\n"+ cmakeListsPath);
 			return false;
 		}
 
@@ -433,6 +429,11 @@ namespace CLC
 
 		success &= Utilities::replaceCmakeVariable(fileContent, "COMPILE_EXAMPLES", (cmakeSettings.compile_examples?"ON":"OFF"));
 		success &= Utilities::replaceCmakeVariable(fileContent, "COMPILE_UNITTESTS", (cmakeSettings.compile_unittests?"ON":"OFF"));
+
+		success &= Utilities::replaceCmakeVariableString(fileContent, "QT_INSTALL_BASE", cmakeSettings.qt_installBase);
+		success &= Utilities::replaceCmakeVariable(fileContent, "QT_MAJOR_VERSION", QString::number(cmakeSettings.qt_major_version));
+		success &= Utilities::replaceCmakeVariableString(fileContent, "QT_VERSION", cmakeSettings.qt_version);
+		success &= Utilities::replaceCmakeVariableString(fileContent, "QT_COMPILER", cmakeSettings.qt_compiler);
 
 		{
 			QString target = "_NO_EXAMPLES";
@@ -488,7 +489,7 @@ namespace CLC
 		QFile file(cmakeListsPath);
 		if (!file.open(QIODevice::ReadOnly))
 		{
-			QMessageBox::critical(0, "Error", "Failed to read file:\n" + cmakeListsPath);
+			Utilities::critical("Error", "Failed to read file:\n" + cmakeListsPath);
 			return false;
 		}
 		doc = QJsonDocument::fromJson(file.readAll());
@@ -511,7 +512,7 @@ namespace CLC
 		doc.setObject(obj);
 		if (!file.open(QIODevice::WriteOnly))
 		{
-			QMessageBox::critical(0, "Error", "Failed to write file:\n" + cmakeListsPath);
+			Utilities::critical("Error", "Failed to write file:\n" + cmakeListsPath);
 			return false;
 		}
 		file.write(doc.toJson());
@@ -527,7 +528,7 @@ namespace CLC
 		QVector<QString> fileContent = Utilities::getFileContents(header);
 		if (fileContent.size() == 0)
 		{
-			QMessageBox::critical(0, "Error", "Failed to read file:\n" + header);
+			Utilities::critical("Error", "Failed to read file:\n" + header);
 			return false;
 		}
 
@@ -626,7 +627,7 @@ namespace CLC
 			// Check if the file exists
 			if (!QFile::exists(sectionList.file))
 			{
-				QMessageBox::critical(0, "Error", "Failed to find file:\n" + sectionList.file+"\nto replace user sections");
+				Utilities::critical("Error", "Failed to find file:\n" + sectionList.file+"\nto replace user sections");
 				success &= false;
 				continue;
 			}
@@ -648,7 +649,7 @@ namespace CLC
 			// Check if the file exists
 			if (!QFile::exists(sectionList.file))
 			{
-				QMessageBox::critical(0, "Error", "Failed to find file:\n" + sectionList.file + "\nto replace user sections");
+				Utilities::critical("Error", "Failed to find file:\n" + sectionList.file + "\nto replace user sections");
 				success &= false;
 				continue;
 			}
@@ -665,7 +666,7 @@ namespace CLC
 		QVector<QString> fileContent = Utilities::getFileContents(cmakeListsPath);
 		if (fileContent.size() == 0)
 		{
-			QMessageBox::critical(0, "Error", "Failed to read file:\n" + cmakeListsPath);
+			Utilities::critical("Error", "Failed to read file:\n" + cmakeListsPath);
 			return false;
 		}
 	}*/
@@ -676,13 +677,13 @@ namespace CLC
 		QString cmakeListsPath = projectDirPath + "/CMakeLists.txt";
 		if (QFile::exists(cmakeListsPath) == false)
 		{
-			QMessageBox::critical(0, "Error", "Failed to find file:\n" + cmakeListsPath+"\nIs this a library directory?");
+			Utilities::critical("Error", "Failed to find file:\n" + cmakeListsPath+"\nIs this a library directory?");
 			return false;
 		}
 		QVector<QString> fileContent = Utilities::getFileContents(cmakeListsPath);
 		if (fileContent.size() == 0)
 		{
-			QMessageBox::critical(0, "Error", "Failed to read file:\n" + cmakeListsPath);
+			Utilities::critical("Error", "Failed to read file:\n" + cmakeListsPath);
 			return false;
 		}
 
@@ -710,11 +711,16 @@ namespace CLC
 		success &= Utilities::readCmakeVariable(fileContent, "CMAKE_CXX_STANDARD", cmakeSettings.cxxStandard);
 		success &= Utilities::readCmakeVariable(fileContent, "CMAKE_CXX_STANDARD_REQUIRED", cmakeSettings.cxxStandardRequired);
 
-		if (success) success &= Utilities::replaceCmakeVariable(fileContent, "CMAKE_CXX_STANDARD", QString::number(cmakeSettings.cxxStandard));
-		if (success) success &= Utilities::replaceCmakeVariable(fileContent, "CMAKE_CXX_STANDARD_REQUIRED", (cmakeSettings.cxxStandardRequired ? "ON" : "OFF"));
+		//if (success) success &= Utilities::replaceCmakeVariable(fileContent, "CMAKE_CXX_STANDARD", QString::number(cmakeSettings.cxxStandard));
+		//if (success) success &= Utilities::replaceCmakeVariable(fileContent, "CMAKE_CXX_STANDARD_REQUIRED", (cmakeSettings.cxxStandardRequired ? "ON" : "OFF"));
 
 		success &= Utilities::readCmakeVariable(fileContent, "COMPILE_EXAMPLES", cmakeSettings.compile_examples);
 		success &= Utilities::readCmakeVariable(fileContent, "COMPILE_UNITTESTS", cmakeSettings.compile_unittests);
+
+		success &= Utilities::readCmakeVariableString(fileContent, "QT_INSTALL_BASE", cmakeSettings.qt_installBase);
+		success &= Utilities::readCmakeVariable(fileContent, "QT_MAJOR_VERSION", cmakeSettings.qt_major_version);
+		success &= Utilities::readCmakeVariableString(fileContent, "QT_VERSION", cmakeSettings.qt_version);
+		success &= Utilities::readCmakeVariableString(fileContent, "QT_COMPILER", cmakeSettings.qt_compiler);
 
 		settings.setCMAKE_settings(cmakeSettings);
 
@@ -763,7 +769,7 @@ namespace CLC
 		QVector<QString> fileContent = Utilities::getFileContents(header);
 		if (fileContent.size() == 0)
 		{
-			QMessageBox::critical(0, "Error", "Failed to read file:\n" + header);
+			Utilities::critical("Error", "Failed to read file:\n" + header);
 			return false;
 		}
 
@@ -772,7 +778,7 @@ namespace CLC
 		int namespaceLineIndex = Utilities::getLineIndex(fileContent, namespaceKey, true);
 		if (namespaceLineIndex == -1)
 		{
-			QMessageBox::critical(0, "Error", "Could not find namespace in " + header);
+			Utilities::critical("Error", "Could not find namespace in " + header);
 			//return false;
 		}
 		QString namespaceName = fileContent[namespaceLineIndex].mid(fileContent[namespaceLineIndex].indexOf(namespaceKey)+ namespaceKey.size()+1).trimmed();
@@ -783,14 +789,24 @@ namespace CLC
 		int exportLineIndex2 = Utilities::getLineIndex(fileContent, { "class","LibraryInfo" }, true);
 		if ((exportLineIndex1 == -1 || exportLineIndex2 == -1) || (exportLineIndex1 != exportLineIndex2))
 		{
-			QMessageBox::critical(0, "Error", "Could not find export name in " + header);
+			Utilities::critical("Error", "Could not find export name in " + header);
 			//return false;
 		}
 		else
 		{
 			QString line = fileContent[exportLineIndex1];
-			line = line.mid(line.indexOf("class") + 6);
-			QString exportName = line.mid(0, line.indexOf("LibraryInfo")).trimmed();
+			QStringList splitted = line.split(" ");
+			QString exportName;
+			for (int i = 0; i < splitted.size(); ++i)
+			{
+				if (splitted[i].indexOf("EXPORT") != -1)
+				{
+					exportName = splitted[i].trimmed();
+					break;
+				}
+			}
+			
+			
 			librarySettings.exportName = exportName;
 		}
 
@@ -807,7 +823,7 @@ namespace CLC
 
 		if (name != cmakeSettings.libraryName)
 		{
-			QMessageBox::critical(0, "Error", "Library name in " + header + " does not match the library name in CMakeLists.txt");
+			Utilities::critical("Error", "Library name in " + header + " does not match the library name in CMakeLists.txt");
 			//return false;
 		}
 		settings.setLibrarySettings(librarySettings);

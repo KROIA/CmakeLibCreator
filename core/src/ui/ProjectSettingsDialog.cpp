@@ -10,11 +10,18 @@ namespace CLC
 	{
 		ui.setupUi(this);
 
+		m_qtMajorVersionText[5] = "Qt5";
+		m_qtMajorVersionText[6] = "Qt6";
+
 		m_qtModulesDialog = new CheckBoxSelectionDialog("QT Modules");
 		m_dependenciesDialog = new CheckBoxSelectionDialog("Dependencies");
 
 		connect(m_qtModulesDialog, &CheckBoxSelectionDialog::okButtonClicked, this, &ProjectSettingsDialog::onQtModulesSelected);
 		connect(m_dependenciesDialog, &CheckBoxSelectionDialog::okButtonClicked, this, &ProjectSettingsDialog::onDependenciesSelected);
+
+		ui.qt_majorVersion_comboBox->clear();
+		for (const auto& v : m_qtMajorVersionText)
+			ui.qt_majorVersion_comboBox->addItem(v.second);
 	}
 
 	ProjectSettingsDialog::~ProjectSettingsDialog()
@@ -59,6 +66,51 @@ namespace CLC
 		ui.cxxStandard_spinBox->setValue(cmakeSettings.cxxStandard);
 		ui.compileExamples_checkBox->setChecked(cmakeSettings.compile_examples);
 		ui.compileUnitTests_checkBox->setChecked(cmakeSettings.compile_unittests);
+
+
+		if(cmakeSettings.qt_installBase.isEmpty())
+			ui.qt_installBasePath_lineEdit->setText("C:/Qt");
+		else
+			ui.qt_installBasePath_lineEdit->setText(cmakeSettings.qt_installBase);
+
+		QStringList parts = cmakeSettings.qt_version.split('.');
+		int major = cmakeSettings.qt_major_version;
+		
+
+		int minor = 0;
+		int patch = 0;
+		bool useNewestQtVersion = false;
+		if (parts.size() == 3) {
+			major = parts[0].toInt();
+			minor = parts[1].toInt();
+			patch = parts[2].toInt();
+		}
+		else {
+			useNewestQtVersion = true;
+		}
+		if (major <= 0)
+			major = 5;
+		ui.qt_useNewestVersion_checkBox->setChecked(useNewestQtVersion);
+		on_qt_useNewestVersion_checkBox_clicked(useNewestQtVersion);
+		ui.qt_minorVersion_spinBox->setValue(minor);
+		ui.qt_patchVersion_spinBox->setValue(patch);
+		if (m_qtMajorVersionText.find(major) != m_qtMajorVersionText.end())
+		{
+			int index = 0;
+			for (const auto& el : m_qtMajorVersionText)
+			{
+				if (el.first == major)
+					break;
+				++index;
+			}
+			if(index < ui.qt_majorVersion_comboBox->count())
+				ui.qt_majorVersion_comboBox->setCurrentIndex(index);
+		}
+		if(cmakeSettings.qt_compiler.isEmpty())
+			ui.qt_compilerName_lineEdit->setText("autoFind");
+		else
+			ui.qt_compilerName_lineEdit->setText(cmakeSettings.qt_compiler);
+
 		m_ignoreNameChangeEvents = false;
 	}
 	const ProjectSettings& ProjectSettingsDialog::getSettings()
@@ -89,6 +141,25 @@ namespace CLC
 		cmakeSettings.cxxStandard = ui.cxxStandard_spinBox->value();
 		cmakeSettings.compile_examples = ui.compileExamples_checkBox->isChecked();
 		cmakeSettings.compile_unittests = ui.compileUnitTests_checkBox->isChecked();
+
+
+		cmakeSettings.qt_installBase = ui.qt_installBasePath_lineEdit->text();
+		QString majorStr = ui.qt_majorVersion_comboBox->currentText().toLower();
+		int major = majorStr.mid(majorStr.indexOf("qt") + 2).toInt();
+		cmakeSettings.qt_major_version = major;
+		if (ui.qt_useNewestVersion_checkBox->isChecked())
+			cmakeSettings.qt_version = "autoFind";
+		else
+		{
+			int minor = ui.qt_minorVersion_spinBox->value();
+			int patch = ui.qt_patchVersion_spinBox->value();
+			cmakeSettings.qt_version = QString::number(major) + "." + QString::number(minor) + "." + QString::number(patch);
+		}
+		QString qtCompilerName = ui.qt_compilerName_lineEdit->text();
+		if (qtCompilerName.isEmpty())
+			qtCompilerName = "autoFind";
+		cmakeSettings.qt_compiler = qtCompilerName;
+
 		
 		m_settings.setLibrarySettings(libSettings);
 		m_settings.setCMAKE_settings(cmakeSettings);
@@ -194,6 +265,12 @@ namespace CLC
 		}
 		ui.exportName_lineEdit->setText(exportSubstr);
 		ui.libraryNameShort_lineEdit->setText(cmakeSettings.lib_short_define);
+	}
+
+	void ProjectSettingsDialog::on_qt_useNewestVersion_checkBox_clicked(bool checked)
+	{
+		ui.qt_minorVersion_spinBox->setEnabled(!checked);
+		ui.qt_patchVersion_spinBox->setEnabled(!checked);
 	}
 
 	void ProjectSettingsDialog::onQtModulesSelected(const QVector<CheckBoxSelectionDialog::Element>& selectedItems)

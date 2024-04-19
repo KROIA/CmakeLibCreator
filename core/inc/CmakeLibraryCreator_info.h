@@ -31,7 +31,7 @@ namespace CLC
 	public:
 		// Current version of the library
 		static constexpr int versionMajor				= 1;
-		static constexpr int versionMinor				= 0;
+		static constexpr int versionMinor				= 1;
 		static constexpr int versionPatch				= 0;
 
 		// Library name

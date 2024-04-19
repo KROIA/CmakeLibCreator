@@ -34,6 +34,13 @@ namespace CLC
 		void disableUI();
 		void enableUI();
 
+
+		void signalInformation(const QString& title,
+			const QString& text);
+		void signalWarning(const QString& title,
+			const QString& text);
+		void signalCritical(const QString& title,
+			const QString& text);
 		//void onTimerTimeout();
 	private:
 		void threadFinished();

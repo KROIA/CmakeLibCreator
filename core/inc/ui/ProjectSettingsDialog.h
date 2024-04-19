@@ -5,6 +5,7 @@
 #include "ui_ProjectSettingsDialog.h"
 #include "ProjectSettings.h"
 #include "CheckBoxSelectionDialog.h"
+#include <map>
 
 namespace CLC
 {
@@ -24,6 +25,7 @@ namespace CLC
 		void on_qtModules_pushButton_clicked();
 		void on_dependencies_pushButton_clicked();
 		void on_libraryName_lineEdit_textChanged(const QString& text);
+		void on_qt_useNewestVersion_checkBox_clicked(bool checked);
 
 
 		void onQtModulesSelected(const QVector<CheckBoxSelectionDialog::Element>& selectedItems);
@@ -38,5 +40,6 @@ namespace CLC
 
 		bool m_ignoreNameChangeEvents = false;
 		
+		std::map<int, QString> m_qtMajorVersionText;
 	};
 }

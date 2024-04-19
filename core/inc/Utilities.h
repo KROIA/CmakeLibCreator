@@ -3,14 +3,24 @@
 #include "CmakeLibraryCreator_base.h"
 #include <QString>
 #include <QStringList>
+#include <QObject>
+#include <QMessageBox>
+
 
 namespace CLC
 {
-	class Utilities
+	class Utilities: public QObject
 	{
-		Utilities() = delete;
-		Utilities(const Utilities&) = delete;
+		Q_OBJECT
+		Utilities()
+		{
+
+		}
+		//Utilities(const Utilities&) = delete;
+
+		
 	public:
+		static Utilities& instance();
 		struct UserSection
 		{
 			int sectionIndex;
@@ -44,12 +54,14 @@ namespace CLC
 		static int getLineIndex(const QVector<QString>& lines, const QVector<QString>& pattern, int startIndex, bool onlyCompleteWord);
 		
 		static bool replaceCmakeVariable(QVector<QString> &lines, QString variable, const QString& value);
+		static bool replaceCmakeVariableString(QVector<QString> &lines, QString variable, const QString& value);
 		static bool replaceCmakeVariable(QVector<QString> &lines, QString variable, const QVector<QString>& values);
 		static bool replaceUserCodeSections(const QString& filePath, const QVector<UserSection>& sections);
 		static bool replaceUserCodeSections(QVector<QString>& lines, const QVector<UserSection>& sections);
 		static bool replaceUserCmakeSections(const QString& filePath, const QVector<UserSection>& sections);
 		static bool replaceUserCmakeSections(QVector<QString>& lines, const QVector<UserSection>& sections);
 		static bool readCmakeVariable(const QVector<QString>& lines, QString variable, QString& value);
+		static bool readCmakeVariableString(const QVector<QString>& lines, QString variable, QString& value);
 		static bool readCmakeVariable(const QVector<QString>& lines, QString variable, bool& value);
 		static bool readCmakeVariable(const QVector<QString>& lines, QString variable, int& value);
 		static bool readCmakeVariable(const QVector<QString>& lines, QString variable, unsigned int& value);
@@ -67,6 +79,16 @@ namespace CLC
 	
 		static bool downloadGitRepository(const QString& url, const QString &branch, const QString& folder, QString tmpFolder);
 		static bool downloadGitRepository(const QString& url, const QString &branch, QString folder);
+
+
+		static void information(const QString& title, const QString& text);
+		static void warning(const QString& title, const QString& text);
+		static void critical(const QString& title, const QString& text);
+
+	signals:
+		void signalInformation(const QString& title, const QString& text);
+		void signalWarning(const QString& title, const QString& text);
+		void signalCritical(const QString& title, const QString& text);
 	
 	private:
 		static bool readUserSections(const QString& filePath, QVector<UserSection>& sections, const QString &commentSign = "//");
@@ -75,5 +97,10 @@ namespace CLC
 		static bool replaceUserSections(const QString& filePath, const QVector<UserSection>& sections, const QString &commentSign = "//");
 		static bool replaceUserSections(QVector<QString>& lines, const QVector<UserSection>& sections, const QString &commentSign = "//");
 	
+		
+
+		void _information(const QString& title, const QString& text);
+		void _warning(const QString& title, const QString& text);
+		void _critical(const QString& title, const QString& text);
 	};
 }

@@ -55,6 +55,11 @@ namespace CLC
 					prjButtons.saveAsNewProject->enableLoadingCircle(false);
 			});
 
+		connect(&Utilities::instance(), &Utilities::signalInformation, this, &MainWindow::signalInformation, Qt::QueuedConnection);
+		connect(&Utilities::instance(), &Utilities::signalWarning, this, &MainWindow::signalWarning, Qt::QueuedConnection);
+		connect(&Utilities::instance(), &Utilities::signalCritical, this, &MainWindow::signalCritical, Qt::QueuedConnection);
+
+
 		//m_timer.setInterval(100);
 		//connect(&m_timer, &QTimer::timeout, this, &MainWindow::onTimerTimeout);
 	}
@@ -224,6 +229,19 @@ namespace CLC
 			QMessageBox box(QMessageBox::Warning, "Error", "The template source path does not exist,\ndownload the template first", QMessageBox::Ok, this);
 			return;
 		}
+
+
+
+		QString _folderPath = folderPath;
+		auto settings = m_projectSettingsDialog->getSettings();
+		settings.setLoadedPlaceholder(ProjectSettings::s_defaultPlaceholder);
+		_folderPath += "/" + settings.getCMAKE_settings().libraryName;
+		Resources::setLoadedProjectPath(_folderPath);
+		if (dir.exists(_folderPath))
+		{
+			if (!QMessageBox::question(0, "Folder already exists", "The folder already exists. Do you want to overwrite it?"))
+				return;
+		}
 		
 
 		m_workerThread = new QThread;
@@ -231,13 +249,8 @@ namespace CLC
 		static ProjectSettings loadingSettings;
 		loadingSettings = ProjectSettings();
 			// worker lambda
-		auto worker = [this, folderPath]()
+		auto worker = [this, folderPath, settings, _folderPath]()
 			{
-				QString _folderPath = folderPath;
-				auto settings = m_projectSettingsDialog->getSettings();
-				settings.setLoadedPlaceholder(ProjectSettings::s_defaultPlaceholder);
-				_folderPath += "/" + settings.getCMAKE_settings().libraryName;
-
 				ProjectExporter::ExportSettings exportSettings;
 				exportSettings.copyAllTemplateFiles = true;
 				exportSettings.replaceTemplateCmakeFiles = true;
@@ -245,7 +258,7 @@ namespace CLC
 				exportSettings.replaceTemplateVariables = true;
 				exportSettings.replaceTemplateCodePlaceholders = true;
 
-				Resources::setLoadedProjectPath(_folderPath);
+				
 				ProjectExporter::exportProject(settings, _folderPath, exportSettings);
 
 				//ProjectSettings settings2;
@@ -316,6 +329,22 @@ namespace CLC
 	{
 		ui.centralWidget->setEnabled(true);
 		update();
+	}
+
+	void MainWindow::signalInformation(const QString& title,
+		const QString& text)
+	{
+		QMessageBox::information(nullptr, title, text, QMessageBox::Button::Ok, QMessageBox::Button::Ok);
+	}
+	void MainWindow::signalWarning(const QString& title,
+		const QString& text)
+	{
+		QMessageBox::warning(nullptr, title, text, QMessageBox::Button::Ok, QMessageBox::Button::Ok);
+	}
+	void MainWindow::signalCritical(const QString& title,
+		const QString& text)
+	{
+		QMessageBox::critical(nullptr, title, text, QMessageBox::Button::Ok, QMessageBox::Button::Ok);
 	}
 
 	/*void MainWindow::onTimerTimeout()

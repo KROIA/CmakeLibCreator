@@ -44,6 +44,11 @@ namespace CLC
 			bool qt_enable;
 			bool qt_deploy;
 
+			QString qt_installBase; // "C:/Qt"
+			int qt_major_version; // Qt5, Qt6
+			QString qt_version; // "5.15.2"
+			QString qt_compiler; // "msvc2019_64"
+
 			QVector<QTModule> qModules;
 
 			QString debugPostFix;
@@ -71,8 +76,6 @@ namespace CLC
 			QString Library_Name;
 			QString LIBRARY__NAME_LIB;
 			QString LIBRARY__NAME_SHORT;
-
-
 		};
 
 		struct CMakeFileUserSections

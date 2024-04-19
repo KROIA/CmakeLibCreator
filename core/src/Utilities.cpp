@@ -1,10 +1,14 @@
 #include "Utilities.h"
 #include <QDebug>
 #include <QDirIterator>
-#include <QMessageBox>
 
 namespace CLC
 {
+	Utilities& Utilities::instance()
+	{
+		static Utilities inst;
+		return inst;
+	}
 	bool Utilities::copyAndReplaceFolderContents(const QString& absolutFromDir, const QString& absolutToDir, bool copyAndRemove)
 	{
 		qDebug() << "Copying from " << absolutFromDir << " to " << absolutToDir;
@@ -161,7 +165,9 @@ namespace CLC
 		QTextStream out(&f);
 		for (int i = 0; i < contents.size(); ++i)
 		{
-			out << contents[i] << "\n";
+			out << contents[i];
+			if (i < contents.size()-1)
+				out << "\n";
 		}
 		f.close();
 		return true;
@@ -301,7 +307,8 @@ namespace CLC
 		int lineIndex = getLineIndex(lines, variable, true);
 		if (lineIndex == -1)
 		{
-			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			//QMessageBox::critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
 			return false;
 		}
 		QString line = lines[lineIndex];
@@ -312,18 +319,34 @@ namespace CLC
 		lines[lineIndex] = replacement;
 		return true;
 	}
+	bool Utilities::replaceCmakeVariableString(QVector<QString>& lines, QString variable, const QString& value)
+	{
+		QString v = value;
+		if (v.isEmpty())
+			v = "\"\"";
+		else
+		{
+			if (v.indexOf("\"") != 0)
+				v = "\"" + v;
+			if (v.indexOf("\"") != v.size() - 1)
+				v = v + "\"";
+		}
+		return replaceCmakeVariable(lines, variable, v);
+	}
 	bool Utilities::replaceCmakeVariable(QVector<QString>& lines, QString variable, const QVector<QString>& values)
 	{
 		int startLineIndex = getLineIndex(lines, variable, true);
 		if (startLineIndex == -1)
 		{
-			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			//QMessageBox::critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
 			return false;
 		}
-		int endLineIndex = getLineIndex(lines, ")", startLineIndex);
+		int endLineIndex = getLineIndex(lines, ")", startLineIndex, false);
 		if (endLineIndex == -1)
 		{
-			QMessageBox::critical(nullptr, "Error", "Could not find end of variable " + variable + " in CMakeLists.txt");
+			critical("Error", "Could not find end of variable " + variable + " in CMakeLists.txt");
+			//QMessageBox::critical("Error", "Could not find end of variable " + variable + " in CMakeLists.txt");
 			return false;
 		}
 		QString left = lines[startLineIndex].mid(0, lines[startLineIndex].indexOf(variable));
@@ -333,11 +356,14 @@ namespace CLC
 		
 		for (const auto& value : values)
 			replacement.push_back("  " + value);
-		if(replacement.size())
+		if (replacement.size())
+		{
 			replacement[0] = left + variable + "\n" + replacement[0];
+			replacement[replacement.size() - 1] += "\n)";
+		}
 		else
-			replacement.push_back(left + variable);
-		replacement[replacement.size()-1] += ")";
+			replacement.push_back(left + variable + ")");
+		
 		for(int i=replacement.size()-1; i>=0; i--)
 			lines.insert(lines.begin() + startLineIndex, replacement[i]);
 
@@ -384,7 +410,8 @@ namespace CLC
 				sectionIndex = lines[i].mid(patternIndex1 + startPattern1.size()).trimmed().toInt(&ok);
 				if (!ok)
 				{
-					QMessageBox::critical(nullptr, "Error", "Invalid user section index in CMakeLists.txt Line: " + QString::number(i) + " : " + lines[i]);
+					critical("Error", "Invalid user section index in CMakeLists.txt Line: " + QString::number(i) + " : " + lines[i]);
+					//QMessageBox::critical("Error", "Invalid user section index in CMakeLists.txt Line: " + QString::number(i) + " : " + lines[i]);
 					sectionIndex = -1;
 				}
 				int sectionListIndex = -1;
@@ -411,7 +438,8 @@ namespace CLC
 				int endIndex = getLineIndex(lines, "USER_SECTION_END", i, false);
 				if (endIndex == -1)
 				{
-					QMessageBox::critical(nullptr, "Error", "Could not find end of user section in CMakeLists.txt");
+					critical("Error", "Could not find end of user section in CMakeLists.txt");
+					//QMessageBox::critical("Error", "Could not find end of user section in CMakeLists.txt");
 					success = false;
 				}
 				else
@@ -429,7 +457,8 @@ namespace CLC
 		int lineIndex = getLineIndex(lines, variable, true);
 		if (lineIndex == -1)
 		{
-			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			//QMessageBox::critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
 			return false;
 		}
 		QString line = lines[lineIndex];
@@ -437,12 +466,26 @@ namespace CLC
 		value = line.mid(0, line.indexOf(")")).trimmed();
 		return true;
 	}
+	bool Utilities::readCmakeVariableString(const QVector<QString>& lines, QString variable, QString& value)
+	{
+		bool success = readCmakeVariable(lines, variable, value);
+		if(value.indexOf("\"") == 0)
+		{
+			value = value.mid(1);
+		}
+		if (value.indexOf("\"") == value.size() - 1)
+		{
+			value = value.mid(0, value.size() -1);
+		}
+		return success;
+	}
 	bool Utilities::readCmakeVariable(const QVector<QString>& lines, QString variable, bool& value)
 	{
 		int lineIndex = getLineIndex(lines, variable, true);
 		if (lineIndex == -1)
 		{
-			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			//QMessageBox::critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
 			return false;
 		}
 		QString line = lines[lineIndex];
@@ -462,7 +505,8 @@ namespace CLC
 		int lineIndex = getLineIndex(lines, variable, true);
 		if (lineIndex == -1)
 		{
-			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			//QMessageBox::critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
 			return false;
 		}
 		QString line = lines[lineIndex];
@@ -478,7 +522,8 @@ namespace CLC
 		int lineIndex = getLineIndex(lines, variable, true);
 		if (lineIndex == -1)
 		{
-			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			//QMessageBox::critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
 			return false;
 		}
 		QString line = lines[lineIndex];
@@ -494,13 +539,15 @@ namespace CLC
 		int lineIndex = getLineIndex(lines, variable, true);
 		if (lineIndex == -1)
 		{
-			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
+			//QMessageBox::critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
 			return false;
 		}
 		int endLineIndex = getLineIndex(lines, ")", lineIndex, false);
 		if (endLineIndex == -1)
 		{
-			QMessageBox::critical(nullptr, "Error", "Could not find end of variable " + variable + " in CMakeLists.txt");
+			critical("Error", "Could not find end of variable " + variable + " in CMakeLists.txt");
+			//QMessageBox::critical("Error", "Could not find end of variable " + variable + " in CMakeLists.txt");
 			return false;
 		}
 		QString firstElement = lines[lineIndex];
@@ -577,7 +624,8 @@ namespace CLC
 				sectionIndex = lines[i].mid(patternIndex1 + startPattern1.size()).trimmed().toInt(&ok);
 				if (!ok)
 				{
-					QMessageBox::critical(nullptr, "Error", "Invalid user section index in CMakeLists.txt Line: " + QString::number(i)+" : "+lines[i]);
+					critical("Error", "Invalid user section index in CMakeLists.txt Line: " + QString::number(i)+" : "+lines[i]);
+					//QMessageBox::critical("Error", "Invalid user section index in CMakeLists.txt Line: " + QString::number(i)+" : "+lines[i]);
 					section.sectionIndex = -1;
 				}
 				else
@@ -603,7 +651,8 @@ namespace CLC
 		int lineIndex = getLineIndex(lines, { variable, "=", ";"}, false);
 		if (lineIndex == -1)
 		{
-			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in header file");
+			critical("Error", "Could not find variable " + variable + " in header file");
+			//QMessageBox::critical("Error", "Could not find variable " + variable + " in header file");
 			return false;
 		}
 		QString line = lines[lineIndex];
@@ -618,7 +667,8 @@ namespace CLC
 		int lineIndex = getLineIndex(lines, { variable, "=", ";" }, false);
 		if (lineIndex == -1)
 		{
-			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in header file");
+			critical("Error", "Could not find variable " + variable + " in header file");
+			//QMessageBox::critical("Error", "Could not find variable " + variable + " in header file");
 			return false;
 		}
 		QString line = lines[lineIndex];
@@ -628,12 +678,14 @@ namespace CLC
 		{
 			if (value.indexOf("\"") != 0)
 			{
-				QMessageBox::critical(nullptr, "Error", "Invalid string format for variable " + variable + " in header file. Value = "+ value);
+				critical("Error", "Invalid string format for variable " + variable + " in header file. Value = "+ value);
+				//QMessageBox::critical("Error", "Invalid string format for variable " + variable + " in header file. Value = "+ value);
 				return false;
 			}
 			if (value.lastIndexOf("\"") != value.size() - 1)
 			{
-				QMessageBox::critical(nullptr, "Error", "Invalid string format for variable " + variable + " in header file. Value = " + value);
+				critical("Error", "Invalid string format for variable " + variable + " in header file. Value = " + value);
+				//QMessageBox::critical("Error", "Invalid string format for variable " + variable + " in header file. Value = " + value);
 				return false;
 			}
 			value = value.mid(1, value.size() - 2);
@@ -645,7 +697,8 @@ namespace CLC
 		int lineIndex = getLineIndex(lines, { variable, "=", ";" }, false);
 		if (lineIndex == -1)
 		{
-			QMessageBox::critical(nullptr, "Error", "Could not find variable " + variable + " in header file");
+			critical("Error", "Could not find variable " + variable + " in header file");
+			//QMessageBox::critical("Error", "Could not find variable " + variable + " in header file");
 			return false;
 		}
 		QString line = lines[lineIndex];
@@ -712,9 +765,36 @@ namespace CLC
 		QStringList files = tmpDir.entryList(QDir::Files);
 		if (files.size() == 0)
 		{
-			QMessageBox box(QMessageBox::Warning, "Error", "No files found in the git repository", QMessageBox::Ok);
+			warning("Error", "No files found in the git repository");
+			//QMessageBox box(QMessageBox::Warning, "Error", "No files found in the git repository", QMessageBox::Ok);
 			return false;
 		}
 		return true;
+	}
+
+	void Utilities::information(const QString& title, const QString& text)
+	{
+		instance()._information(title, text);
+	}
+	void Utilities::warning(const QString& title, const QString& text)
+	{
+		instance()._warning(title, text);
+	}
+	void Utilities::critical(const QString& title, const QString& text)
+	{
+		instance()._critical(title, text);
+	}
+
+	void Utilities::_information(const QString& title, const QString& text)
+	{
+		emit signalInformation(title, text);
+	}
+	void Utilities::_warning(const QString& title, const QString& text)
+	{
+		emit signalWarning(title, text);
+	}
+	void Utilities::_critical(const QString& title, const QString& text)
+	{
+		emit signalCritical(title, text);
 	}
 }
