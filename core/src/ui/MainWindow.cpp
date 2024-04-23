@@ -18,12 +18,13 @@ namespace CLC
 		: QMainWindow(parent)
 	{
 		ui.setupUi(this);
+		
 		setWindowTitle("CMake Library Creator");
 		//qApp->setStyleSheet(Resources::getStyleSheet());
 
 
 		m_ribbon = new CLC::RibbonImpl(ui.ribbon_widget);
-		m_projectSettingsDialog = new ProjectSettingsDialog(this);
+		m_projectSettingsDialog = new ProjectSettingsDialog();
 		ui.centralWidget->layout()->addWidget(m_projectSettingsDialog);
 
 		RibbonImpl::TemplateManagementButtons templateManagementButtons = RibbonImpl::getTemplateManagementButtons();
@@ -33,6 +34,9 @@ namespace CLC
 		connect(projectButtons.openExistingProject, &QPushButton::clicked, this, &MainWindow::onOpenExistingProject_clicked);
 		connect(projectButtons.saveExistingProject, &QPushButton::clicked, this, &MainWindow::onSaveExistingProject_clicked);
 		connect(projectButtons.saveAsNewProject, &QPushButton::clicked, this, &MainWindow::onSaveAsNewProject_clicked);
+		connect(projectButtons.loadAndSaveAll, &QPushButton::clicked, [this]() {
+			loadAndSaveProjects(Resources::getLoadSaveProjects().projectPaths);
+			});
 
 		m_settingsDialog = new SettingsDialog();
 
@@ -144,8 +148,7 @@ namespace CLC
 	
 	void MainWindow::onOpenExistingProject_clicked()
 	{
-		// Open file dialog to select a folder
-		m_workerThread = new QThread;
+		
 		
 
 		QString folderPath = QFileDialog::getExistingDirectory(this, tr("Open Library Path"),
@@ -154,38 +157,12 @@ namespace CLC
 		{
 			return;
 		}
-		QDir dir;
-		if (!dir.exists(folderPath))
-		{
-			QMessageBox box(QMessageBox::Warning, "Error", "The selected folder does not exist", QMessageBox::Ok, this);
+		if (!loadProjectAsync(folderPath))
 			return;
-		}
-		static ProjectSettings loadingSettings;
-		loadingSettings = ProjectSettings();
-
-		// worker lambda
-		auto worker = [this, folderPath]()
-			{
-				Resources::setLoadedProjectPath(folderPath);
-				//ProjectSettings settings;
-				ProjectExporter::readProjectData(loadingSettings, folderPath);
-				this->m_workerThread->exit();
-			};
-		
-		// move worker to thread
-		QObject::connect(m_workerThread, &QThread::started, worker);
-		QObject::connect(m_workerThread, &QThread::finished, this, [this]() {
-			m_projectSettingsDialog->setSettings(loadingSettings);
-			m_existingProjectLoaded = true;
-			threadFinished();
-			});
-		//QObject::connect(m_workerThread, &QThread::, this, &MainWindow::enableUI);
-
 		RibbonImpl::ProjectButtons prjButtons = RibbonImpl::getProjectButtons();
 		if (prjButtons.openExistingProject)
 			prjButtons.openExistingProject->enableLoadingCircle(true);
 		disableUI();
-		m_workerThread->start();
 	}
 	void MainWindow::onSaveExistingProject_clicked()
 	{
@@ -398,11 +375,148 @@ namespace CLC
 		}
 	}
 
+	bool MainWindow::loadProjectAsync(const QString& path)
+	{
+		QDir dir;
+		if (!dir.exists(path))
+		{
+			QMessageBox box(QMessageBox::Warning, "Error", "The selected folder does not exist", QMessageBox::Ok, this);
+			return false;
+		}
+		// Open file dialog to select a folder
+		m_workerThread = new QThread;
+		static ProjectSettings loadingSettings;
+		loadingSettings = ProjectSettings();
+
+		// worker lambda
+		auto worker = [this, path]()
+			{
+				Resources::setLoadedProjectPath(path);
+				//ProjectSettings settings;
+				ProjectExporter::readProjectData(loadingSettings, path);
+				this->m_workerThread->exit();
+			};
+
+		// move worker to thread
+		QObject::connect(m_workerThread, &QThread::started, worker);
+		QObject::connect(m_workerThread, &QThread::finished, this, [this]() {
+			m_projectSettingsDialog->setSettings(loadingSettings);
+			m_existingProjectLoaded = true;
+			threadFinished();
+			});
+
+		m_workerThread->start();
+		return true;
+	}
+	void MainWindow::loadAndSaveProjects(QStringList paths)
+	{
+		if (paths.size() == 0)
+			return;
+
+		QString path = paths[0];
+		paths.erase(paths.begin());
+		QDir dir;
+		if (!dir.exists(path))
+		{
+			QMessageBox box(QMessageBox::Warning, "Error", "The selected folder does not exist", QMessageBox::Ok, this);
+			return;
+		}
+		// Open file dialog to select a folder
+		m_workerThread = new QThread;
+		static ProjectSettings loadingSettings;
+		loadingSettings = ProjectSettings();
+
+		// worker lambda
+		auto worker = [this, path]()
+			{
+				Resources::setLoadedProjectPath(path);
+				//ProjectSettings settings;
+				ProjectExporter::readProjectData(loadingSettings, path);
+				this->m_workerThread->exit();
+			};
+
+		// move worker to thread
+		QObject::connect(m_workerThread, &QThread::started, worker);
+		QObject::connect(m_workerThread, &QThread::finished, this, [this, paths]() {
+			m_projectSettingsDialog->setSettings(loadingSettings);
+			m_existingProjectLoaded = true;
+			if (m_workerThread)
+			{
+				if (m_workerThread->isFinished())
+				{
+					//enableUI();
+					//	m_timer.stop();
+					delete m_workerThread;
+					m_workerThread = nullptr;
+
+					RibbonImpl::TemplateManagementButtons templateManagementButtons = RibbonImpl::getTemplateManagementButtons();
+					if (templateManagementButtons.downloadTemplate)
+						templateManagementButtons.downloadTemplate->enableLoadingCircle(false);
+
+					RibbonImpl::ProjectButtons prjButtons = RibbonImpl::getProjectButtons();
+					if (prjButtons.openExistingProject)
+						prjButtons.openExistingProject->enableLoadingCircle(false);
+					if (prjButtons.saveExistingProject)
+						prjButtons.saveExistingProject->enableLoadingCircle(false);
+					if (prjButtons.saveAsNewProject)
+						prjButtons.saveAsNewProject->enableLoadingCircle(false);
+
+
+					m_workerThread = new QThread;
+					/*RibbonImpl::ProjectButtons prjButtons = RibbonImpl::getProjectButtons();
+					if (prjButtons.openExistingProject)
+						prjButtons.openExistingProject->enableLoadingCircle(true);*/
+
+					//static ProjectSettings loadingSettings;
+					//loadingSettings = ProjectSettings();
+					// worker lambda
+					auto worker = [this]()
+						{
+							ProjectExporter::ExportSettings exportSettings;
+							exportSettings.copyAllTemplateFiles = false;
+							exportSettings.replaceTemplateCmakeFiles = true;
+							exportSettings.replaceTemplateCodeFiles = true;
+							exportSettings.replaceTemplateVariables = true;
+							exportSettings.replaceTemplateCodePlaceholders = true;
+							ProjectExporter::exportProject(m_projectSettingsDialog->getSettings(), Resources::getLoadedProjectPath(), exportSettings);
+
+
+							//ProjectExporter::readProjectData(loadingSettings, Resources::getLoadedProjectPath());
+
+							this->m_workerThread->exit();
+						};
+					// move worker to thread
+					QObject::connect(m_workerThread, &QThread::started, worker);
+					QObject::connect(m_workerThread, &QThread::finished, this, [this, paths]() {
+							if (paths.size() == 0)
+							{
+
+							}
+							else
+								loadAndSaveProjects(paths);
+						});
+					//QObject::connect(m_workerThread, &QThread::, this, &MainWindow::enableUI);
+					//RibbonImpl::ProjectButtons prjButtons = RibbonImpl::getProjectButtons();
+					//disableUI();
+					//if (prjButtons.saveExistingProject)
+					//	prjButtons.saveExistingProject->enableLoadingCircle(true);
+					//m_timer.start();
+					m_workerThread->start();
+				}
+
+				
+			}
+
+
+			});
+
+		m_workerThread->start();
+	}
 	
 	void MainWindow::on_actionVersion_triggered()
 	{
 		// Display UI with version information		
-		QWidget *w = LibraryInfo::createInfoWidget();
+		QWidget *w = LibraryInfo::createInfoWidget(this);
 		w->setWindowTitle("Version");
 		// auto delete on close
 		w->setAttribute(Qt::WA_DeleteOnClose);

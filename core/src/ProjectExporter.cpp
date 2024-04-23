@@ -25,11 +25,17 @@ namespace CLC
 		const QString& projectDirPath,
 		const ExportSettings& expSettings)
 	{
-		return instance().exportProject_intern(settings, projectDirPath, expSettings);
+		QString normalizedPath = projectDirPath;
+		normalizedPath = normalizedPath.replace("\\", "/");
+		return instance().exportProject_intern(settings, normalizedPath, expSettings);
 	}
 	bool ProjectExporter::readProjectData(ProjectSettings& settings, const QString& projectDirPath)
 	{
-		return instance().readProjectData_intern(settings, projectDirPath);
+		QString normalizedPath = projectDirPath;
+		normalizedPath = normalizedPath.replace("\\", "/");
+		bool ret = instance().readProjectData_intern(settings, normalizedPath);
+		settings = settings.getValidated();
+		return ret;
 	}
 
 	bool ProjectExporter::exportProject_intern(
@@ -431,8 +437,8 @@ namespace CLC
 		success &= Utilities::replaceCmakeVariable(fileContent, "COMPILE_UNITTESTS", (cmakeSettings.compile_unittests?"ON":"OFF"));
 
 		success &= Utilities::replaceCmakeVariableString(fileContent, "QT_INSTALL_BASE", cmakeSettings.qt_installBase);
-		success &= Utilities::replaceCmakeVariable(fileContent, "QT_MAJOR_VERSION", QString::number(cmakeSettings.qt_major_version));
-		success &= Utilities::replaceCmakeVariableString(fileContent, "QT_VERSION", cmakeSettings.qt_version);
+		success &= Utilities::replaceCmakeVariable(fileContent, "QT_MAJOR_VERSION", QString::number(cmakeSettings.qt_versionNr[0]));
+		success &= Utilities::replaceCmakeVariableString(fileContent, "QT_VERSION", cmakeSettings.getQtVersionStr());
 		success &= Utilities::replaceCmakeVariableString(fileContent, "QT_COMPILER", cmakeSettings.qt_compiler);
 
 		{
@@ -717,10 +723,18 @@ namespace CLC
 		success &= Utilities::readCmakeVariable(fileContent, "COMPILE_EXAMPLES", cmakeSettings.compile_examples);
 		success &= Utilities::readCmakeVariable(fileContent, "COMPILE_UNITTESTS", cmakeSettings.compile_unittests);
 
-		success &= Utilities::readCmakeVariableString(fileContent, "QT_INSTALL_BASE", cmakeSettings.qt_installBase);
-		success &= Utilities::readCmakeVariable(fileContent, "QT_MAJOR_VERSION", cmakeSettings.qt_major_version);
-		success &= Utilities::readCmakeVariableString(fileContent, "QT_VERSION", cmakeSettings.qt_version);
-		success &= Utilities::readCmakeVariableString(fileContent, "QT_COMPILER", cmakeSettings.qt_compiler);
+		QString qtInstallBase;
+		success &= Utilities::readCmakeVariableString(fileContent, "QT_INSTALL_BASE", qtInstallBase);
+		cmakeSettings.setQtInstallBase(qtInstallBase);
+
+		success &= Utilities::readCmakeVariable(fileContent, "QT_MAJOR_VERSION", cmakeSettings.qt_versionNr[0]);
+		QString qtVersionStr;
+		success &= Utilities::readCmakeVariableString(fileContent, "QT_VERSION", qtVersionStr);
+		cmakeSettings.setQtVersion(qtVersionStr);
+
+		QString qtCompilerStr;
+		success &= Utilities::readCmakeVariableString(fileContent, "QT_COMPILER", qtCompilerStr);
+		cmakeSettings.setQtCompiler(qtCompilerStr);
 
 		settings.setCMAKE_settings(cmakeSettings);
 

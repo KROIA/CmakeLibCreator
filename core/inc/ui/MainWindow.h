@@ -45,6 +45,8 @@ namespace CLC
 	private:
 		void threadFinished();
 		
+		bool loadProjectAsync(const QString& path);
+		void loadAndSaveProjects(QStringList paths);
 
 
 		Ui::MainWindow ui;

@@ -20,7 +20,17 @@ namespace CLC
 		m_loadedPlaceholder = s_defaultPlaceholder;
 		m_defaultPlaceholder = s_defaultPlaceholder;
 	}
+	/*ProjectSettings::ProjectSettings(const ProjectSettings& other)
+		: m_librarySettings(other.m_librarySettings)
+		, m_CMAKE_settings(other.m_CMAKE_settings)
+		, m_loadedPlaceholder(other.m_loadedPlaceholder)
+		, m_defaultPlaceholder(other.m_loadedPlaceholder)
+		, m_cmakeFileUserSections(other.m_cmakeFileUserSections)
+		, m_codeUserSections(other.m_codeUserSections)
+	{
 
+	}
+	*/
 	ProjectSettings::~ProjectSettings()
 	{
 	}
@@ -101,6 +111,20 @@ namespace CLC
 	void ProjectSettings::autoSetExportName()
 	{
 		m_librarySettings.autoSetExportName(m_CMAKE_settings.libraryName);
+	}
+
+	ProjectSettings ProjectSettings::getValidated() const
+	{
+		ProjectSettings v(*this);
+		CMAKE_settings& cmakeSettings = v.m_CMAKE_settings;
+
+		
+		cmakeSettings.setQtCompiler(cmakeSettings.qt_compiler);
+		cmakeSettings.setQtVersion(cmakeSettings.getQtVersionStr());
+
+
+
+		return v;
 	}
 
 	ProjectSettings::LibrarySettings::LibrarySettings()
@@ -194,6 +218,52 @@ namespace CLC
 			shortName = libraryName[0].toUpper();
 		}
 		lib_short_define = shortName;
+	}
+	void ProjectSettings::CMAKE_settings::setQtInstallBase(const QString& path)
+	{
+		if (path.isEmpty())
+			qt_installBase = "C:/";
+		else
+			qt_installBase = path;
+	}
+	void ProjectSettings::CMAKE_settings::setQtVersion(const QString& versionStr)
+	{
+		QStringList parts = versionStr.split('.');
+
+		qt_versionNr[1] = 0;
+		qt_versionNr[2] = 0;
+		qt_useNewestVersion = false;
+		if (parts.size() == 3) {
+			qt_versionNr[0] = parts[0].toInt();
+			qt_versionNr[1] = parts[1].toInt();
+			qt_versionNr[2] = parts[2].toInt();
+		}
+		else {
+			qt_useNewestVersion = true;
+		}
+		if (qt_versionNr[0] == 0)
+			qt_versionNr[0] = 5;
+	}
+	QString ProjectSettings::CMAKE_settings::getQtVersionStr() const
+	{
+		if (qt_useNewestVersion)
+		{
+			return "autoFind";
+		}
+		return QString::number(qt_versionNr[0]) + "." + QString::number(qt_versionNr[1]) + "." + QString::number(qt_versionNr[2]);
+	}
+	void ProjectSettings::CMAKE_settings::setQtCompiler(const QString& compilerStr)
+	{
+		if (compilerStr.isEmpty() || compilerStr.toLower() == "autofind")
+		{
+			qt_autoFindCompiler = true;
+			qt_compiler = "autoFind";
+		}
+		else
+		{
+			qt_autoFindCompiler = false;
+			qt_compiler = compilerStr;
+		}
 	}
 
 } // namespace CLC

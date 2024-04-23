@@ -19,7 +19,7 @@ namespace CLC
 		~ProjectSettingsDialog();
 
 		void setSettings(const ProjectSettings& settings);
-		const ProjectSettings &getSettings();
+		ProjectSettings getSettings();
 
 	private slots:
 		void on_qtModules_pushButton_clicked();

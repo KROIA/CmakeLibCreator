@@ -24,8 +24,15 @@ namespace CLC
 			QString dependenciesBranch;
 			QString qtModulesBranch;
 
-			void load(const QJsonObject& obj);
-			QJsonObject save() const;
+			void load(const QJsonValue& val);
+			QJsonValue save() const;
+		};
+		struct LoadSaveProjects
+		{
+			QStringList projectPaths;
+
+			void load(const QJsonValue& val);
+			QJsonValue save() const;
 		};
 		static void loadSettings();
 		static void saveSettings();
@@ -57,6 +64,9 @@ namespace CLC
 		static void setTemplateGitRepo(const GitResources& repo);
 		static const GitResources& getTemplateGitRepo();
 
+		static void setLoadSaveProjects(const LoadSaveProjects& paths);
+		static const LoadSaveProjects& getLoadSaveProjects();
+
 		static void setLoadedProjectPath(const QString& path);
 		static const QString &getLoadedProjectPath();
 
@@ -78,6 +88,7 @@ namespace CLC
 		QString m_tmpPath;
 		
 		GitResources m_gitRepo;
+		LoadSaveProjects m_loadSaveProjects;
 
 		QVector<QTModule> m_qtModules;
 		QVector<Dependency> m_dependencies;

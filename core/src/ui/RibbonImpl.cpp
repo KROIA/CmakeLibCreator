@@ -22,6 +22,7 @@ namespace CLC {
 		m_projectButtons.openExistingProject = new RibbonWidget::InformativeToolButton("Open", "Open an existing library", ":/icons/folder-open.png", true, m_projectGroup);
 		m_projectButtons.saveExistingProject = new RibbonWidget::InformativeToolButton("Save", "Save to existing library", ":/icons/save.png", true, m_projectGroup);
 		m_projectButtons.saveAsNewProject    = new RibbonWidget::InformativeToolButton("Save as new", "Save as new library project", ":/icons/save.png", true, m_projectGroup);
+		m_projectButtons.loadAndSaveAll		 = new RibbonWidget::InformativeToolButton("Load and save all", "Loads all projects and saves them back with the new template", ":/icons/save.png", true, m_projectGroup);
 
 		// Add tabs
 		addTab(m_mainTab);
