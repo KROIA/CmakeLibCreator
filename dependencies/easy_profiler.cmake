@@ -27,7 +27,7 @@ function(dep SHARED_LIB STATIC_LIB STATIC_PROFILE_LIB)
     endif()
 
     FetchContent_MakeAvailable(${LIB_NAME})
-    set(EASY_PROFILER_IS_AVAILABLE ON)
+    set(EASY_PROFILER_IS_AVAILABLE ON PARENT_SCOPE)
 
 
     # Add this library to the specific profiles of this project
@@ -37,7 +37,7 @@ function(dep SHARED_LIB STATIC_LIB STATIC_PROFILE_LIB)
 
     # Deploy the Profiler GUI
     if(QT_ENABLE AND QT_DEPLOY)
-        DEPLOY_QT(profiler_gui ${INSTALL_BIN_PATH})
+        windeployqt(profiler_gui ${INSTALL_BIN_PATH})
     endif()
 
 

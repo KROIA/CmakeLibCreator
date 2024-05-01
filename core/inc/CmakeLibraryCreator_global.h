@@ -9,14 +9,14 @@
 // <LIBRARY NAME SHORT>=CLC 
 //
 #ifndef BUILD_STATIC
-	#pragma message("CMAKE_LIBRARY_CREATOR_LIB is a shared library")
+	//#pragma message("CMAKE_LIBRARY_CREATOR_LIB is a shared library")
 	#if defined(CMAKE_LIBRARY_CREATOR_LIB)
 		#define CMAKE_LIBRARY_CREATOR_EXPORT __declspec(dllexport)
 	#else
 		#define CMAKE_LIBRARY_CREATOR_EXPORT __declspec(dllimport)
 	#endif
 #else 
-	#pragma message("CMAKE_LIBRARY_CREATOR_LIB is a static library")
+	//#pragma message("CMAKE_LIBRARY_CREATOR_LIB is a static library")
 	#define CMAKE_LIBRARY_CREATOR_EXPORT
 #endif
 
@@ -25,9 +25,9 @@
 /// USER_SECTION_END
 
 #ifdef QT_ENABLED
-	#pragma message("QT is enabled")
+	//#pragma message("QT is enabled")
 	#ifdef QT_WIDGETS_ENABLED
-		#pragma message("QT_WIDGETS is enabled")
+		//#pragma message("QT_WIDGETS is enabled")
 	#endif
 #endif
 
@@ -62,6 +62,7 @@
 	#pragma warning (error : 4189) // Unused return value
 	#pragma warning (error : 4996) // unsafe function calls
 	#pragma warning (error : 4018) // signed/unsigned mismatch
+	#pragma warning (error : 4172) // Returning address of local temporary object
 #endif
 
 /// USER_SECTION_START 5
