@@ -6,7 +6,7 @@ namespace CLC {
 		: RibbonWidget::Ribbon(parent)
 	{
 		m_instance = this;
-		Q_INIT_RESOURCE(icons);
+		Q_INIT_RESOURCE(AppIcons);
 		// Create tabs
 		m_mainTab = new RibbonWidget::RibbonTab("Project", "", this);
 		//RibbonWidget::RibbonTab* tabEdit = new RibbonWidget::RibbonTab("Editing", "create_new_2", this);
@@ -23,6 +23,7 @@ namespace CLC {
 		m_projectButtons.saveExistingProject = new RibbonWidget::InformativeToolButton("Save", "Save to existing library", ":/icons/save.png", true, m_projectGroup);
 		m_projectButtons.saveAsNewProject    = new RibbonWidget::InformativeToolButton("Save as new", "Save as new library project", ":/icons/save.png", true, m_projectGroup);
 		m_projectButtons.loadAndSaveAll		 = new RibbonWidget::InformativeToolButton("Load and save all", "Loads all projects and saves them back with the new template", ":/icons/save.png", true, m_projectGroup);
+		m_projectButtons.buildAll			 = new RibbonWidget::InformativeToolButton("Build all", "Builds all projects", ":/icons/hammer.png", true, m_projectGroup);
 
 		// Add tabs
 		addTab(m_mainTab);

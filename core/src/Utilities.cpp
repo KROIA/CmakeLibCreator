@@ -1,6 +1,10 @@
 #include "Utilities.h"
 #include <QDebug>
 #include <QDirIterator>
+#include <cstdio>
+#include <iostream>
+#include <windows.h>
+#include "Logging.h"
 
 namespace CLC
 {
@@ -11,7 +15,7 @@ namespace CLC
 	}
 	bool Utilities::copyAndReplaceFolderContents(const QString& absolutFromDir, const QString& absolutToDir, bool copyAndRemove)
 	{
-		qDebug() << "Copying from " << absolutFromDir << " to " << absolutToDir;
+		Logging::getLogger().log("Copying from "+ absolutFromDir.toStdString() + " to " + absolutToDir.toStdString());
 		QDirIterator it(absolutFromDir, QDirIterator::Subdirectories);
 		QDir dir(absolutFromDir);
 		const int absSourcePathLength = dir.absoluteFilePath(absolutFromDir).length();
@@ -760,7 +764,7 @@ namespace CLC
 
 		QString gitCommand = "git clone --branch " + branch + " " + url + " " + folder;
 
-		qDebug() << gitCommand;
+		Logging::getLogger().log(gitCommand.toStdString());
 		system(gitCommand.toStdString().c_str());
 		QStringList files = tmpDir.entryList(QDir::Files);
 		if (files.size() == 0)
@@ -783,6 +787,40 @@ namespace CLC
 	void Utilities::critical(const QString& title, const QString& text)
 	{
 		instance()._critical(title, text);
+	}
+
+	int Utilities::executeCommand(const QString& command)
+	{
+		// execute command using popen
+		std::string result;
+		Log::Logger::ContextLogger* context = Logging::getLogger().createContext("Utilities::executeCommand");
+		context->log(Log::Level::info, "Executing command: " + command.toStdString());
+		FILE* pipe = _popen(command.toStdString().c_str(), "r");
+		if (!pipe) {
+			//std::cerr << "Error: popen failed!" << std::endl;
+			context->log(Log::Level::error, "popen failed!");
+			Logging::getLogger().destroyContext(context);
+			return -1;
+		}
+		char buffer[128];
+		while (!feof(pipe)) {
+			if (fgets(buffer, 128, pipe) != nullptr) {
+				//result += buffer;
+				context->log(buffer);
+			}
+		}
+		int status = _pclose(pipe);
+		if (status == -1) {
+			//std::cerr << "Error: pclose failed!" << std::endl;
+			context->log(Log::Level::error, "pclose failed!");
+			Logging::getLogger().destroyContext(context);
+			return -2;
+		}
+		Logging::getLogger().destroyContext(context);
+		return status;
+
+
+		//return system(command.toStdString().c_str());
 	}
 
 	void Utilities::_information(const QString& title, const QString& text)

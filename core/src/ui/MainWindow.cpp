@@ -10,6 +10,7 @@
 #include "Utilities.h"
 #include "ProjectExporter.h"
 #include "CmakeLibraryCreator_info.h"
+#include "Logging.h"
 
 
 namespace CLC
@@ -37,6 +38,9 @@ namespace CLC
 		connect(projectButtons.loadAndSaveAll, &QPushButton::clicked, [this]() {
 			loadAndSaveProjects(Resources::getLoadSaveProjects().projectPaths);
 			});
+		connect(projectButtons.buildAll, &QPushButton::clicked, [this]() {
+			buildAllProjects(Resources::getLoadSaveProjects().projectPaths);
+				});
 
 		m_settingsDialog = new SettingsDialog();
 
@@ -63,7 +67,10 @@ namespace CLC
 		connect(&Utilities::instance(), &Utilities::signalWarning, this, &MainWindow::signalWarning, Qt::QueuedConnection);
 		connect(&Utilities::instance(), &Utilities::signalCritical, this, &MainWindow::signalCritical, Qt::QueuedConnection);
 
-
+		Log::Color::setDarkMode(true);
+		Log::Resources::getIconDebug();
+		Logging::getView().setStyleSheet(Log::Resources::getDarkStylesheet());
+		Logging::getView().show();
 		//m_timer.setInterval(100);
 		//connect(&m_timer, &QTimer::timeout, this, &MainWindow::onTimerTimeout);
 	}
@@ -511,6 +518,50 @@ namespace CLC
 			});
 
 		m_workerThread->start();
+	}
+	void MainWindow::buildAllProjects(QStringList paths)
+	{
+		if (paths.size() == 0)
+			return;
+
+		// Create a QThread that calls the heavy commands
+		m_workerThread = new QThread;
+		// worker lambda
+		auto worker = [this, paths]()
+			{
+				for (QString p : paths)
+				{
+					// Replace all backslashes with slashes
+					p.replace("\\", "/");
+					QString command = "cd " + p + " & build.bat";
+
+					// Get result of the call build.bat
+					int result = Utilities::executeCommand(command);
+					if (result != 0)
+					{
+						// Error
+						//QMessageBox::critical(this, "Error", "Error while building project: " + p);
+						Logging::getLogger().log(Log::Level::error, "Error while building project: " + p.toStdString());
+					}
+				}
+				this->m_workerThread->exit();
+			};
+		// move worker to thread
+		QObject::connect(m_workerThread, &QThread::started, worker);
+		QObject::connect(m_workerThread, &QThread::finished, this, [this]() {
+			enableUI();
+			QMessageBox::information(this, "Build", "All projects have been built.");
+						 });
+		// delete after thread is finished
+		QObject::connect(m_workerThread, &QThread::finished, m_workerThread, &QObject::deleteLater);
+
+		disableUI();
+		m_workerThread->start();
+
+
+
+		
+		
 	}
 	
 	void MainWindow::on_actionVersion_triggered()

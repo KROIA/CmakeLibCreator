@@ -2,7 +2,7 @@
 #include <QDir>
 #include <QJsonDocument>
 #include <QJsonArray>
-#include <QDebug>
+#include "Logging.h"
 
 namespace CLC
 {
@@ -184,7 +184,7 @@ namespace CLC
 		QFile file(m_settingsFilePath);
 		if (!file.open(QIODevice::ReadOnly))
 		{
-			qDebug() << "Failed to open file for reading: " << file.fileName();
+			Logging::getLogger().log(Log::Level::error, "Failed to open file for reading: " +file.fileName().toStdString());
 			return;
 		}
 		QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
@@ -217,7 +217,7 @@ namespace CLC
 		QFile file(m_settingsFilePath);
 		if (!file.open(QIODevice::WriteOnly))
 		{
-			qDebug() << "Failed to open file for writing: " << file.fileName();
+			Logging::getLogger().log(Log::Level::error, "Failed to open file for writing: "+ file.fileName().toStdString());
 			return;
 		}
 		file.write(doc.toJson());
@@ -312,14 +312,18 @@ namespace CLC
 			QJsonObject json = loadJsonFile(m_qtModulesSourcePath + "/" + file);
 			if (json.isEmpty())
 			{
-				qDebug() << "Failed to load json file: " << file;
+				Logging::getLogger().log(Log::Level::error, "Failed to load json file: " + file.toStdString());
 				continue;
 			}
 			QTModule module;
-			if(module.loadFromJson(json))
+			if (module.loadFromJson(json))
 				m_qtModules.append(module);
 			else
-				qDebug() << "Failed to load module from json file: " << file << " data: "<< json;
+			{
+				std::string strFromObj = QJsonDocument(json).toJson(QJsonDocument::Compact).toStdString();
+				Logging::getLogger().log(Log::Level::error, "Failed to load module from json file: " + file.toStdString() + " data: " + strFromObj);
+
+			}
 		}
 	}
 	void Resources::loadDependencies_intern()
@@ -336,7 +340,7 @@ namespace CLC
 				m_dependencies.append(dep);
 			}
 			else
-				qDebug() << "Failed to load dependency from cmake file: " << file;
+				Logging::getLogger().log(Log::Level::error,"Failed to load dependency from cmake file: "+ file.toStdString());
 		}
 	}
 	QJsonObject Resources::loadJsonFile(const QString& path)

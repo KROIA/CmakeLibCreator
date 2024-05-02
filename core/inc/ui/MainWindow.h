@@ -47,6 +47,7 @@ namespace CLC
 		
 		bool loadProjectAsync(const QString& path);
 		void loadAndSaveProjects(QStringList paths);
+		void buildAllProjects(QStringList paths);
 
 
 		Ui::MainWindow ui;

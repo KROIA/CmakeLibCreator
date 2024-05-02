@@ -25,6 +25,7 @@ namespace CLC {
 			RibbonWidget::InformativeToolButton* saveExistingProject = nullptr;
 			RibbonWidget::InformativeToolButton* saveAsNewProject = nullptr;
 			RibbonWidget::InformativeToolButton* loadAndSaveAll = nullptr;
+			RibbonWidget::InformativeToolButton* buildAll = nullptr;
 		};
 
 

@@ -85,6 +85,8 @@ namespace CLC
 		static void warning(const QString& title, const QString& text);
 		static void critical(const QString& title, const QString& text);
 
+		static int executeCommand(const QString& command);
+
 	signals:
 		void signalInformation(const QString& title, const QString& text);
 		void signalWarning(const QString& title, const QString& text);
