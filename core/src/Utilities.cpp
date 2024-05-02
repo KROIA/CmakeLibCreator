@@ -795,20 +795,80 @@ namespace CLC
 		std::string result;
 		Log::Logger::ContextLogger* context = Logging::getLogger().createContext("Utilities::executeCommand");
 		context->log(Log::Level::info, "Executing command: " + command.toStdString());
-		FILE* pipe = _popen(command.toStdString().c_str(), "r");
+		
+		// (command+" 2>&1")
+		FILE* pipe = _popen((command).toStdString().c_str(), "r");
 		if (!pipe) {
 			//std::cerr << "Error: popen failed!" << std::endl;
 			context->log(Log::Level::error, "popen failed!");
 			Logging::getLogger().destroyContext(context);
 			return -1;
 		}
-		char buffer[128];
+		//std::streambuf* oldCoutStreamBuf = std::cout.rdbuf();
+		//std::ostringstream strCout;
+		//std::cout.rdbuf(strCout.rdbuf());
+		char buffer[1024];
 		while (!feof(pipe)) {
-			if (fgets(buffer, 128, pipe) != nullptr) {
+			//std::string streamStr = strCout.str();
+			//strCout.clear();
+			if (fgets(buffer, 1024, pipe) != nullptr) {
 				//result += buffer;
-				context->log(buffer);
+				QString msg = QString(buffer);
+				if (msg.indexOf("build successful") != -1)
+				{
+					int a = 0;
+					a;
+				}
+				Log::Color color = Log::Color::white;
+
+				// Search for console color codes
+				
+				if (msg.toLower().indexOf("error") != -1)
+					color = Log::Color::red;
+				else if (msg.toLower().indexOf("warning") != -1)
+					color = Log::Color::yellow;
+
+				const QString target = "[";
+				if (msg.indexOf(target) != -1)
+				{
+					int index = msg.indexOf("[");
+					QString colorCode = msg.mid(index, 4).toLower();
+					if (colorCode.indexOf("[0m") != -1)
+						color = Log::Color::white;
+					else if (colorCode.indexOf("[31m") != -1)
+						color = Log::Color::red;
+					else if (colorCode.indexOf("[32m") != -1)
+						color = Log::Color::green;
+					else if (colorCode.indexOf("[33m") != -1)
+						color = Log::Color::yellow;
+					else if (colorCode.indexOf("[34m") != -1)
+						color = Log::Color::blue;
+					else if (colorCode.indexOf("[35m") != -1)
+						color = Log::Color::magenta;
+					else if (colorCode.indexOf("[36m") != -1)
+						color = Log::Color::cyan;
+					else if (colorCode.indexOf("[37m") != -1)
+						color = Log::Color::white;
+					else
+					{
+						break;
+					}
+					// Removes color code from message
+					//if(index > 0)
+					//	msg.remove(index-1, 6);
+
+				}
+				context->log(Log::Level::info, color, msg.toStdString());
+				/*if (streamStr.size() > 0)
+				{
+					context->log(Log::Level::info, color, streamStr);
+					streamStr.clear();
+				}*/
 			}
 		}
+		// Restore old cout.
+		//std::cout.rdbuf(oldCoutStreamBuf);
+
 		int status = _pclose(pipe);
 		if (status == -1) {
 			//std::cerr << "Error: pclose failed!" << std::endl;

@@ -563,6 +563,14 @@ namespace CLC
 		
 		
 	}
+
+	void MainWindow::closeEvent(QCloseEvent* event) 
+	{
+		CLC_UNUSED(event);
+		Logging::getView().close();
+		// Close the application
+		QApplication::quit();
+	}
 	
 	void MainWindow::on_actionVersion_triggered()
 	{
