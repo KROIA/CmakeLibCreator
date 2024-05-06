@@ -5,7 +5,7 @@
 #include <QStringList>
 #include <QObject>
 #include <QMessageBox>
-
+#include "Logging.h"
 
 namespace CLC
 {
@@ -86,6 +86,7 @@ namespace CLC
 		static void critical(const QString& title, const QString& text);
 
 		static int executeCommand(const QString& command);
+		static int executeCommand(const QString& command, Log::Logger::ContextLogger &logger);
 
 	signals:
 		void signalInformation(const QString& title, const QString& text);

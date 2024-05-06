@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <iostream>
 #include <windows.h>
-#include "Logging.h"
 
 namespace CLC
 {
@@ -764,8 +763,10 @@ namespace CLC
 
 		QString gitCommand = "git clone --branch " + branch + " " + url + " " + folder;
 
-		Logging::getLogger().log(gitCommand.toStdString());
-		system(gitCommand.toStdString().c_str());
+		//Logging::getLogger().log(gitCommand.toStdString());
+		int ret = executeCommand(gitCommand, Logging::getLogger());
+		ret;
+		//system(gitCommand.toStdString().c_str());
 		QStringList files = tmpDir.entryList(QDir::Files);
 		if (files.size() == 0)
 		{
@@ -792,27 +793,24 @@ namespace CLC
 	int Utilities::executeCommand(const QString& command)
 	{
 		// execute command using popen
-		std::string result;
 		Log::Logger::ContextLogger* context = Logging::getLogger().createContext("Utilities::executeCommand");
-		context->log(Log::Level::info, "Executing command: " + command.toStdString());
-		
-		// (command+" 2>&1")
+		int result = executeCommand(command, *context);
+		Logging::getLogger().destroyContext(context);
+		return result;
+	}
+	int Utilities::executeCommand(const QString& command, Log::Logger::ContextLogger& logger)
+	{
+		logger.log(Log::Level::info, "Executing command: " + command.toStdString());
+
 		FILE* pipe = _popen((command).toStdString().c_str(), "r");
 		if (!pipe) {
 			//std::cerr << "Error: popen failed!" << std::endl;
-			context->log(Log::Level::error, "popen failed!");
-			Logging::getLogger().destroyContext(context);
+			logger.log(Log::Level::error, "popen failed!");
 			return -1;
 		}
-		//std::streambuf* oldCoutStreamBuf = std::cout.rdbuf();
-		//std::ostringstream strCout;
-		//std::cout.rdbuf(strCout.rdbuf());
 		char buffer[1024];
 		while (!feof(pipe)) {
-			//std::string streamStr = strCout.str();
-			//strCout.clear();
 			if (fgets(buffer, 1024, pipe) != nullptr) {
-				//result += buffer;
 				QString msg = QString(buffer);
 				if (msg.indexOf("build successful") != -1)
 				{
@@ -822,7 +820,7 @@ namespace CLC
 				Log::Color color = Log::Color::white;
 
 				// Search for console color codes
-				
+
 				if (msg.toLower().indexOf("error") != -1)
 					color = Log::Color::red;
 				else if (msg.toLower().indexOf("warning") != -1)
@@ -858,29 +856,15 @@ namespace CLC
 					//	msg.remove(index-1, 6);
 
 				}
-				context->log(Log::Level::info, color, msg.toStdString());
-				/*if (streamStr.size() > 0)
-				{
-					context->log(Log::Level::info, color, streamStr);
-					streamStr.clear();
-				}*/
+				logger.log(Log::Level::info, color, msg.toStdString());
 			}
 		}
-		// Restore old cout.
-		//std::cout.rdbuf(oldCoutStreamBuf);
-
 		int status = _pclose(pipe);
 		if (status == -1) {
-			//std::cerr << "Error: pclose failed!" << std::endl;
-			context->log(Log::Level::error, "pclose failed!");
-			Logging::getLogger().destroyContext(context);
+			logger.log(Log::Level::error, "pclose failed!");
 			return -2;
 		}
-		Logging::getLogger().destroyContext(context);
 		return status;
-
-
-		//return system(command.toStdString().c_str());
 	}
 
 	void Utilities::_information(const QString& title, const QString& text)
