@@ -793,19 +793,19 @@ namespace CLC
 	int Utilities::executeCommand(const QString& command)
 	{
 		// execute command using popen
-		Log::Logger::ContextLogger* context = Logging::getLogger().createContext("Utilities::executeCommand");
-		int result = executeCommand(command, *context);
-		Logging::getLogger().destroyContext(context);
+		Log::LogObject context(Logging::getLogger().getID(), "Utilities::executeCommand");
+		int result = executeCommand(command, context);
+		//Logging::getLogger().destroyContext(context);
 		return result;
 	}
-	int Utilities::executeCommand(const QString& command, Log::Logger::ContextLogger& logger)
+	int Utilities::executeCommand(const QString& command, Log::LogObject & logger)
 	{
-		logger.log(Log::Level::info, "Executing command: " + command.toStdString());
+		logger.log("Executing command: " + command.toStdString(), Log::Level::info);
 
 		FILE* pipe = _popen((command).toStdString().c_str(), "r");
 		if (!pipe) {
 			//std::cerr << "Error: popen failed!" << std::endl;
-			logger.log(Log::Level::error, "popen failed!");
+			logger.log("popen failed!", Log::Level::error);
 			return -1;
 		}
 		char buffer[1024];
@@ -817,14 +817,14 @@ namespace CLC
 					int a = 0;
 					a;
 				}
-				Log::Color color = Log::Color::white;
+				Log::Color color = Log::Colors::white;
 
 				// Search for console color codes
 
 				if (msg.toLower().indexOf("error") != -1)
-					color = Log::Color::red;
+					color = Log::Colors::red;
 				else if (msg.toLower().indexOf("warning") != -1)
-					color = Log::Color::yellow;
+					color = Log::Colors::yellow;
 
 				const QString target = "[";
 				if (msg.indexOf(target) != -1)
@@ -832,21 +832,21 @@ namespace CLC
 					int index = msg.indexOf("[");
 					QString colorCode = msg.mid(index, 4).toLower();
 					if (colorCode.indexOf("[0m") != -1)
-						color = Log::Color::white;
+						color = Log::Colors::white;
 					else if (colorCode.indexOf("[31m") != -1)
-						color = Log::Color::red;
+						color = Log::Colors::red;
 					else if (colorCode.indexOf("[32m") != -1)
-						color = Log::Color::green;
+						color = Log::Colors::green;
 					else if (colorCode.indexOf("[33m") != -1)
-						color = Log::Color::yellow;
+						color = Log::Colors::yellow;
 					else if (colorCode.indexOf("[34m") != -1)
-						color = Log::Color::blue;
+						color = Log::Colors::blue;
 					else if (colorCode.indexOf("[35m") != -1)
-						color = Log::Color::magenta;
+						color = Log::Colors::magenta;
 					else if (colorCode.indexOf("[36m") != -1)
-						color = Log::Color::cyan;
+						color = Log::Colors::cyan;
 					else if (colorCode.indexOf("[37m") != -1)
-						color = Log::Color::white;
+						color = Log::Colors::white;
 					else
 					{
 						break;
@@ -856,12 +856,12 @@ namespace CLC
 					//	msg.remove(index-1, 6);
 
 				}
-				logger.log(Log::Level::info, color, msg.toStdString());
+				logger.log(msg.toStdString(), Log::Level::info, color);
 			}
 		}
 		int status = _pclose(pipe);
 		if (status == -1) {
-			logger.log(Log::Level::error, "pclose failed!");
+			logger.log("pclose failed!", Log::Level::error);
 			return -2;
 		}
 		return status;

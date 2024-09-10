@@ -15,7 +15,7 @@ namespace CLC
 
 			static Logging &getInstance();
 
-			static Log::Logger::ContextLogger &getLogger();
+			static Log::LogObject &getLogger();
 #ifdef USE_TREE_VIEW
 			static Log::UI::QContextLoggerTreeView& getView();
 #else
@@ -23,7 +23,7 @@ namespace CLC
 #endif
 
 		private:
-		Log::Logger::ContextLogger* m_logger;
+		Log::LogObject* m_logger;
 #ifdef USE_TREE_VIEW
 		Log::UI::QContextLoggerTreeView* m_view;
 #else

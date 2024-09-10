@@ -86,7 +86,7 @@ namespace CLC
 		static void critical(const QString& title, const QString& text);
 
 		static int executeCommand(const QString& command);
-		static int executeCommand(const QString& command, Log::Logger::ContextLogger &logger);
+		static int executeCommand(const QString& command, Log::LogObject &logger);
 
 	signals:
 		void signalInformation(const QString& title, const QString& text);

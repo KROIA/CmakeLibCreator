@@ -4,15 +4,12 @@ namespace CLC
 {
 	Logging::Logging()
 	{
-		m_logger = new Log::Logger::ContextLogger("CmakeLibraryCreator");
+		m_logger = new Log::LogObject("CmakeLibraryCreator");
 #ifdef USE_TREE_VIEW
 		m_view = new Log::UI::QContextLoggerTreeView(nullptr);
 #else
 		m_view = new Log::UI::QConsoleView(nullptr);
 #endif
-	
-
-		m_view->attachLogger(*m_logger);
 	}
 
 	Logging::~Logging()
@@ -27,7 +24,7 @@ namespace CLC
 		return instance;
 	}
 
-	Log::Logger::ContextLogger& Logging::getLogger()
+	Log::LogObject& Logging::getLogger()
 	{
 		return *getInstance().m_logger;
 	}

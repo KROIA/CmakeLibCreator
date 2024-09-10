@@ -184,7 +184,7 @@ namespace CLC
 		QFile file(m_settingsFilePath);
 		if (!file.open(QIODevice::ReadOnly))
 		{
-			Logging::getLogger().log(Log::Level::error, "Failed to open file for reading: " +file.fileName().toStdString());
+			Logging::getLogger().logError("Failed to open file for reading: " +file.fileName().toStdString());
 			return;
 		}
 		QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
@@ -217,7 +217,7 @@ namespace CLC
 		QFile file(m_settingsFilePath);
 		if (!file.open(QIODevice::WriteOnly))
 		{
-			Logging::getLogger().log(Log::Level::error, "Failed to open file for writing: "+ file.fileName().toStdString());
+			Logging::getLogger().logError("Failed to open file for writing: "+ file.fileName().toStdString());
 			return;
 		}
 		file.write(doc.toJson());
@@ -312,7 +312,7 @@ namespace CLC
 			QJsonObject json = loadJsonFile(m_qtModulesSourcePath + "/" + file);
 			if (json.isEmpty())
 			{
-				Logging::getLogger().log(Log::Level::error, "Failed to load json file: " + file.toStdString());
+				Logging::getLogger().logError("Failed to load json file: " + file.toStdString());
 				continue;
 			}
 			QTModule module;
@@ -321,7 +321,7 @@ namespace CLC
 			else
 			{
 				std::string strFromObj = QJsonDocument(json).toJson(QJsonDocument::Compact).toStdString();
-				Logging::getLogger().log(Log::Level::error, "Failed to load module from json file: " + file.toStdString() + " data: " + strFromObj);
+				Logging::getLogger().logError("Failed to load module from json file: " + file.toStdString() + " data: " + strFromObj);
 
 			}
 		}
@@ -340,7 +340,7 @@ namespace CLC
 				m_dependencies.append(dep);
 			}
 			else
-				Logging::getLogger().log(Log::Level::error,"Failed to load dependency from cmake file: "+ file.toStdString());
+				Logging::getLogger().logError("Failed to load dependency from cmake file: "+ file.toStdString());
 		}
 	}
 	QJsonObject Resources::loadJsonFile(const QString& path)

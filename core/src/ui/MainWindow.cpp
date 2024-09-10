@@ -541,7 +541,7 @@ namespace CLC
 					{
 						// Error
 						//QMessageBox::critical(this, "Error", "Error while building project: " + p);
-						Logging::getLogger().log(Log::Level::error, "Error while building project: " + p.toStdString());
+						Logging::getLogger().logError("Error while building project: " + p.toStdString());
 					}
 				}
 				this->m_workerThread->exit();
