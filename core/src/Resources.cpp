@@ -1,7 +1,8 @@
 #include "Resources.h"
 #include <QDir>
 #include <QJsonDocument>
-#include <QDebug>
+#include <QJsonArray>
+#include "Logging.h"
 
 namespace CLC
 {
@@ -161,6 +162,14 @@ namespace CLC
 	{
 		return instance().m_gitRepo;
 	}
+	void Resources::setLoadSaveProjects(const LoadSaveProjects& paths)
+	{
+		instance().m_loadSaveProjects = paths;
+	}
+	const Resources::LoadSaveProjects& Resources::getLoadSaveProjects()
+	{
+		return instance().m_loadSaveProjects;
+	}
 	void Resources::setLoadedProjectPath(const QString& path)
 	{
 		instance().m_loadedProjectPath = path;
@@ -175,7 +184,7 @@ namespace CLC
 		QFile file(m_settingsFilePath);
 		if (!file.open(QIODevice::ReadOnly))
 		{
-			qDebug() << "Failed to open file for reading: " << file.fileName();
+			Logging::getLogger().logError("Failed to open file for reading: " +file.fileName().toStdString());
 			return;
 		}
 		QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
@@ -187,7 +196,9 @@ namespace CLC
 		m_styleSheetSourcePath = settings["styleSheetSourcePath"].toString();
 		m_tmpPath = settings["tmpPath"].toString();
 
-		m_gitRepo.load(settings["git"].toObject());
+		m_gitRepo.load(settings["git"]);
+		//qDebug() << settings;
+		m_loadSaveProjects.load(settings["projectPaths"]);
 		loadQTModules_intern();
 		loadDependencies_intern();
 	}
@@ -200,26 +211,28 @@ namespace CLC
 		settings["styleSheetSourcePath"] = m_styleSheetSourcePath;
 		settings["tmpPath"] = m_tmpPath;
 		settings["git"] = m_gitRepo.save();
+		settings["projectPaths"] = m_loadSaveProjects.save();
 
 		QJsonDocument doc(settings);
 		QFile file(m_settingsFilePath);
 		if (!file.open(QIODevice::WriteOnly))
 		{
-			qDebug() << "Failed to open file for writing: " << file.fileName();
+			Logging::getLogger().logError("Failed to open file for writing: "+ file.fileName().toStdString());
 			return;
 		}
 		file.write(doc.toJson());
 		file.close();
 	}
 
-	void Resources::GitResources::load(const QJsonObject& obj)
+	void Resources::GitResources::load(const QJsonValue& val)
 	{
+		QJsonObject obj = val.toObject();
 		repo = obj["repo"].toString();
 		templateBranch = obj["templateBranch"].toString();
 		dependenciesBranch = obj["dependenciesBranch"].toString();
 		qtModulesBranch = obj["qtModulesBranch"].toString();
 	}
-	QJsonObject Resources::GitResources::save() const
+	QJsonValue Resources::GitResources::save() const
 	{
 		QJsonObject obj;
 		obj["repo"] = repo;
@@ -227,6 +240,23 @@ namespace CLC
 		obj["dependenciesBranch"] = dependenciesBranch;
 		obj["qtModulesBranch"] = qtModulesBranch;
 		return obj;
+	}
+
+	void Resources::LoadSaveProjects::load(const QJsonValue& val)
+	{
+		QJsonArray arr = val.toArray();
+		projectPaths.clear();
+		for (int i = 0; i < arr.size(); ++i)
+			if (arr[i].isString())
+				projectPaths.push_back(arr[i].toString());		 
+	}
+	QJsonValue Resources::LoadSaveProjects::save() const
+	{
+		QJsonArray arr;
+		for (int i = 0; i < projectPaths.size(); ++i)
+			arr.push_front(projectPaths[i]);
+
+		return arr;
 	}
 	void Resources::loadQTModules_intern()
 	{
@@ -282,14 +312,18 @@ namespace CLC
 			QJsonObject json = loadJsonFile(m_qtModulesSourcePath + "/" + file);
 			if (json.isEmpty())
 			{
-				qDebug() << "Failed to load json file: " << file;
+				Logging::getLogger().logError("Failed to load json file: " + file.toStdString());
 				continue;
 			}
 			QTModule module;
-			if(module.loadFromJson(json))
+			if (module.loadFromJson(json))
 				m_qtModules.append(module);
 			else
-				qDebug() << "Failed to load module from json file: " << file << " data: "<< json;
+			{
+				std::string strFromObj = QJsonDocument(json).toJson(QJsonDocument::Compact).toStdString();
+				Logging::getLogger().logError("Failed to load module from json file: " + file.toStdString() + " data: " + strFromObj);
+
+			}
 		}
 	}
 	void Resources::loadDependencies_intern()
@@ -306,7 +340,7 @@ namespace CLC
 				m_dependencies.append(dep);
 			}
 			else
-				qDebug() << "Failed to load dependency from cmake file: " << file;
+				Logging::getLogger().logError("Failed to load dependency from cmake file: "+ file.toStdString());
 		}
 	}
 	QJsonObject Resources::loadJsonFile(const QString& path)

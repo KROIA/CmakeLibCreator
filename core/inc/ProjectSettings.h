@@ -16,9 +16,9 @@ namespace CLC
 		{
 			struct Version
 			{
-				int major;
-				int minor;
-				int patch;
+				int major = 0;
+				int minor = 0;
+				int patch = 0;
 				Version();
 			};
 			Version version;
@@ -45,11 +45,15 @@ namespace CLC
 			bool qt_deploy;
 
 			QString qt_installBase; // "C:/Qt"
-			int qt_major_version; // Qt5, Qt6
-			QString qt_version; // "5.15.2"
+			//int qt_major_version; // Qt5, Qt6
+			//QString qt_version; // "5.15.2"
 			QString qt_compiler; // "msvc2019_64"
+			unsigned int qt_versionNr[3];
+			bool qt_useNewestVersion;
+			bool qt_autoFindCompiler;
 
 			QVector<QTModule> qModules;
+			QStringList customDefines;
 
 			QString debugPostFix;
 			QString staticPostFix;
@@ -66,6 +70,11 @@ namespace CLC
 			void autosetLibDefine();
 			void autosetLibProfileDefine();
 			void autosetLibShortDefine();
+
+			void setQtInstallBase(const QString& path);
+			void setQtVersion(const QString& versionStr);
+			QString getQtVersionStr() const;
+			void setQtCompiler(const QString& compilerStr);
 		};
 
 		// Placeholder for strings that are used in the CMakeLists.txt and code files
@@ -90,6 +99,7 @@ namespace CLC
 		};
 
 		ProjectSettings();
+		//ProjectSettings(const ProjectSettings &other);
 		~ProjectSettings();
 
 		ProjectSettings& operator=(const ProjectSettings& other);
@@ -111,6 +121,8 @@ namespace CLC
 		void autosetLibShortDefine();
 		void autoSetNamespaceName();
 		void autoSetExportName();
+
+		ProjectSettings getValidated() const;
 
 		static const Placeholder s_defaultPlaceholder;
 	private:

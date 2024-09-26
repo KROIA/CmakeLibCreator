@@ -1,6 +1,9 @@
 #include "Utilities.h"
 #include <QDebug>
 #include <QDirIterator>
+#include <cstdio>
+#include <iostream>
+#include <windows.h>
 
 namespace CLC
 {
@@ -11,7 +14,7 @@ namespace CLC
 	}
 	bool Utilities::copyAndReplaceFolderContents(const QString& absolutFromDir, const QString& absolutToDir, bool copyAndRemove)
 	{
-		qDebug() << "Copying from " << absolutFromDir << " to " << absolutToDir;
+		Logging::getLogger().log("Copying from "+ absolutFromDir.toStdString() + " to " + absolutToDir.toStdString());
 		QDirIterator it(absolutFromDir, QDirIterator::Subdirectories);
 		QDir dir(absolutFromDir);
 		const int absSourcePathLength = dir.absoluteFilePath(absolutFromDir).length();
@@ -240,26 +243,33 @@ namespace CLC
 		return hasChanged;
 	}
 
-	int Utilities::getLineIndex(const QVector<QString>& lines, const QString& pattern, bool onlyCompleteWord)
+	int Utilities::getLineIndex(const QVector<QString>& lines, const QString& pattern, bool onlyCompleteWord, const QString& commentKey)
 	{
-		return getLineIndex(lines, pattern, 0, onlyCompleteWord);
+		return getLineIndex(lines, pattern, 0, onlyCompleteWord, commentKey);
 	}
-	int Utilities::getLineIndex(const QVector<QString>& lines, const QVector<QString>& patterns, bool onlyCompleteWord)
+	int Utilities::getLineIndex(const QVector<QString>& lines, const QVector<QString>& patterns, bool onlyCompleteWord, const QString& commentKey)
 	{
-		return getLineIndex(lines, patterns, 0, onlyCompleteWord);
+		return getLineIndex(lines, patterns, 0, onlyCompleteWord, commentKey);
 	}
-	int Utilities::getLineIndex(const QVector<QString>& lines, const QString& pattern, int startIndex, bool onlyCompleteWord)
+	int Utilities::getLineIndex(const QVector<QString>& lines, const QString& pattern, int startIndex, bool onlyCompleteWord, const QString& commentKey)
 	{
 		for (int i = startIndex; i < lines.size(); i++)
 		{
-			if (lines[i].contains(pattern))
+			QString line = lines[i];
+			if (commentKey.size() > 0)
+			{
+				int commentIndex = line.indexOf(commentKey);
+				if (commentIndex != -1)
+					line = line.mid(0, commentIndex);
+			}
+			if (line.contains(pattern))
 			{
 				if (onlyCompleteWord)
 				{
-					const QString& line = lines[i];
+					//const QString& line = lines[i];
 					int index = line.indexOf(pattern);
-					QChar before = (index == 0 ? ' ' : line[index - 1]);
-					QChar after = (index + pattern.size() >= line.size() ? ' ' : line[index + pattern.size()]);
+					QChar before = (index == 0 ? ' ' : line.at(index - 1));
+					QChar after = (index + pattern.size() >= line.size() ? ' ' : line.at(index + pattern.size()));
 					if (before.isLetterOrNumber() || after.isLetterOrNumber())
 						continue;
 					else
@@ -271,21 +281,28 @@ namespace CLC
 		}
 		return -1;
 	}
-	int Utilities::getLineIndex(const QVector<QString>& lines, const QVector<QString>& patterns, int startIndex, bool onlyCompleteWord)
+	int Utilities::getLineIndex(const QVector<QString>& lines, const QVector<QString>& patterns, int startIndex, bool onlyCompleteWord, const QString& commentKey)
 	{
 		for (int i = startIndex; i < lines.size(); i++)
 		{
 			bool foundAll = true;
 			for (const auto& pattern : patterns)
 			{
-				if (lines[i].contains(pattern))
+				QString line = lines[i];
+				if (commentKey.size() > 0)
+				{
+					int commentIndex = line.indexOf(commentKey);
+					if (commentIndex != -1)
+						line = line.mid(0, commentIndex);
+				}
+				if (line.contains(pattern))
 				{
 					if (onlyCompleteWord)
 					{
-						const QString& line = lines[i];
+						//const QString& line = lines[i];
 						int index = line.indexOf(pattern);
-						QChar before = (index == 0 ? ' ' : line[index - 1]);
-						QChar after = (index + pattern.size() >= line.size() ? ' ' : line[index + pattern.size()]);
+						QChar before = (index == 0 ? ' ' : line.at(index - 1));
+						QChar after = (index + pattern.size() >= line.size() ? ' ' : line.at(index + pattern.size()));
 						if (before.isLetterOrNumber() || after.isLetterOrNumber())
 							foundAll = false;
 					}
@@ -304,7 +321,7 @@ namespace CLC
 
 	bool Utilities::replaceCmakeVariable(QVector<QString>& lines, QString variable, const QString& value)
 	{
-		int lineIndex = getLineIndex(lines, variable, true);
+		int lineIndex = getLineIndex(lines, variable, true, "#");
 		if (lineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
@@ -335,14 +352,14 @@ namespace CLC
 	}
 	bool Utilities::replaceCmakeVariable(QVector<QString>& lines, QString variable, const QVector<QString>& values)
 	{
-		int startLineIndex = getLineIndex(lines, variable, true);
+		int startLineIndex = getLineIndex(lines, variable, true, "#");
 		if (startLineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
 			//QMessageBox::critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
 			return false;
 		}
-		int endLineIndex = getLineIndex(lines, ")", startLineIndex, false);
+		int endLineIndex = getLineIndex(lines, ")", startLineIndex, false, "#");
 		if (endLineIndex == -1)
 		{
 			critical("Error", "Could not find end of variable " + variable + " in CMakeLists.txt");
@@ -435,7 +452,7 @@ namespace CLC
 						newLines.push_back(line);
 				}
 				
-				int endIndex = getLineIndex(lines, "USER_SECTION_END", i, false);
+				int endIndex = getLineIndex(lines, "USER_SECTION_END", i, false, "");
 				if (endIndex == -1)
 				{
 					critical("Error", "Could not find end of user section in CMakeLists.txt");
@@ -454,7 +471,7 @@ namespace CLC
 
 	bool Utilities::readCmakeVariable(const QVector<QString>& lines, QString variable, QString& value)
 	{
-		int lineIndex = getLineIndex(lines, variable, true);
+		int lineIndex = getLineIndex(lines, variable, true, "#");
 		if (lineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
@@ -481,7 +498,7 @@ namespace CLC
 	}
 	bool Utilities::readCmakeVariable(const QVector<QString>& lines, QString variable, bool& value)
 	{
-		int lineIndex = getLineIndex(lines, variable, true);
+		int lineIndex = getLineIndex(lines, variable, true, "#");
 		if (lineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
@@ -502,7 +519,7 @@ namespace CLC
 	}
 	bool Utilities::readCmakeVariable(const QVector<QString>& lines, QString variable, int& value)
 	{
-		int lineIndex = getLineIndex(lines, variable, true);
+		int lineIndex = getLineIndex(lines, variable, true, "#");
 		if (lineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
@@ -519,7 +536,7 @@ namespace CLC
 	}
 	bool Utilities::readCmakeVariable(const QVector<QString>& lines, QString variable, unsigned int& value)
 	{
-		int lineIndex = getLineIndex(lines, variable, true);
+		int lineIndex = getLineIndex(lines, variable, true, "#");
 		if (lineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
@@ -536,14 +553,14 @@ namespace CLC
 	}
 	bool Utilities::readCmakeVariables(const QVector<QString>& lines, QString variable, QVector<QString>& values)
 	{
-		int lineIndex = getLineIndex(lines, variable, true);
+		int lineIndex = getLineIndex(lines, variable, true, "#");
 		if (lineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
 			//QMessageBox::critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
 			return false;
 		}
-		int endLineIndex = getLineIndex(lines, ")", lineIndex, false);
+		int endLineIndex = getLineIndex(lines, ")", lineIndex, false, "#");
 		if (endLineIndex == -1)
 		{
 			critical("Error", "Could not find end of variable " + variable + " in CMakeLists.txt");
@@ -648,7 +665,7 @@ namespace CLC
 
 	bool Utilities::replaceHeaderVariable(QVector<QString>& lines, const QString& variable, const QString& value)
 	{
-		int lineIndex = getLineIndex(lines, { variable, "=", ";"}, false);
+		int lineIndex = getLineIndex(lines, { variable, "=", ";"}, false, "//");
 		if (lineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in header file");
@@ -664,7 +681,7 @@ namespace CLC
 	}
 	bool Utilities::readHeaderVariable(QVector<QString>& lines, const QString& variable, QString& value)
 	{
-		int lineIndex = getLineIndex(lines, { variable, "=", ";" }, false);
+		int lineIndex = getLineIndex(lines, { variable, "=", ";" }, false, "//");
 		if (lineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in header file");
@@ -694,7 +711,7 @@ namespace CLC
 	}
 	bool Utilities::readHeaderVariable(QVector<QString>& lines, const QString& variable, int& value)
 	{
-		int lineIndex = getLineIndex(lines, { variable, "=", ";" }, false);
+		int lineIndex = getLineIndex(lines, { variable, "=", ";" }, false, "//");
 		if (lineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in header file");
@@ -760,8 +777,10 @@ namespace CLC
 
 		QString gitCommand = "git clone --branch " + branch + " " + url + " " + folder;
 
-		qDebug() << gitCommand;
-		system(gitCommand.toStdString().c_str());
+		//Logging::getLogger().log(gitCommand.toStdString());
+		int ret = executeCommand(gitCommand, Logging::getLogger());
+		ret;
+		//system(gitCommand.toStdString().c_str());
 		QStringList files = tmpDir.entryList(QDir::Files);
 		if (files.size() == 0)
 		{
@@ -783,6 +802,83 @@ namespace CLC
 	void Utilities::critical(const QString& title, const QString& text)
 	{
 		instance()._critical(title, text);
+	}
+
+	int Utilities::executeCommand(const QString& command)
+	{
+		// execute command using popen
+		Log::LogObject context(Logging::getLogger().getID(), "Utilities::executeCommand");
+		int result = executeCommand(command, context);
+		//Logging::getLogger().destroyContext(context);
+		return result;
+	}
+	int Utilities::executeCommand(const QString& command, Log::LogObject & logger)
+	{
+		logger.log("Executing command: " + command.toStdString(), Log::Level::info);
+
+		FILE* pipe = _popen((command).toStdString().c_str(), "r");
+		if (!pipe) {
+			//std::cerr << "Error: popen failed!" << std::endl;
+			logger.log("popen failed!", Log::Level::error);
+			return -1;
+		}
+		char buffer[1024];
+		while (!feof(pipe)) {
+			if (fgets(buffer, 1024, pipe) != nullptr) {
+				QString msg = QString(buffer);
+				if (msg.indexOf("build successful") != -1)
+				{
+					int a = 0;
+					a;
+				}
+				Log::Color color = Log::Colors::white;
+
+				// Search for console color codes
+
+				if (msg.toLower().indexOf("error") != -1)
+					color = Log::Colors::red;
+				else if (msg.toLower().indexOf("warning") != -1)
+					color = Log::Colors::yellow;
+
+				const QString target = "[";
+				if (msg.indexOf(target) != -1)
+				{
+					int index = msg.indexOf("[");
+					QString colorCode = msg.mid(index, 4).toLower();
+					if (colorCode.indexOf("[0m") != -1)
+						color = Log::Colors::white;
+					else if (colorCode.indexOf("[31m") != -1)
+						color = Log::Colors::red;
+					else if (colorCode.indexOf("[32m") != -1)
+						color = Log::Colors::green;
+					else if (colorCode.indexOf("[33m") != -1)
+						color = Log::Colors::yellow;
+					else if (colorCode.indexOf("[34m") != -1)
+						color = Log::Colors::blue;
+					else if (colorCode.indexOf("[35m") != -1)
+						color = Log::Colors::magenta;
+					else if (colorCode.indexOf("[36m") != -1)
+						color = Log::Colors::cyan;
+					else if (colorCode.indexOf("[37m") != -1)
+						color = Log::Colors::white;
+					else
+					{
+						break;
+					}
+					// Removes color code from message
+					//if(index > 0)
+					//	msg.remove(index-1, 6);
+
+				}
+				logger.log(msg.toStdString(), Log::Level::info, color);
+			}
+		}
+		int status = _pclose(pipe);
+		if (status == -1) {
+			logger.log("pclose failed!", Log::Level::error);
+			return -2;
+		}
+		return status;
 	}
 
 	void Utilities::_information(const QString& title, const QString& text)

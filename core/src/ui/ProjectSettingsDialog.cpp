@@ -55,6 +55,16 @@ namespace CLC
 		ui.license_lineEdit->setText(libSettings.license);
 
 		ui.libDefine_lineEdit->setText(cmakeSettings.lib_define);
+
+		QString customDefines;
+		for (int i=0; i< cmakeSettings.customDefines.size(); ++i)
+		{
+			customDefines += cmakeSettings.customDefines[i];
+			if (i < cmakeSettings.customDefines.size() - 1)
+				customDefines += "\n";
+		}
+		ui.customDefines_plainTextEdit->setPlainText(customDefines);
+
 		ui.libProfileDefine_lineEdit->setText(cmakeSettings.lib_profile_define);
 		ui.qtEnable_checkBox->setChecked(cmakeSettings.qt_enable);
 		ui.qtDeploy_checkBox->setChecked(cmakeSettings.qt_deploy);
@@ -68,52 +78,32 @@ namespace CLC
 		ui.compileUnitTests_checkBox->setChecked(cmakeSettings.compile_unittests);
 
 
-		if(cmakeSettings.qt_installBase.isEmpty())
-			ui.qt_installBasePath_lineEdit->setText("C:/Qt");
-		else
-			ui.qt_installBasePath_lineEdit->setText(cmakeSettings.qt_installBase);
+	
+		ui.qt_installBasePath_lineEdit->setText(cmakeSettings.qt_installBase);
 
-		QStringList parts = cmakeSettings.qt_version.split('.');
-		int major = cmakeSettings.qt_major_version;
 		
-
-		int minor = 0;
-		int patch = 0;
-		bool useNewestQtVersion = false;
-		if (parts.size() == 3) {
-			major = parts[0].toInt();
-			minor = parts[1].toInt();
-			patch = parts[2].toInt();
-		}
-		else {
-			useNewestQtVersion = true;
-		}
-		if (major <= 0)
-			major = 5;
-		ui.qt_useNewestVersion_checkBox->setChecked(useNewestQtVersion);
-		on_qt_useNewestVersion_checkBox_clicked(useNewestQtVersion);
-		ui.qt_minorVersion_spinBox->setValue(minor);
-		ui.qt_patchVersion_spinBox->setValue(patch);
-		if (m_qtMajorVersionText.find(major) != m_qtMajorVersionText.end())
+		ui.qt_useNewestVersion_checkBox->setChecked(cmakeSettings.qt_useNewestVersion);
+		on_qt_useNewestVersion_checkBox_clicked(cmakeSettings.qt_useNewestVersion);
+		ui.qt_minorVersion_spinBox->setValue(cmakeSettings.qt_versionNr[1]);
+		ui.qt_patchVersion_spinBox->setValue(cmakeSettings.qt_versionNr[2]);
+		if (m_qtMajorVersionText.find(cmakeSettings.qt_versionNr[0]) != m_qtMajorVersionText.end())
 		{
 			int index = 0;
 			for (const auto& el : m_qtMajorVersionText)
 			{
-				if (el.first == major)
+				if (el.first == cmakeSettings.qt_versionNr[0])
 					break;
 				++index;
 			}
 			if(index < ui.qt_majorVersion_comboBox->count())
 				ui.qt_majorVersion_comboBox->setCurrentIndex(index);
 		}
-		if(cmakeSettings.qt_compiler.isEmpty())
-			ui.qt_compilerName_lineEdit->setText("autoFind");
-		else
-			ui.qt_compilerName_lineEdit->setText(cmakeSettings.qt_compiler);
+
+		ui.qt_compilerName_lineEdit->setText(cmakeSettings.qt_compiler);
 
 		m_ignoreNameChangeEvents = false;
 	}
-	const ProjectSettings& ProjectSettingsDialog::getSettings()
+	ProjectSettings ProjectSettingsDialog::getSettings()
 	{
 		ProjectSettings::LibrarySettings libSettings = m_settings.getLibrarySettings();
 		libSettings.version.major = ui.major_spinBox->value();
@@ -131,6 +121,7 @@ namespace CLC
 		ProjectSettings::CMAKE_settings cmakeSettings = m_settings.getCMAKE_settings();
 		cmakeSettings.libraryName = ui.libraryName_lineEdit->text();
 		cmakeSettings.lib_define = ui.libDefine_lineEdit->text();
+		cmakeSettings.customDefines = getCustomDefines();
 		cmakeSettings.lib_profile_define = ui.libProfileDefine_lineEdit->text();
 		cmakeSettings.lib_short_define = ui.libraryNameShort_lineEdit->text();
 		cmakeSettings.qt_enable = ui.qtEnable_checkBox->isChecked();
@@ -146,25 +137,41 @@ namespace CLC
 		cmakeSettings.qt_installBase = ui.qt_installBasePath_lineEdit->text();
 		QString majorStr = ui.qt_majorVersion_comboBox->currentText().toLower();
 		int major = majorStr.mid(majorStr.indexOf("qt") + 2).toInt();
-		cmakeSettings.qt_major_version = major;
-		if (ui.qt_useNewestVersion_checkBox->isChecked())
-			cmakeSettings.qt_version = "autoFind";
-		else
-		{
-			int minor = ui.qt_minorVersion_spinBox->value();
-			int patch = ui.qt_patchVersion_spinBox->value();
-			cmakeSettings.qt_version = QString::number(major) + "." + QString::number(minor) + "." + QString::number(patch);
-		}
-		QString qtCompilerName = ui.qt_compilerName_lineEdit->text();
-		if (qtCompilerName.isEmpty())
-			qtCompilerName = "autoFind";
-		cmakeSettings.qt_compiler = qtCompilerName;
+		cmakeSettings.qt_versionNr[0] = major;
+		cmakeSettings.qt_versionNr[1] = ui.qt_minorVersion_spinBox->value();
+		cmakeSettings.qt_versionNr[2] = ui.qt_patchVersion_spinBox->value();
+		cmakeSettings.qt_useNewestVersion = ui.qt_useNewestVersion_checkBox->isChecked();
 
+		cmakeSettings.setQtCompiler(ui.qt_compilerName_lineEdit->text());
 		
 		m_settings.setLibrarySettings(libSettings);
 		m_settings.setCMAKE_settings(cmakeSettings);
+		return m_settings.getValidated();
+	}
 
-		return m_settings;
+	QStringList ProjectSettingsDialog::getCustomDefines() const
+	{
+		QString txt = ui.customDefines_plainTextEdit->toPlainText();
+		// Split the txt into lines and skip empty lines
+		QStringList defines = txt.split("\n", Qt::SkipEmptyParts);
+		// Remove leading and trailing whitespaces
+		for (QString& def : defines)
+		{
+			def = def.trimmed();
+		}
+		// Split by spaces and remove empty parts
+		QStringList defines2;
+		for (QString& def : defines)
+		{
+			QStringList parts = def.split(" ", Qt::SkipEmptyParts);
+			for(QString part : parts)
+			{
+				part = part.trimmed();
+				if(!part.isEmpty())
+					defines2.push_back(part);
+			}
+		}
+		return defines2;
 	}
 
 	void ProjectSettingsDialog::on_qtModules_pushButton_clicked()

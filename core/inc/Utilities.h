@@ -5,7 +5,7 @@
 #include <QStringList>
 #include <QObject>
 #include <QMessageBox>
-
+#include "Logging.h"
 
 namespace CLC
 {
@@ -48,10 +48,13 @@ namespace CLC
 		// QVector<QVector<QString>> mustContainInLine2 = {{"if", "(", "WIN32", ")"}, {"if", "(", "UNIX", ")"}}; OR condition between the 2 vectors
  		static bool replaceAllIfLineContains(QVector<QString>& lines, const QString& target, const QString& replacement, const QVector<QVector<QString>> &mustContainInLine);
 	
-		static int getLineIndex(const QVector<QString>& lines, const QString& pattern, bool onlyCompleteWord);
-		static int getLineIndex(const QVector<QString>& lines, const QVector<QString>& patterns, bool onlyCompleteWord);
-		static int getLineIndex(const QVector<QString>& lines, const QString& pattern, int startIndex, bool onlyCompleteWord);
-		static int getLineIndex(const QVector<QString>& lines, const QVector<QString>& pattern, int startIndex, bool onlyCompleteWord);
+		// QString commentKey means the string that defines a comment in the file
+		// Example: "#" for CMake, "//" for C++, etc.
+		// If it is empty, comments are not ignored
+		static int getLineIndex(const QVector<QString>& lines, const QString& pattern, bool onlyCompleteWord, const QString& commentKey);
+		static int getLineIndex(const QVector<QString>& lines, const QVector<QString>& patterns, bool onlyCompleteWord, const QString& commentKey);
+		static int getLineIndex(const QVector<QString>& lines, const QString& pattern, int startIndex, bool onlyCompleteWord, const QString& commentKey);
+		static int getLineIndex(const QVector<QString>& lines, const QVector<QString>& pattern, int startIndex, bool onlyCompleteWord, const QString& commentKey);
 		
 		static bool replaceCmakeVariable(QVector<QString> &lines, QString variable, const QString& value);
 		static bool replaceCmakeVariableString(QVector<QString> &lines, QString variable, const QString& value);
@@ -84,6 +87,9 @@ namespace CLC
 		static void information(const QString& title, const QString& text);
 		static void warning(const QString& title, const QString& text);
 		static void critical(const QString& title, const QString& text);
+
+		static int executeCommand(const QString& command);
+		static int executeCommand(const QString& command, Log::LogObject &logger);
 
 	signals:
 		void signalInformation(const QString& title, const QString& text);

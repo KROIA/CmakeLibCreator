@@ -1,12 +1,12 @@
-## description: simple library create unit tests
+## description: simple library to create log files and UI based logging systems
 include(FetchContent)
 
 function(dep LIBRARY_MACRO_NAME SHARED_LIB STATIC_LIB STATIC_PROFILE_LIB)
     # Define the git repository and tag to download from
-    set(LIB_NAME UnitTest)		
-    set(LIB_MACRO_NAME UNIT_TEST)
-    set(GIT_REPO https://github.com/KROIA/UnitTest.git)	
-    set(GIT_TAG main)									
+    set(LIB_NAME Logger)
+	set(LIB_MACRO_NAME LOGGER)
+    set(GIT_REPO https://github.com/KROIA/Logger.git)
+    set(GIT_TAG main)
 
     FetchContent_Declare(
         ${LIB_NAME}
@@ -14,8 +14,8 @@ function(dep LIBRARY_MACRO_NAME SHARED_LIB STATIC_LIB STATIC_PROFILE_LIB)
         GIT_TAG        ${GIT_TAG}
     )
 
-    set(${LIB_NAME}_NO_EXAMPLES True)						# Disables the examlpes of the library
-    set(${LIB_NAME}_NO_UNITTESTS True)						# Disables the unittests of the library
+    set(${LIB_NAME}_NO_EXAMPLES True)
+    set(${LIB_NAME}_NO_UNITTESTS True)
     message("Downloading dependency: ${LIB_NAME} from: ${GIT_REPO} tag: ${GIT_TAG}")
     FetchContent_MakeAvailable(${LIB_NAME})
 
@@ -24,7 +24,7 @@ function(dep LIBRARY_MACRO_NAME SHARED_LIB STATIC_LIB STATIC_PROFILE_LIB)
     list(APPEND DEPS_FOR_STATIC_LIB ${LIB_NAME}_static)
     list(APPEND DEPS_FOR_STATIC_PROFILE_LIB ${LIB_NAME}_static_profile) # only use for static profiling profile
 
-    set(${LIBRARY_MACRO_NAME} "${${LIBRARY_MACRO_NAME}};${LIB_MACRO_NAME}" PARENT_SCOPE)
+	set(${LIBRARY_MACRO_NAME} "${${LIBRARY_MACRO_NAME}};${LIB_MACRO_NAME}" PARENT_SCOPE)
     set(${SHARED_LIB} "${${SHARED_LIB}};${DEPS_FOR_SHARED_LIB}" PARENT_SCOPE)
     set(${STATIC_LIB} "${${STATIC_LIB}};${DEPS_FOR_STATIC_LIB}" PARENT_SCOPE)
     set(${STATIC_PROFILE_LIB} "${${STATIC_PROFILE_LIB}};${DEPS_FOR_STATIC_PROFILE_LIB}" PARENT_SCOPE)

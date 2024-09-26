@@ -45,6 +45,11 @@ namespace CLC
 	private:
 		void threadFinished();
 		
+		bool loadProjectAsync(const QString& path);
+		void loadAndSaveProjects(QStringList paths);
+		void buildAllProjects(QStringList paths);
+
+		void closeEvent(QCloseEvent* event) override;
 
 
 		Ui::MainWindow ui;

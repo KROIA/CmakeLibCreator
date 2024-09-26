@@ -21,11 +21,16 @@ endif()
 # QT settings
 if(QT_ENABLE)
     message("Using QT modules: ${QT_MODULES}")
-    find_package(${QT_PACKAGE_NAME} REQUIRED COMPONENTS ${QT_MODULES})
+    list(LENGTH QT_MODULES list_length)
+    if(NOT list_length EQUAL 0)
+        find_package(${QT_PACKAGE_NAME} REQUIRED COMPONENTS ${QT_MODULES})
 
-    set(CMAKE_AUTOMOC ON)
-    set(CMAKE_AUTORCC ON)
-    #set(CMAKE_AUTOUIC ON)
+        set(CMAKE_AUTOMOC ON)
+        set(CMAKE_AUTORCC ON)
+        #set(CMAKE_AUTOUIC ON)
+    else()
+        message("ERROR: QT_MODULES is empty. Please specify the required modules or set the variable \"QT_ENABLE\" to OFF")
+    endif()
 endif()
 # end QT settings
 
@@ -80,8 +85,19 @@ FOREACH(file ${SOURCES})
    message("  File: " ${file})
 ENDFOREACH()
 
+
 # Set defines for inside the code of the library
 list(APPEND DEFINES_FOR_ALL_PROFILES ${LIB_DEFINE})
+
+# Add the names of the dependencies as a define
+foreach(DEPENDENCY ${DEPENDENCY_NAME_MACRO})
+	list(APPEND DEFINES_FOR_ALL_PROFILES ${DEPENDENCY})
+endforeach()
+
+foreach(DEF ${USER_SPECIFIC_DEFINES})
+	list(APPEND DEFINES_FOR_ALL_PROFILES ${DEF})
+endforeach()
+
 if(QT_ENABLE)
     list(APPEND DEFINES_FOR_ALL_PROFILES QT_ENABLED)
     # Check if QT_MODULES contains Widgets
@@ -91,6 +107,8 @@ if(QT_ENABLE)
         list(APPEND DEFINES_FOR_ALL_PROFILES QT_WIDGETS_ENABLED)
     endif()
 endif()
+
+message("Defines for all profiles: ${DEFINES_FOR_ALL_PROFILES}")
 list(APPEND DEFINES_FOR_SHARED_LIB ${DEFINES_FOR_ALL_PROFILES} BUILD_SHARED)
 list(APPEND DEFINES_FOR_STATIC_LIB ${DEFINES_FOR_ALL_PROFILES} BUILD_STATIC)
 if(EASY_PROFILER_IS_AVAILABLE)
@@ -160,16 +178,14 @@ endif()
 ## USER_SECTION_END
 
 # Define the install path
-message("Installation to path: ${CMAKE_INSTALL_PREFIX}/bin")
 message("Installation to path: ${INSTALL_LIB_PATH}")
 if(EASY_PROFILER_IS_AVAILABLE)
-    install(TARGETS ${LIBRARY_NAME_SHARED} ${LIBRARY_NAME_STATIC}  ${LIBRARY_NAME_STATIC_PROFILE} DESTINATION "${INSTALL_BIN_PATH}")
+    install(TARGETS ${LIBRARY_NAME_SHARED} ${LIBRARY_NAME_STATIC}  ${LIBRARY_NAME_STATIC_PROFILE} DESTINATION "${INSTALL_LIB_PATH}")
 else()
-    install(TARGETS ${LIBRARY_NAME_SHARED} ${LIBRARY_NAME_STATIC} DESTINATION "${INSTALL_BIN_PATH}")
+    install(TARGETS ${LIBRARY_NAME_SHARED} ${LIBRARY_NAME_STATIC} DESTINATION "${INSTALL_LIB_PATH}")
 endif()
 
-copyLibraryHeaders("${CMAKE_CURRENT_SOURCE_DIR}/${INCLUDE_PATH}" "${CMAKE_INSTALL_PREFIX}/include" "${LIBRARY_NAME}")
-
+copyLibraryHeaders("${CMAKE_CURRENT_SOURCE_DIR}/${INCLUDE_PATH}" "${INSTALL_INCLUDE_PATH}" "${LIBRARY_NAME}")
 
 ## USER_SECTION_START 6
 
