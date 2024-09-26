@@ -575,7 +575,7 @@ namespace CLC
 	void MainWindow::on_actionVersion_triggered()
 	{
 		// Display UI with version information		
-		QWidget *w = LibraryInfo::createInfoWidget(this);
+		QWidget *w = LibraryInfo::createInfoWidget();
 		w->setWindowTitle("Version");
 		// auto delete on close
 		w->setAttribute(Qt::WA_DeleteOnClose);

@@ -4,7 +4,9 @@
 
 /// USER_SECTION_END
 
-#include "CmakeLibraryCreator_base.h"
+#include "CmakeLibraryCreator_global.h"
+#include "CmakeLibraryCreator_debug.h"
+
 #include <sstream>
 
 #define STRINGIFY(x) #x
@@ -53,7 +55,7 @@ namespace CLC
 
 		// Current version of the library
 		static constexpr int versionMajor				= 1;
-		static constexpr int versionMinor				= 1;
+		static constexpr int versionMinor				= 2;
 		static constexpr int versionPatch				= 0;
 
 		static constexpr Version version{ versionMajor, versionMinor, versionPatch };

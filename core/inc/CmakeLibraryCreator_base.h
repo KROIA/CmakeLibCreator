@@ -6,6 +6,7 @@
 
 #include "CmakeLibraryCreator_global.h"
 #include "CmakeLibraryCreator_debug.h"
+#include "CmakeLibraryCreator_info.h"
 
 /// USER_SECTION_START 2
 
