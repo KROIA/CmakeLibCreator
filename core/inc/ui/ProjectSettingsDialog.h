@@ -21,6 +21,8 @@ namespace CLC
 		void setSettings(const ProjectSettings& settings);
 		ProjectSettings getSettings();
 
+		QStringList getCustomDefines() const;
+
 	private slots:
 		void on_qtModules_pushButton_clicked();
 		void on_dependencies_pushButton_clicked();

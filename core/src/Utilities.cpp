@@ -243,26 +243,33 @@ namespace CLC
 		return hasChanged;
 	}
 
-	int Utilities::getLineIndex(const QVector<QString>& lines, const QString& pattern, bool onlyCompleteWord)
+	int Utilities::getLineIndex(const QVector<QString>& lines, const QString& pattern, bool onlyCompleteWord, const QString& commentKey)
 	{
-		return getLineIndex(lines, pattern, 0, onlyCompleteWord);
+		return getLineIndex(lines, pattern, 0, onlyCompleteWord, commentKey);
 	}
-	int Utilities::getLineIndex(const QVector<QString>& lines, const QVector<QString>& patterns, bool onlyCompleteWord)
+	int Utilities::getLineIndex(const QVector<QString>& lines, const QVector<QString>& patterns, bool onlyCompleteWord, const QString& commentKey)
 	{
-		return getLineIndex(lines, patterns, 0, onlyCompleteWord);
+		return getLineIndex(lines, patterns, 0, onlyCompleteWord, commentKey);
 	}
-	int Utilities::getLineIndex(const QVector<QString>& lines, const QString& pattern, int startIndex, bool onlyCompleteWord)
+	int Utilities::getLineIndex(const QVector<QString>& lines, const QString& pattern, int startIndex, bool onlyCompleteWord, const QString& commentKey)
 	{
 		for (int i = startIndex; i < lines.size(); i++)
 		{
-			if (lines[i].contains(pattern))
+			QString line = lines[i];
+			if (commentKey.size() > 0)
+			{
+				int commentIndex = line.indexOf(commentKey);
+				if (commentIndex != -1)
+					line = line.mid(0, commentIndex);
+			}
+			if (line.contains(pattern))
 			{
 				if (onlyCompleteWord)
 				{
-					const QString& line = lines[i];
+					//const QString& line = lines[i];
 					int index = line.indexOf(pattern);
-					QChar before = (index == 0 ? ' ' : line[index - 1]);
-					QChar after = (index + pattern.size() >= line.size() ? ' ' : line[index + pattern.size()]);
+					QChar before = (index == 0 ? ' ' : line.at(index - 1));
+					QChar after = (index + pattern.size() >= line.size() ? ' ' : line.at(index + pattern.size()));
 					if (before.isLetterOrNumber() || after.isLetterOrNumber())
 						continue;
 					else
@@ -274,21 +281,28 @@ namespace CLC
 		}
 		return -1;
 	}
-	int Utilities::getLineIndex(const QVector<QString>& lines, const QVector<QString>& patterns, int startIndex, bool onlyCompleteWord)
+	int Utilities::getLineIndex(const QVector<QString>& lines, const QVector<QString>& patterns, int startIndex, bool onlyCompleteWord, const QString& commentKey)
 	{
 		for (int i = startIndex; i < lines.size(); i++)
 		{
 			bool foundAll = true;
 			for (const auto& pattern : patterns)
 			{
-				if (lines[i].contains(pattern))
+				QString line = lines[i];
+				if (commentKey.size() > 0)
+				{
+					int commentIndex = line.indexOf(commentKey);
+					if (commentIndex != -1)
+						line = line.mid(0, commentIndex);
+				}
+				if (line.contains(pattern))
 				{
 					if (onlyCompleteWord)
 					{
-						const QString& line = lines[i];
+						//const QString& line = lines[i];
 						int index = line.indexOf(pattern);
-						QChar before = (index == 0 ? ' ' : line[index - 1]);
-						QChar after = (index + pattern.size() >= line.size() ? ' ' : line[index + pattern.size()]);
+						QChar before = (index == 0 ? ' ' : line.at(index - 1));
+						QChar after = (index + pattern.size() >= line.size() ? ' ' : line.at(index + pattern.size()));
 						if (before.isLetterOrNumber() || after.isLetterOrNumber())
 							foundAll = false;
 					}
@@ -307,7 +321,7 @@ namespace CLC
 
 	bool Utilities::replaceCmakeVariable(QVector<QString>& lines, QString variable, const QString& value)
 	{
-		int lineIndex = getLineIndex(lines, variable, true);
+		int lineIndex = getLineIndex(lines, variable, true, "#");
 		if (lineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
@@ -338,14 +352,14 @@ namespace CLC
 	}
 	bool Utilities::replaceCmakeVariable(QVector<QString>& lines, QString variable, const QVector<QString>& values)
 	{
-		int startLineIndex = getLineIndex(lines, variable, true);
+		int startLineIndex = getLineIndex(lines, variable, true, "#");
 		if (startLineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
 			//QMessageBox::critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
 			return false;
 		}
-		int endLineIndex = getLineIndex(lines, ")", startLineIndex, false);
+		int endLineIndex = getLineIndex(lines, ")", startLineIndex, false, "#");
 		if (endLineIndex == -1)
 		{
 			critical("Error", "Could not find end of variable " + variable + " in CMakeLists.txt");
@@ -438,7 +452,7 @@ namespace CLC
 						newLines.push_back(line);
 				}
 				
-				int endIndex = getLineIndex(lines, "USER_SECTION_END", i, false);
+				int endIndex = getLineIndex(lines, "USER_SECTION_END", i, false, "");
 				if (endIndex == -1)
 				{
 					critical("Error", "Could not find end of user section in CMakeLists.txt");
@@ -457,7 +471,7 @@ namespace CLC
 
 	bool Utilities::readCmakeVariable(const QVector<QString>& lines, QString variable, QString& value)
 	{
-		int lineIndex = getLineIndex(lines, variable, true);
+		int lineIndex = getLineIndex(lines, variable, true, "#");
 		if (lineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
@@ -484,7 +498,7 @@ namespace CLC
 	}
 	bool Utilities::readCmakeVariable(const QVector<QString>& lines, QString variable, bool& value)
 	{
-		int lineIndex = getLineIndex(lines, variable, true);
+		int lineIndex = getLineIndex(lines, variable, true, "#");
 		if (lineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
@@ -505,7 +519,7 @@ namespace CLC
 	}
 	bool Utilities::readCmakeVariable(const QVector<QString>& lines, QString variable, int& value)
 	{
-		int lineIndex = getLineIndex(lines, variable, true);
+		int lineIndex = getLineIndex(lines, variable, true, "#");
 		if (lineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
@@ -522,7 +536,7 @@ namespace CLC
 	}
 	bool Utilities::readCmakeVariable(const QVector<QString>& lines, QString variable, unsigned int& value)
 	{
-		int lineIndex = getLineIndex(lines, variable, true);
+		int lineIndex = getLineIndex(lines, variable, true, "#");
 		if (lineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
@@ -539,14 +553,14 @@ namespace CLC
 	}
 	bool Utilities::readCmakeVariables(const QVector<QString>& lines, QString variable, QVector<QString>& values)
 	{
-		int lineIndex = getLineIndex(lines, variable, true);
+		int lineIndex = getLineIndex(lines, variable, true, "#");
 		if (lineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
 			//QMessageBox::critical("Error", "Could not find variable " + variable + " in CMakeLists.txt");
 			return false;
 		}
-		int endLineIndex = getLineIndex(lines, ")", lineIndex, false);
+		int endLineIndex = getLineIndex(lines, ")", lineIndex, false, "#");
 		if (endLineIndex == -1)
 		{
 			critical("Error", "Could not find end of variable " + variable + " in CMakeLists.txt");
@@ -651,7 +665,7 @@ namespace CLC
 
 	bool Utilities::replaceHeaderVariable(QVector<QString>& lines, const QString& variable, const QString& value)
 	{
-		int lineIndex = getLineIndex(lines, { variable, "=", ";"}, false);
+		int lineIndex = getLineIndex(lines, { variable, "=", ";"}, false, "//");
 		if (lineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in header file");
@@ -667,7 +681,7 @@ namespace CLC
 	}
 	bool Utilities::readHeaderVariable(QVector<QString>& lines, const QString& variable, QString& value)
 	{
-		int lineIndex = getLineIndex(lines, { variable, "=", ";" }, false);
+		int lineIndex = getLineIndex(lines, { variable, "=", ";" }, false, "//");
 		if (lineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in header file");
@@ -697,7 +711,7 @@ namespace CLC
 	}
 	bool Utilities::readHeaderVariable(QVector<QString>& lines, const QString& variable, int& value)
 	{
-		int lineIndex = getLineIndex(lines, { variable, "=", ";" }, false);
+		int lineIndex = getLineIndex(lines, { variable, "=", ";" }, false, "//");
 		if (lineIndex == -1)
 		{
 			critical("Error", "Could not find variable " + variable + " in header file");

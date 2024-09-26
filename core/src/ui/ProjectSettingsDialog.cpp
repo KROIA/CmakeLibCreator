@@ -55,6 +55,16 @@ namespace CLC
 		ui.license_lineEdit->setText(libSettings.license);
 
 		ui.libDefine_lineEdit->setText(cmakeSettings.lib_define);
+
+		QString customDefines;
+		for (int i=0; i< cmakeSettings.customDefines.size(); ++i)
+		{
+			customDefines += cmakeSettings.customDefines[i];
+			if (i < cmakeSettings.customDefines.size() - 1)
+				customDefines += "\n";
+		}
+		ui.customDefines_plainTextEdit->setPlainText(customDefines);
+
 		ui.libProfileDefine_lineEdit->setText(cmakeSettings.lib_profile_define);
 		ui.qtEnable_checkBox->setChecked(cmakeSettings.qt_enable);
 		ui.qtDeploy_checkBox->setChecked(cmakeSettings.qt_deploy);
@@ -111,6 +121,7 @@ namespace CLC
 		ProjectSettings::CMAKE_settings cmakeSettings = m_settings.getCMAKE_settings();
 		cmakeSettings.libraryName = ui.libraryName_lineEdit->text();
 		cmakeSettings.lib_define = ui.libDefine_lineEdit->text();
+		cmakeSettings.customDefines = getCustomDefines();
 		cmakeSettings.lib_profile_define = ui.libProfileDefine_lineEdit->text();
 		cmakeSettings.lib_short_define = ui.libraryNameShort_lineEdit->text();
 		cmakeSettings.qt_enable = ui.qtEnable_checkBox->isChecked();
@@ -136,6 +147,31 @@ namespace CLC
 		m_settings.setLibrarySettings(libSettings);
 		m_settings.setCMAKE_settings(cmakeSettings);
 		return m_settings.getValidated();
+	}
+
+	QStringList ProjectSettingsDialog::getCustomDefines() const
+	{
+		QString txt = ui.customDefines_plainTextEdit->toPlainText();
+		// Split the txt into lines and skip empty lines
+		QStringList defines = txt.split("\n", Qt::SkipEmptyParts);
+		// Remove leading and trailing whitespaces
+		for (QString& def : defines)
+		{
+			def = def.trimmed();
+		}
+		// Split by spaces and remove empty parts
+		QStringList defines2;
+		for (QString& def : defines)
+		{
+			QStringList parts = def.split(" ", Qt::SkipEmptyParts);
+			for(QString part : parts)
+			{
+				part = part.trimmed();
+				if(!part.isEmpty())
+					defines2.push_back(part);
+			}
+		}
+		return defines2;
 	}
 
 	void ProjectSettingsDialog::on_qtModules_pushButton_clicked()

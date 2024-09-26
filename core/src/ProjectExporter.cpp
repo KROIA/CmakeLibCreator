@@ -426,6 +426,15 @@ namespace CLC
 		}
 		success &= Utilities::replaceCmakeVariable(fileContent, "QT_MODULES", qtModules);
 
+		QVector<QString> customDefines;
+		for (const auto& def : cmakeSettings.customDefines)
+		{
+			customDefines.push_back(def);
+		}
+		success &= Utilities::replaceCmakeVariable(fileContent, "USER_SPECIFIC_DEFINES", customDefines);
+
+
+
 		success &= Utilities::replaceCmakeVariable(fileContent, "DEBUG_POSTFIX_STR", cmakeSettings.debugPostFix);
 		success &= Utilities::replaceCmakeVariable(fileContent, "STATIC_POSTFIX_STR", cmakeSettings.staticPostFix);
 		success &= Utilities::replaceCmakeVariable(fileContent, "PROFILING_POSTFIX_STR", cmakeSettings.profilingPostFix);
@@ -443,7 +452,7 @@ namespace CLC
 
 		{
 			QString target = "_NO_EXAMPLES";
-			int line = Utilities::getLineIndex(fileContent, target, false);
+			int line = Utilities::getLineIndex(fileContent, target, false, "#");
 			if (line != -1)
 			{
 				QString lineContent = fileContent[line];
@@ -463,7 +472,7 @@ namespace CLC
 
 		{
 			QString target = "_NO_UNITTESTS";
-			int line = Utilities::getLineIndex(fileContent, target, false);
+			int line = Utilities::getLineIndex(fileContent, target, false, "#");
 			if (line != -1)
 			{
 				QString lineContent = fileContent[line];
@@ -601,11 +610,11 @@ namespace CLC
 			{defaultPlaceholders.LIBRARY__NAME_LIB,cmakeSettings.lib_define, {{"#"}}},
 			{defaultPlaceholders.Library_Name ,cmakeSettings.libraryName, {{"#include"}}},
 
-			{loadedPlaceholders.Library_Namespace,librarySettigns.namespaceName,	{}},
-			{loadedPlaceholders.LIBRARY__NAME_EXPORT,librarySettigns.exportName,  {{loadedPlaceholders.LIBRARY__NAME_EXPORT + " "}, {"#","define"}}},
-			{loadedPlaceholders.LIBRARY__NAME_SHORT,cmakeSettings.lib_short_define, {}},
-			{loadedPlaceholders.LIBRARY__NAME_LIB,cmakeSettings.lib_define, {{"#"}}},
-			{loadedPlaceholders.Library_Name ,cmakeSettings.libraryName, {{"#include"}}}
+			//{loadedPlaceholders.Library_Namespace,librarySettigns.namespaceName,	{}},
+			//{loadedPlaceholders.LIBRARY__NAME_EXPORT,librarySettigns.exportName,  {{loadedPlaceholders.LIBRARY__NAME_EXPORT + " "}, {"#","define"}}},
+			//{loadedPlaceholders.LIBRARY__NAME_SHORT,cmakeSettings.lib_short_define, {}},
+			//{loadedPlaceholders.LIBRARY__NAME_LIB,cmakeSettings.lib_define, {{"#"}}},
+			//{loadedPlaceholders.Library_Name ,cmakeSettings.libraryName, {{"#include"}}}
 		};
 
 		for (auto& file : files)
@@ -709,6 +718,30 @@ namespace CLC
 			cmakeSettings.qModules.push_back(QTModule(module, ""));
 		}
 
+		QVector<QString> customDefines;
+		success &= Utilities::readCmakeVariables(fileContent, "USER_SPECIFIC_DEFINES", customDefines);
+		cmakeSettings.customDefines.clear();
+		for(auto def : customDefines)
+		{
+			QStringList splitted = def.split(" ");
+			// Remove whitespaces and empty strings
+			for(int i = 0; i < splitted.size(); ++i)
+			{
+				splitted[i] = splitted[i].trimmed();
+				if(splitted[i].isEmpty())
+				{
+					splitted.removeAt(i);
+					i--;
+				}
+				else
+				{
+					cmakeSettings.customDefines.push_back(splitted[i]);
+				}
+			}
+		}
+		
+
+
 		success &= Utilities::readCmakeVariable(fileContent, "DEBUG_POSTFIX_STR", cmakeSettings.debugPostFix);
 		success &= Utilities::readCmakeVariable(fileContent, "STATIC_POSTFIX_STR", cmakeSettings.staticPostFix);
 		success &= Utilities::readCmakeVariable(fileContent, "PROFILING_POSTFIX_STR", cmakeSettings.profilingPostFix);
@@ -753,13 +786,13 @@ namespace CLC
 			QString header = projectDirPath + "/core/inc/" + cmakeSettings.libraryName + "_global.h";
 			QVector<QString> globalContent = Utilities::getFileContents(header);
 			QString shortNameKey = "<LIBRARY NAME SHORT>=";
-			int shortNameIndex = Utilities::getLineIndex(globalContent, shortNameKey, false);
+			int shortNameIndex = Utilities::getLineIndex(globalContent, shortNameKey, false, "//");
 			if (shortNameIndex == -1)
 			{
 				// Alternative method to read the short name
 				// Searchinf for line:
 				// #define CLC_UNUSED(x) (void)x;
-				shortNameIndex = Utilities::getLineIndex(globalContent, "_UNUSED(x)", false);
+				shortNameIndex = Utilities::getLineIndex(globalContent, "_UNUSED(x)", false, "//");
 				if (shortNameIndex != -1)
 				{
 					QString line = globalContent[shortNameIndex];
@@ -789,7 +822,7 @@ namespace CLC
 
 		// Read the namespace from that file
 		QString namespaceKey = "namespace";
-		int namespaceLineIndex = Utilities::getLineIndex(fileContent, namespaceKey, true);
+		int namespaceLineIndex = Utilities::getLineIndex(fileContent, namespaceKey, true, "//");
 		if (namespaceLineIndex == -1)
 		{
 			Utilities::critical("Error", "Could not find namespace in " + header);
@@ -799,8 +832,8 @@ namespace CLC
 		librarySettings.namespaceName = namespaceName;
 
 		// Read the export name from that file
-		int exportLineIndex1 = Utilities::getLineIndex(fileContent, "EXPORT", false);
-		int exportLineIndex2 = Utilities::getLineIndex(fileContent, { "class","LibraryInfo" }, true);
+		int exportLineIndex1 = Utilities::getLineIndex(fileContent, "EXPORT", false, "//");
+		int exportLineIndex2 = Utilities::getLineIndex(fileContent, { "class","LibraryInfo" }, true, "//");
 		if ((exportLineIndex1 == -1 || exportLineIndex2 == -1) || (exportLineIndex1 != exportLineIndex2))
 		{
 			Utilities::critical("Error", "Could not find export name in " + header);

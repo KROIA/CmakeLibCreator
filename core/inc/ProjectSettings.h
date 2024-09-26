@@ -53,6 +53,7 @@ namespace CLC
 			bool qt_autoFindCompiler;
 
 			QVector<QTModule> qModules;
+			QStringList customDefines;
 
 			QString debugPostFix;
 			QString staticPostFix;
