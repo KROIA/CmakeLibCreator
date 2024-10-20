@@ -22,6 +22,7 @@ namespace CLC
 		ProjectSettings getSettings();
 
 		QStringList getCustomDefines() const;
+		QStringList getCustomGlobalDefines() const;
 
 	private slots:
 		void on_qtModules_pushButton_clicked();

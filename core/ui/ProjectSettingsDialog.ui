@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>630</width>
-    <height>666</height>
+    <height>826</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -44,9 +44,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-39</y>
+        <y>0</y>
         <width>614</width>
-        <height>779</height>
+        <height>855</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -374,7 +374,101 @@
           <number>1</number>
          </property>
          <layout class="QGridLayout" name="gridLayout_2" columnminimumwidth="150,0,0,0">
-          <item row="11" column="3">
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_12">
+            <property name="text">
+             <string>LIB_PROFILE define</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="14" column="0">
+           <widget class="QLabel" name="label_20">
+            <property name="text">
+             <string>Compile examples</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="14" column="3">
+           <widget class="QCheckBox" name="compileExamples_checkBox">
+            <property name="text">
+             <string/>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_14">
+            <property name="text">
+             <string>QT Deploy</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="0">
+           <widget class="QLabel" name="label_15">
+            <property name="text">
+             <string>Filename postfix</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="3">
+           <widget class="QCheckBox" name="qtEnable_checkBox">
+            <property name="text">
+             <string/>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_13">
+            <property name="text">
+             <string>QT Enabled</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="3">
+           <widget class="QLineEdit" name="qt_installBasePath_lineEdit">
+            <property name="text">
+             <string>C:/Qt</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="3">
+           <widget class="QLineEdit" name="qt_compilerName_lineEdit"/>
+          </item>
+          <item row="3" column="3">
+           <widget class="QPlainTextEdit" name="customDefines_plainTextEdit">
+            <property name="plainText">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="QLineEdit" name="libProfileDefine_lineEdit">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="3">
            <widget class="QFrame" name="version_frame_2">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -500,17 +594,62 @@
             </layout>
            </widget>
           </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="label_14">
+          <item row="1" column="3">
+           <widget class="QLineEdit" name="libDefine_lineEdit">
             <property name="text">
-             <string>QT Deploy</string>
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="3">
+           <widget class="QPushButton" name="qtModules_pushButton">
+            <property name="text">
+             <string>QT Modules</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0">
+           <widget class="QLabel" name="label_30">
+            <property name="text">
+             <string>QT compiler name</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
-          <item row="7" column="0">
+          <item row="13" column="0">
+           <widget class="QLabel" name="label_19">
+            <property name="text">
+             <string>C++ Standard</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="3">
+           <widget class="QCheckBox" name="qtDeploy_checkBox">
+            <property name="text">
+             <string/>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_31">
+            <property name="text">
+             <string>Custom defines
+(separated by newline)</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0">
            <widget class="QLabel" name="label_26">
             <property name="text">
              <string>QT Version</string>
@@ -520,47 +659,43 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="3">
-           <widget class="QLineEdit" name="libDefine_lineEdit">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="14" column="3">
-           <widget class="QCheckBox" name="compileUnitTests_checkBox">
-            <property name="text">
-             <string/>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_12">
-            <property name="text">
-             <string>LIB_PROFILE define</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="13" column="0">
-           <widget class="QLabel" name="label_20">
-            <property name="text">
-             <string>Compile examples</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="3">
+          <item row="11" column="3">
            <widget class="QPushButton" name="dependencies_pushButton">
             <property name="text">
              <string>Dependencies</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="QLabel" name="label_29">
+            <property name="text">
+             <string>QT install base</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="3">
+           <widget class="QSpinBox" name="cxxStandard_spinBox">
+            <property name="value">
+             <number>14</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1" rowspan="15">
+           <widget class="Line" name="line_2">
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+            <property name="lineWidth">
+             <number>0</number>
+            </property>
+            <property name="midLineWidth">
+             <number>1</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
             </property>
            </widget>
           </item>
@@ -574,27 +709,7 @@
             </property>
            </widget>
           </item>
-          <item row="6" column="0">
-           <widget class="QLabel" name="label_29">
-            <property name="text">
-             <string>QT install base</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="3">
-           <widget class="QCheckBox" name="qtEnable_checkBox">
-            <property name="text">
-             <string/>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="3">
+          <item row="8" column="3">
            <widget class="QFrame" name="frame">
             <property name="frameShape">
              <enum>QFrame::StyledPanel</enum>
@@ -686,27 +801,13 @@
             </layout>
            </widget>
           </item>
-          <item row="9" column="3">
-           <widget class="QPushButton" name="qtModules_pushButton">
+          <item row="15" column="0">
+           <widget class="QLabel" name="label_21">
             <property name="text">
-             <string>QT Modules</string>
+             <string>Compile unittests</string>
             </property>
-           </widget>
-          </item>
-          <item row="5" column="3">
-           <widget class="QCheckBox" name="qtDeploy_checkBox">
-            <property name="text">
-             <string/>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="12" column="3">
-           <widget class="QSpinBox" name="cxxStandard_spinBox">
-            <property name="value">
-             <number>14</number>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
@@ -730,74 +831,8 @@
             </property>
            </widget>
           </item>
-          <item row="8" column="0">
-           <widget class="QLabel" name="label_30">
-            <property name="text">
-             <string>QT compiler name</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="14" column="0">
-           <widget class="QLabel" name="label_21">
-            <property name="text">
-             <string>Compile unittests</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="12" column="0">
-           <widget class="QLabel" name="label_19">
-            <property name="text">
-             <string>C++ Standard</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="3">
-           <widget class="QLineEdit" name="qt_installBasePath_lineEdit">
-            <property name="text">
-             <string>C:/Qt</string>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="3">
-           <widget class="QLineEdit" name="qt_compilerName_lineEdit"/>
-          </item>
-          <item row="11" column="0">
-           <widget class="QLabel" name="label_15">
-            <property name="text">
-             <string>Filename postfix</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1" rowspan="14">
-           <widget class="Line" name="line_2">
-            <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
-            </property>
-            <property name="lineWidth">
-             <number>0</number>
-            </property>
-            <property name="midLineWidth">
-             <number>1</number>
-            </property>
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="13" column="3">
-           <widget class="QCheckBox" name="compileExamples_checkBox">
+          <item row="15" column="3">
+           <widget class="QCheckBox" name="compileUnitTests_checkBox">
             <property name="text">
              <string/>
             </property>
@@ -806,34 +841,13 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="3">
-           <widget class="QLineEdit" name="libProfileDefine_lineEdit">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
+          <item row="4" column="3">
+           <widget class="QPlainTextEdit" name="customGlobalDefines_plainTextEdit"/>
           </item>
           <item row="4" column="0">
-           <widget class="QLabel" name="label_13">
+           <widget class="QLabel" name="label_32">
             <property name="text">
-             <string>QT Enabled</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="3">
-           <widget class="QPlainTextEdit" name="customDefines_plainTextEdit">
-            <property name="plainText">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_31">
-            <property name="text">
-             <string>Custom defines
+             <string>Custom global defines
 (separated by newline)</string>
             </property>
             <property name="alignment">

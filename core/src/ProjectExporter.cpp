@@ -432,6 +432,12 @@ namespace CLC
 			customDefines.push_back(def);
 		}
 		success &= Utilities::replaceCmakeVariable(fileContent, "USER_SPECIFIC_DEFINES", customDefines);
+		QVector<QString> customGlobalDefines;
+		for (const auto& def : cmakeSettings.customGlobalDefines)
+		{
+			customGlobalDefines.push_back(def);
+		}
+		success &= Utilities::replaceCmakeVariable(fileContent, "USER_SPECIFIC_GLOBAL_DEFINES", customGlobalDefines);
 
 
 
@@ -736,6 +742,28 @@ namespace CLC
 				else
 				{
 					cmakeSettings.customDefines.push_back(splitted[i]);
+				}
+			}
+		}
+
+		QVector<QString> customGlobalDefines;
+		success &= Utilities::readCmakeVariables(fileContent, "USER_SPECIFIC_GLOBAL_DEFINES", customGlobalDefines);
+		cmakeSettings.customGlobalDefines.clear();
+		for (auto def : customGlobalDefines)
+		{
+			QStringList splitted = def.split(" ");
+			// Remove whitespaces and empty strings
+			for (int i = 0; i < splitted.size(); ++i)
+			{
+				splitted[i] = splitted[i].trimmed();
+				if (splitted[i].isEmpty())
+				{
+					splitted.removeAt(i);
+					i--;
+				}
+				else
+				{
+					cmakeSettings.customGlobalDefines.push_back(splitted[i]);
 				}
 			}
 		}

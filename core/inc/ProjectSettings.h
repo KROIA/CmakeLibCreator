@@ -54,6 +54,7 @@ namespace CLC
 
 			QVector<QTModule> qModules;
 			QStringList customDefines;
+			QStringList customGlobalDefines;
 
 			QString debugPostFix;
 			QString staticPostFix;
