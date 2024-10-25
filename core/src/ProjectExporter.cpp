@@ -908,6 +908,16 @@ namespace CLC
 	bool ProjectExporter::readDependencies(ProjectSettings& settings, const QString& projectDirPath)
 	{
 		QVector<QString> fileList = Utilities::getFilesInFolder(projectDirPath + "/dependencies", ".cmake");
+		// Search for the file "order.cmake" and remove it if it was found
+		for (int i = 0; i < fileList.size(); ++i)
+		{
+			if (fileList[i].indexOf("order.cmake") != -1)
+			{
+				fileList.removeAt(i);
+				break;
+			}
+		}
+
 		ProjectSettings::CMAKE_settings cmakeSettings = settings.getCMAKE_settings();
 		QVector<Dependency> dependencies;
 		for (const auto& file : fileList)
