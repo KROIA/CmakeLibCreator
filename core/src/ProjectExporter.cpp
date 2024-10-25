@@ -290,6 +290,15 @@ namespace CLC
 		// Remove all existing dependencies if they are official dependencies from the manager
 		const QVector<Dependency> &dependencies = settings.getCMAKE_settings().dependencies;
 		QVector<QString> existingDeps = Utilities::getFilesInFolder(projectDirPath + "/dependencies/", ".cmake");
+		// Search for the "order.cmake" and remove it from the list
+		for (int i = 0; i < existingDeps.size(); ++i)
+		{
+			if (existingDeps[i].indexOf("order.cmake") != -1)
+			{
+				existingDeps.remove(i);
+				break;
+			}
+		}
 		for (const auto& dep : existingDeps)
 		{
 			
