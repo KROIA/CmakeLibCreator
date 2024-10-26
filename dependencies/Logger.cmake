@@ -16,7 +16,7 @@ function(dep LIBRARY_MACRO_NAME SHARED_LIB STATIC_LIB STATIC_PROFILE_LIB)
 
     set(${LIB_NAME}_NO_EXAMPLES True)
     set(${LIB_NAME}_NO_UNITTESTS True)
-
+    
     # Check if the library has already been populated
     FetchContent_GetProperties(${LIB_NAME})
     if(NOT ${LIB_NAME}_ALREADY_POPULATED)
