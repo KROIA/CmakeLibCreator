@@ -56,6 +56,9 @@ namespace CLC
 		static int getLineIndex(const QVector<QString>& lines, const QString& pattern, int startIndex, bool onlyCompleteWord, const QString& commentKey);
 		static int getLineIndex(const QVector<QString>& lines, const QVector<QString>& pattern, int startIndex, bool onlyCompleteWord, const QString& commentKey);
 		
+		static bool isTextInsideString(const QString& line, const QString& targetText);
+		static QString getLineWithoutComments(const QString& line, const QString& commentKey);
+
 		static bool replaceCmakeVariable(QVector<QString> &lines, QString variable, const QString& value);
 		static bool replaceCmakeVariableString(QVector<QString> &lines, QString variable, const QString& value);
 		static bool replaceCmakeVariable(QVector<QString> &lines, QString variable, const QVector<QString>& values);

@@ -260,7 +260,11 @@ namespace CLC
 			{
 				int commentIndex = line.indexOf(commentKey);
 				if (commentIndex != -1)
-					line = line.mid(0, commentIndex);
+				{
+					line = getLineWithoutComments(line, commentKey);
+					//if (isTextInsideString(line, commentKey))
+					//	line = line.mid(0, commentIndex);
+				}
 			}
 			if (line.contains(pattern))
 			{
@@ -286,15 +290,20 @@ namespace CLC
 		for (int i = startIndex; i < lines.size(); i++)
 		{
 			bool foundAll = true;
+			QString line = lines[i];
+			if (commentKey.size() > 0)
+			{
+				int commentIndex = line.indexOf(commentKey);
+				if (commentIndex != -1)
+				{
+					line = getLineWithoutComments(line, commentKey);
+					//if(isTextInsideString(line, commentKey))
+					//	line = line.mid(0, commentIndex);
+				}
+			}
 			for (const auto& pattern : patterns)
 			{
-				QString line = lines[i];
-				if (commentKey.size() > 0)
-				{
-					int commentIndex = line.indexOf(commentKey);
-					if (commentIndex != -1)
-						line = line.mid(0, commentIndex);
-				}
+				
 				if (line.contains(pattern))
 				{
 					if (onlyCompleteWord)
@@ -318,6 +327,78 @@ namespace CLC
 		}
 		return -1;
 	}
+
+	bool Utilities::isTextInsideString(const QString& line, const QString& targetText)
+	{
+		// !< Todo Check if the targetText is string esdcaped in the "line"
+		// Check if the targetText is inside a string
+		int index = line.indexOf(targetText);
+		if (index == -1)
+			return false;
+		int quoteCount = 0;
+		for (int i = 0; i < index; i++)
+		{
+			if (line[i] == '\"')
+				quoteCount++;
+		}
+		if (quoteCount % 2 == 1)
+			return true;
+		return false;
+	}
+
+	QString Utilities::getLineWithoutComments(const QString& line, const QString& commentKey)
+	{
+		QString newLine = line;
+		int commentIndex = newLine.indexOf(commentKey);
+		if (commentIndex == -1)
+			return newLine;
+		
+		int patternLength = commentKey.length();
+		int quoteCount = 0;
+		for (int i = 0; i < line.length() - patternLength + 1; ++i) 
+		{
+			if (line[i] == '\"')
+				quoteCount++;
+			if (quoteCount % 2 == 0)
+			{
+				if (line.mid(i, patternLength) == commentKey)
+				{
+					// Return the line up to the comment pattern, trimming any trailing spaces
+					return line.left(i).trimmed();
+				}
+			}
+		}
+		return line;
+
+		/*
+		int startIndex = 0;
+		int endIndex = 0;
+		int lastCommentIndex = commentIndex;
+		while (commentIndex != -1)
+		{
+			newLine = line.mid(startIndex, line.size() - startIndex);
+			endIndex = newLine.size();
+			if (isTextInsideString(newLine, commentKey))
+			{
+				startIndex = commentIndex + 1;
+				endIndex = newLine.mid(commentIndex + 1).indexOf("\"") + commentIndex + 1;
+				//if (endIndex == -1)
+				//	endIndex = line.size();
+			}
+			else
+				break;
+			lastCommentIndex = commentIndex;
+			if(endIndex >= 0)
+				commentIndex = newLine.indexOf(commentKey, endIndex);
+			else
+				commentIndex = -1;
+		}
+		newLine = line.mid(0, endIndex + startIndex);
+		*/
+		
+		//return newLine;
+	}
+
 
 	bool Utilities::replaceCmakeVariable(QVector<QString>& lines, QString variable, const QString& value)
 	{

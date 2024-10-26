@@ -55,7 +55,7 @@ namespace CLC
 
 		// Current version of the library
 		static constexpr int versionMajor				= 1;
-		static constexpr int versionMinor				= 3;
+		static constexpr int versionMinor				= 4;
 		static constexpr int versionPatch				= 0;
 
 		static constexpr Version version{ versionMajor, versionMinor, versionPatch };
@@ -64,7 +64,7 @@ namespace CLC
 		static constexpr const char* name				= "CmakeLibraryCreator";
 		static constexpr const char* author				= "Alex Krieg";
 		static constexpr const char* email				= "";
-		static constexpr const char* website			= "";
+		static constexpr const char* website			= "https://github.com/KROIA/CmakeLibCreator";
 		static constexpr const char* license			= "MIT";
 		static constexpr const char* compilationDate	= __DATE__;
 		static constexpr const char* compilationTime	= __TIME__;
