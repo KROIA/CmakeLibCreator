@@ -21,6 +21,7 @@ namespace CLC
 		
 	public:
 		static Utilities& instance();
+		static Log::LogObject& getLogger();
 		struct UserSection
 		{
 			int sectionIndex;

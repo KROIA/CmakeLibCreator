@@ -12,6 +12,11 @@ namespace CLC
 		static Utilities inst;
 		return inst;
 	}
+	Log::LogObject& Utilities::getLogger()
+	{
+		static Log::LogObject logger("Utilities");
+		return logger;
+	}
 	bool Utilities::copyAndReplaceFolderContents(const QString& absolutFromDir, const QString& absolutToDir, bool copyAndRemove)
 	{
 		Logging::getLogger().log("Copying from "+ absolutFromDir.toStdString() + " to " + absolutToDir.toStdString());
@@ -486,6 +491,7 @@ namespace CLC
 	bool Utilities::replaceUserSections(const QString& filePath, const QVector<UserSection>& sections, const QString& commentSign)
 	{
 		QVector<QString> lines = getFileContents(filePath);
+		getLogger().logInfo("Replacing user sections in file: "+filePath.toStdString());
 		bool success = replaceUserSections(lines, sections, commentSign);
 		if (success)
 			saveFileContents(filePath, lines);
@@ -528,7 +534,8 @@ namespace CLC
 				}
 				else
 				{
-
+					getLogger().logInfo("Inserting user section [" + std::to_string(sectionIndex) + "] "
+										"Lines: "+std::to_string(sections[sectionListIndex].lines.size()));
 					for (const auto& line : sections[sectionListIndex].lines)
 						newLines.push_back(line);
 				}

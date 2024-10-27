@@ -19,6 +19,11 @@ namespace CLC
 		static ProjectExporter instance;
 		return instance;
 	}
+	Log::LogObject& ProjectExporter::getLogger()
+	{
+		static Log::LogObject logger("ProjectExporter");
+		return logger;
+	}
 
 	bool ProjectExporter::exportProject(
 		const ProjectSettings& settings,
@@ -679,6 +684,7 @@ namespace CLC
 			// Check if the file exists
 			if (!QFile::exists(sectionList.file))
 			{
+				getLogger().logError("Failed to find file:\n" + sectionList.file.toStdString() + "\nto replace user sections");
 				Utilities::critical("Error", "Failed to find file:\n" + sectionList.file + "\nto replace user sections");
 				success &= false;
 				continue;

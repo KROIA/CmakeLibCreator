@@ -10,6 +10,8 @@ namespace CLC
 		ProjectExporter();
 		static ProjectExporter& instance();
 	public:
+	static Log::LogObject& getLogger();
+
 		struct ExportSettings
 		{
 			bool copyAllTemplateFiles = true;
