@@ -127,7 +127,7 @@ namespace CLC
 
 		// Check if the provided path is a valid directory
 		if (!directory.exists()) {
-			qWarning("Directory does not exist.");
+			getLogger().logError("Directory does not exist.");
 			return folders;
 		}
 
@@ -153,7 +153,7 @@ namespace CLC
 	{
 		QVector<QString> lines;
 		QFile f(file);
-		if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
+		if (!openFile(f, QIODevice::ReadOnly | QIODevice::Text))
 			return lines;
 
 		QTextStream in(&f);
@@ -167,7 +167,7 @@ namespace CLC
 	bool Utilities::saveFileContents(const QString& file, const QVector<QString>& contents)
 	{
 		QFile f(file);
-		if (!f.open(QIODevice::WriteOnly | QIODevice::Text))
+		if (!openFile(f, QIODevice::WriteOnly | QIODevice::Text))
 			return false;
 
 		QTextStream out(&f);
@@ -491,10 +491,10 @@ namespace CLC
 	bool Utilities::replaceUserSections(const QString& filePath, const QVector<UserSection>& sections, const QString& commentSign)
 	{
 		QVector<QString> lines = getFileContents(filePath);
-		getLogger().logInfo("Replacing user sections in file: "+filePath.toStdString());
+		//getLogger().logInfo("Replacing user sections in file: "+filePath.toStdString());
 		bool success = replaceUserSections(lines, sections, commentSign);
 		if (success)
-			saveFileContents(filePath, lines);
+			success &= saveFileContents(filePath, lines);
 		return success;
 	}
 	bool Utilities::replaceUserSections(QVector<QString>& lines, const QVector<UserSection>& sections, const QString& commentSign)
@@ -534,8 +534,8 @@ namespace CLC
 				}
 				else
 				{
-					getLogger().logInfo("Inserting user section [" + std::to_string(sectionIndex) + "] "
-										"Lines: "+std::to_string(sections[sectionListIndex].lines.size()));
+					//getLogger().logInfo("Inserting user section [" + std::to_string(sectionIndex) + "] "
+					//					"Lines: "+std::to_string(sections[sectionListIndex].lines.size()));
 					for (const auto& line : sections[sectionListIndex].lines)
 						newLines.push_back(line);
 				}
@@ -555,6 +555,19 @@ namespace CLC
 		}
 		lines = newLines;
 		return success;
+	}
+	bool Utilities::openFile(QFile& file, QIODevice::OpenMode flags)
+	{
+		for (size_t i = 0; i < maxFileOpenRetryCount; ++i)
+		{
+			if (file.open(flags))
+				return true;
+			getLogger().logWarning("Could not open file: " + file.fileName().toStdString() + " Retry: " + std::to_string(i));
+			// sleep for fileOpenRetryDelay
+			Sleep(fileOpenRetryDelay);
+		}
+		getLogger().logError("Could not open file: " + file.fileName().toStdString());
+		return false;
 	}
 
 	bool Utilities::readCmakeVariable(const QVector<QString>& lines, QString variable, QString& value)

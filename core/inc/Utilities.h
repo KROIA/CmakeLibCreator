@@ -18,6 +18,8 @@ namespace CLC
 		}
 		//Utilities(const Utilities&) = delete;
 
+		static constexpr size_t maxFileOpenRetryCount = 10;
+		static constexpr size_t fileOpenRetryDelay = 50; // ms
 		
 	public:
 		static Utilities& instance();
@@ -107,7 +109,7 @@ namespace CLC
 		static bool replaceUserSections(const QString& filePath, const QVector<UserSection>& sections, const QString &commentSign = "//");
 		static bool replaceUserSections(QVector<QString>& lines, const QVector<UserSection>& sections, const QString &commentSign = "//");
 	
-		
+		static bool openFile(QFile &file, QIODevice::OpenMode flags);
 
 		void _information(const QString& title, const QString& text);
 		void _warning(const QString& title, const QString& text);
