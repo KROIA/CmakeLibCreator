@@ -893,8 +893,12 @@ namespace CLC
 	}
 	bool Utilities::gitHasUncommitedChanges(const QString& folder)
 	{
-		QString gitCommand = "cd /d " + folder + " && git diff-index --quiet HEAD --";
-		int ret = executeCommand(gitCommand, Logging::getLogger());
+		QString gitCommand = "cd /d " + folder + " && ";
+		// Check if the repo has uncommited changes, return false if this repo is behind the head
+		QString gitCommand1 = gitCommand + "git fetch";
+		QString gitCommand2 = gitCommand + "git rev-list --count origin/$(git branch --show-current)..HEAD";
+		int ret = executeCommand(gitCommand1, Logging::getLogger());
+		ret = executeCommand(gitCommand2, Logging::getLogger());
 		if (ret == 0)
 			return false;
 		return true;
@@ -907,10 +911,22 @@ namespace CLC
 			return false;
 		return true;
 	}
+	bool Utilities::gitBehindRemote(const QString& folder)
+	{
+		QString gitCommand = "cd /d " + folder + " && ";
+		// Check if the repo has uncommited changes, return false if this repo is behind the head
+		QString gitCommand1 = gitCommand + "git fetch";
+		QString gitCommand2 = gitCommand + "git rev-list --count HEAD..origin/$(git branch --show-current)";
+		int ret = executeCommand(gitCommand1, Logging::getLogger());
+		ret = executeCommand(gitCommand2, Logging::getLogger());
+		if (ret == 0)
+			return false;
+		return true;
+	}
 	bool Utilities::gitPull(const QString& folder)
 	{
-		// Pull the repo inside the "folder"
-		QString gitCommand = "cd /d " + folder + " && git pull";
+		// Pull fast forward if possible
+		QString gitCommand = "cd /d " + folder + " && git pull --ff-only";
 		int ret = executeCommand(gitCommand, Logging::getLogger());
 		if (ret == 0)
 			return true;

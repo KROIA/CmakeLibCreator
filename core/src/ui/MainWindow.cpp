@@ -184,10 +184,13 @@ namespace CLC
 			{
 				for (QString path : projectPaths)
 				{
-					if (Utilities::gitHasUncommitedChanges(path))
+					if (!Utilities::gitHasUnpushedCommits(path))
 					{
-						Logging::getLogger().logWarning("Repo: " + path.toStdString() + " has uncommited changes");
-						continue;
+						if (Utilities::gitHasUncommitedChanges(path))
+						{
+							Logging::getLogger().logWarning("Repo: " + path.toStdString() + " has uncommited changes");
+							continue;
+						}
 					}
 					if (!Utilities::gitPull(path))
 					{

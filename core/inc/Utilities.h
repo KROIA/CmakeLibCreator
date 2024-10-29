@@ -91,6 +91,7 @@ namespace CLC
 
 		static bool gitHasUncommitedChanges(const QString& folder);
 		static bool gitHasUnpushedCommits(const QString& folder);
+		static bool gitBehindRemote(const QString& folder);
 		static bool gitPull(const QString& folder);
 		static bool gitCommit(const QString& folder, const QString& message);
 		static bool gitPush(const QString& folder);
