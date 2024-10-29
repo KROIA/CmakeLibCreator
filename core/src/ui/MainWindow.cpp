@@ -7,6 +7,7 @@
 #include <QThread>
 #include "Resources.h"
 #include <QDebug>
+#include <QInputDialog>
 #include "Utilities.h"
 #include "ProjectExporter.h"
 #include "CmakeLibraryCreator_info.h"
@@ -30,6 +31,7 @@ namespace CLC
 
 		RibbonImpl::TemplateManagementButtons templateManagementButtons = RibbonImpl::getTemplateManagementButtons();
 		RibbonImpl::ProjectButtons projectButtons = RibbonImpl::getProjectButtons();
+		RibbonImpl::GitButtons gitButtons = RibbonImpl::getGitButtons();
 		connect(templateManagementButtons.openTemplatePath, &QPushButton::clicked, this, &MainWindow::onOpenTemplatePath_clicked);
 		connect(templateManagementButtons.downloadTemplate, &QPushButton::clicked, this, &MainWindow::onDownloadTemplate_clicked);
 		connect(projectButtons.openExistingProject, &QPushButton::clicked, this, &MainWindow::onOpenExistingProject_clicked);
@@ -41,6 +43,8 @@ namespace CLC
 		connect(projectButtons.buildAll, &QPushButton::clicked, [this]() {
 			buildAllProjects(Resources::getLoadSaveProjects().projectPaths);
 				});
+		connect(gitButtons.pullProjects, &QPushButton::clicked, this, &MainWindow::onPullProjects_clicked);
+		connect(gitButtons.pushProjects, &QPushButton::clicked, this, &MainWindow::onPushProjects_clicked);
 
 		m_settingsDialog = new SettingsDialog();
 
@@ -152,6 +156,137 @@ namespace CLC
 		m_workerThread->start();
 
 	}
+
+	void MainWindow::onPullProjects_clicked()
+	{
+		const QStringList& projectPaths = Resources::getLoadSaveProjects().projectPaths;
+
+		
+
+
+		if(m_workerThread)
+		{
+			if (m_workerThread->isRunning())
+			{
+				Logging::getLogger().logWarning("A thread is already running");
+				return;
+			}
+		}
+		m_workerThread = new QThread;
+		/*RibbonImpl::ProjectButtons prjButtons = RibbonImpl::getProjectButtons();
+		if (prjButtons.openExistingProject)
+			prjButtons.openExistingProject->enableLoadingCircle(true);*/
+
+		static ProjectSettings loadingSettings;
+		loadingSettings = ProjectSettings();
+		// worker lambda
+		auto worker = [this, projectPaths]()
+			{
+				for (QString path : projectPaths)
+				{
+					if (Utilities::gitHasUncommitedChanges(path))
+					{
+						Logging::getLogger().logWarning("Repo: " + path.toStdString() + " has uncommited changes");
+						continue;
+					}
+					if (!Utilities::gitPull(path))
+					{
+						Logging::getLogger().logError("Can't pull repo: " + path.toStdString());
+					}
+				}
+
+				this->m_workerThread->exit();
+			};
+		// move worker to thread
+		QObject::connect(m_workerThread, &QThread::started, worker);
+		QObject::connect(m_workerThread, &QThread::finished, this, [this]() {
+			RibbonImpl::GitButtons gitButtons = RibbonImpl::getGitButtons();
+			if (gitButtons.pullProjects)
+				gitButtons.pullProjects->enableLoadingCircle(false);
+			threadFinished();
+			});
+		//QObject::connect(m_workerThread, &QThread::, this, &MainWindow::enableUI);
+		RibbonImpl::GitButtons gitButtons = RibbonImpl::getGitButtons();
+		disableUI();
+		if (gitButtons.pullProjects)
+			gitButtons.pullProjects->enableLoadingCircle(true);
+		//m_timer.start();
+		m_workerThread->start();
+	}
+	void MainWindow::onPushProjects_clicked()
+	{
+		if (m_workerThread)
+		{
+			if (m_workerThread->isRunning())
+			{
+				Logging::getLogger().logWarning("A thread is already running");
+				return;
+			}
+		}
+		const QStringList& projectPaths = Resources::getLoadSaveProjects().projectPaths;
+		//Create a dialog that asks for the git commit message
+		QString commitMessage = QInputDialog::getText(this, "Commit message", "Enter the commit message:");
+		if (commitMessage.isEmpty())
+		{
+			return;
+		}
+
+
+
+		
+
+		
+		m_workerThread = new QThread;
+		/*RibbonImpl::ProjectButtons prjButtons = RibbonImpl::getProjectButtons();
+		if (prjButtons.openExistingProject)
+			prjButtons.openExistingProject->enableLoadingCircle(true);*/
+
+		static ProjectSettings loadingSettings;
+		loadingSettings = ProjectSettings();
+		// worker lambda
+		auto worker = [this, projectPaths, commitMessage]()
+			{
+				for (QString path : projectPaths)
+				{
+					bool hasChanges = Utilities::gitHasUncommitedChanges(path);
+					bool hasUnPushedCommits = Utilities::gitHasUnpushedCommits(path);
+					if (!hasChanges && !hasUnPushedCommits)
+					{
+						Logging::getLogger().logWarning("Repo: " + path.toStdString() + " has no changes, commit skipped");
+						continue;
+					}
+					if (hasChanges)
+					{
+						if (!Utilities::gitCommit(path, commitMessage))
+						{
+							Logging::getLogger().logError("Can't commit repo: " + path.toStdString());
+							continue;
+						}
+					}
+					if (!Utilities::gitPush(path))
+					{
+						Logging::getLogger().logError("Can't push repo: " + path.toStdString());
+					}
+				}
+
+				this->m_workerThread->exit();
+			};
+		// move worker to thread
+		QObject::connect(m_workerThread, &QThread::started, worker);
+		QObject::connect(m_workerThread, &QThread::finished, this, [this]() {
+			RibbonImpl::GitButtons gitButtons = RibbonImpl::getGitButtons();
+			if (gitButtons.pushProjects)
+				gitButtons.pushProjects->enableLoadingCircle(false);
+			threadFinished();
+			});
+		//QObject::connect(m_workerThread, &QThread::, this, &MainWindow::enableUI);
+		RibbonImpl::GitButtons gitButtons = RibbonImpl::getGitButtons();
+		disableUI();
+		if (gitButtons.pushProjects)
+			gitButtons.pushProjects->enableLoadingCircle(true);
+		//m_timer.start();
+		m_workerThread->start();
+	}
 	
 	void MainWindow::onOpenExistingProject_clicked()
 	{
@@ -191,6 +326,14 @@ namespace CLC
 	}
 	void MainWindow::onSaveAsNewProject_clicked()
 	{
+		if (m_workerThread)
+		{
+			if (m_workerThread->isRunning())
+			{
+				Logging::getLogger().logWarning("A thread is already running");
+				return;
+			}
+		}
 		// Open file dialog to select a folder
 		QString loadedProjectPath = Resources::getLoadedProjectPath();
 		loadedProjectPath = QFileInfo(loadedProjectPath).path();

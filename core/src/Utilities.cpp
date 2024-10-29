@@ -891,6 +891,47 @@ namespace CLC
 		}
 		return true;
 	}
+	bool Utilities::gitHasUncommitedChanges(const QString& folder)
+	{
+		QString gitCommand = "cd /d " + folder + " && git diff-index --quiet HEAD --";
+		int ret = executeCommand(gitCommand, Logging::getLogger());
+		if (ret == 0)
+			return false;
+		return true;
+	}
+	bool Utilities::gitHasUnpushedCommits(const QString& folder)
+	{
+		QString gitCommand = "cd /d " + folder + " && git log origin/master..HEAD";
+		int ret = executeCommand(gitCommand, Logging::getLogger());
+		if (ret == 0)
+			return false;
+		return true;
+	}
+	bool Utilities::gitPull(const QString& folder)
+	{
+		// Pull the repo inside the "folder"
+		QString gitCommand = "cd /d " + folder + " && git pull";
+		int ret = executeCommand(gitCommand, Logging::getLogger());
+		if (ret == 0)
+			return true;
+		return false;
+	}
+	bool Utilities::gitCommit(const QString& folder, const QString& message)
+	{
+		QString gitCommand = "cd /d " + folder + " && git commit -am \"" + message + "\"";
+		int ret = executeCommand(gitCommand, Logging::getLogger());
+		if (ret == 0)
+			return true;
+		return false;
+	}
+	bool Utilities::gitPush(const QString& folder)
+	{
+		QString gitCommand = "cd /d " + folder + " && git push";
+		int ret = executeCommand(gitCommand, Logging::getLogger());
+		if (ret == 0)
+			return true;
+		return false;
+	}
 
 	void Utilities::information(const QString& title, const QString& text)
 	{

@@ -89,6 +89,11 @@ namespace CLC
 		static bool downloadGitRepository(const QString& url, const QString &branch, const QString& folder, QString tmpFolder);
 		static bool downloadGitRepository(const QString& url, const QString &branch, QString folder);
 
+		static bool gitHasUncommitedChanges(const QString& folder);
+		static bool gitHasUnpushedCommits(const QString& folder);
+		static bool gitPull(const QString& folder);
+		static bool gitCommit(const QString& folder, const QString& message);
+		static bool gitPush(const QString& folder);
 
 		static void information(const QString& title, const QString& text);
 		static void warning(const QString& title, const QString& text);

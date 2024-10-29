@@ -28,18 +28,28 @@ namespace CLC {
 			RibbonWidget::InformativeToolButton* buildAll = nullptr;
 		};
 
+		struct GitButtons
+		{
+			RibbonWidget::InformativeToolButton* pullProjects = nullptr;
+			RibbonWidget::InformativeToolButton* pushProjects = nullptr;
+		};
+
 
 		static TemplateManagementButtons& getTemplateManagementButtons();
 		static ProjectButtons& getProjectButtons();
+		static GitButtons& getGitButtons();
 	private:
 		static RibbonImpl* m_instance;
 
 		TemplateManagementButtons m_templateButtons;
 		ProjectButtons m_projectButtons;
+		GitButtons m_gitButtons;
 
 		RibbonWidget::RibbonTab* m_mainTab;
 
 		RibbonWidget::RibbonButtonGroup* m_templateGroup;
 		RibbonWidget::RibbonButtonGroup* m_projectGroup;
+		RibbonWidget::RibbonButtonGroup* m_gitGroup;
+
 	};
 }

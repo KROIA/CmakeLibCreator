@@ -20,6 +20,9 @@ namespace CLC
 	private slots:
 		void onOpenTemplatePath_clicked();
 		void onDownloadTemplate_clicked();
+	
+		void onPullProjects_clicked();
+		void onPushProjects_clicked();
 
 		void onOpenExistingProject_clicked();
 		void onSaveExistingProject_clicked();
