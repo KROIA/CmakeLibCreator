@@ -23,9 +23,12 @@ namespace CLC
 		
 		setWindowTitle("CMake Library Creator");
 		//qApp->setStyleSheet(Resources::getStyleSheet());
+		QToolBar* tb = new QToolBar(this);
+		tb->setMovable(false);
+		tb->setFixedHeight(130);
+		addToolBar(Qt::TopToolBarArea, tb);
 
-
-		m_ribbon = new CLC::RibbonImpl(ui.ribbon_widget);
+		m_ribbon = new CLC::RibbonImpl(tb);
 		m_projectSettingsDialog = new ProjectSettingsDialog();
 		ui.centralWidget->layout()->addWidget(m_projectSettingsDialog);
 

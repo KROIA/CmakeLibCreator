@@ -8,7 +8,7 @@ namespace CLC {
 	{
 		Q_OBJECT
 	public:
-		RibbonImpl(QWidget* parent = nullptr);
+		RibbonImpl(QToolBar* parent = nullptr);
 		~RibbonImpl();
 
 

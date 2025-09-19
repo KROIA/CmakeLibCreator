@@ -2,7 +2,7 @@
 
 namespace CLC {
 	RibbonImpl* RibbonImpl::m_instance = nullptr;
-	RibbonImpl::RibbonImpl(QWidget* parent)
+	RibbonImpl::RibbonImpl(QToolBar* parent)
 		: RibbonWidget::Ribbon(parent)
 	{
 		m_instance = this;
