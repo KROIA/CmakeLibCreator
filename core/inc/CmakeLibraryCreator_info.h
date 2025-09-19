@@ -29,7 +29,7 @@ namespace CLC
 
 /// USER_SECTION_END
 
-	class CMAKE_LIBRARY_CREATOR_EXPORT LibraryInfo
+	class LIBRARY_NAME_API LibraryInfo
 	{
 		LibraryInfo() = delete;
 		LibraryInfo(const LibraryInfo&) = delete;
@@ -55,7 +55,7 @@ namespace CLC
 
 		// Current version of the library
 		static constexpr int versionMajor				= 1;
-		static constexpr int versionMinor				= 4;
+		static constexpr int versionMinor				= 5;
 		static constexpr int versionPatch				= 0;
 
 		static constexpr Version version{ versionMajor, versionMinor, versionPatch };

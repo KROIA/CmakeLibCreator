@@ -28,11 +28,11 @@ namespace CLC
 			QString license;
 
 			QString namespaceName;
-			QString exportName;
+			QString apiName;
 			LibrarySettings();
 
 			void autoSetNamespaceName(const QString &libraryName);
-			void autoSetExportName(const QString& libraryName);
+			void autoSetApiName(const QString& libraryName);
 		};
 		struct CMAKE_settings
 		{
@@ -82,7 +82,7 @@ namespace CLC
 		struct Placeholder
 		{
 			QString Library_Namespace;
-			QString LIBRARY__NAME_EXPORT;
+			QString LIBRARY__NAME_API;
 			QString Library_Name;
 			QString LIBRARY__NAME_LIB;
 			QString LIBRARY__NAME_SHORT;
@@ -121,7 +121,7 @@ namespace CLC
 		void autosetLibProfileDefine();
 		void autosetLibShortDefine();
 		void autoSetNamespaceName();
-		void autoSetExportName();
+		void autoSetApiName();
 
 		ProjectSettings getValidated() const;
 

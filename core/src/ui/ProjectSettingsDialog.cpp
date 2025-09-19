@@ -38,13 +38,19 @@ namespace CLC
 		const ProjectSettings::CMAKE_settings &cmakeSettings = m_settings.getCMAKE_settings();
 		ui.libraryName_lineEdit->setText(cmakeSettings.libraryName);
 		ui.namespaceName_lineEdit->setText(libSettings.namespaceName);
-		QString exportSubstr = libSettings.exportName;
-		int idx = exportSubstr.indexOf("_EXPORT");
+		QString apiStr = libSettings.apiName;
+		int idx = apiStr.indexOf("_API");
 		if (idx != -1)
 		{
-			exportSubstr = exportSubstr.mid(0, idx);
+			apiStr = apiStr.mid(0, idx);
 		}
-		ui.exportName_lineEdit->setText(exportSubstr);
+		else
+		{
+			idx = apiStr.indexOf("_EXPORT");
+			if (idx != -1)
+				apiStr = apiStr.mid(0, idx);
+		}
+		ui.exportName_lineEdit->setText(apiStr);
 		ui.libraryNameShort_lineEdit->setText(cmakeSettings.lib_short_define);
 		ui.major_spinBox->setValue(libSettings.version.major);
 		ui.minor_spinBox->setValue(libSettings.version.minor);
@@ -126,7 +132,7 @@ namespace CLC
 		libSettings.license = ui.license_lineEdit->text();
 
 		libSettings.namespaceName = ui.namespaceName_lineEdit->text();
-		libSettings.exportName = ui.exportName_lineEdit->text() + "_EXPORT";
+		libSettings.apiName = ui.exportName_lineEdit->text() + "_API";
 
 		ProjectSettings::CMAKE_settings cmakeSettings = m_settings.getCMAKE_settings();
 		cmakeSettings.libraryName = ui.libraryName_lineEdit->text();
@@ -293,19 +299,25 @@ namespace CLC
 		m_settings.autosetLibProfileDefine();
 		m_settings.autosetLibShortDefine();
 		m_settings.autoSetNamespaceName();
-		m_settings.autoSetExportName();
+		m_settings.autoSetApiName();
 		const ProjectSettings::LibrarySettings& libSettings = m_settings.getLibrarySettings();
 		cmakeSettings = m_settings.getCMAKE_settings();
 		ui.libDefine_lineEdit->setText(cmakeSettings.lib_define);
 		ui.libProfileDefine_lineEdit->setText(cmakeSettings.lib_profile_define);
 		ui.namespaceName_lineEdit->setText(libSettings.namespaceName);
-		QString exportSubstr = libSettings.exportName;
-		int idx = exportSubstr.indexOf("_EXPORT");
+		QString apiStr = libSettings.apiName;
+		int idx = apiStr.indexOf("_API");
 		if (idx != -1)
 		{
-			exportSubstr = exportSubstr.mid(0, idx);
+			apiStr = apiStr.mid(0, idx);
 		}
-		ui.exportName_lineEdit->setText(exportSubstr);
+		else
+		{
+			idx = apiStr.indexOf("_EXPORT");
+			if (idx != -1)
+				apiStr = apiStr.mid(0, idx);
+		}
+		ui.exportName_lineEdit->setText(apiStr);
 		ui.libraryNameShort_lineEdit->setText(cmakeSettings.lib_short_define);
 	}
 

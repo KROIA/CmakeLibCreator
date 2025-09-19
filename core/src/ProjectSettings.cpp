@@ -7,7 +7,7 @@ namespace CLC
 	// This porject gets updatet with this tool.
 	const ProjectSettings::Placeholder ProjectSettings::s_defaultPlaceholder = {
 		QString("Library")+"Namespace",
-		QString("LIBRARY")+"_NAME_EXPORT",
+		QString("LIBRARY")+"_NAME_API",
 		QString("Library")+"Name",
 		QString("LIBRARY")+"_NAME_LIB",
 		QString("LIBRARY")+"_NAME_SHORT",
@@ -108,9 +108,9 @@ namespace CLC
 	{
 		m_librarySettings.autoSetNamespaceName(m_CMAKE_settings.libraryName);
 	}
-	void ProjectSettings::autoSetExportName()
+	void ProjectSettings::autoSetApiName()
 	{
-		m_librarySettings.autoSetExportName(m_CMAKE_settings.libraryName);
+		m_librarySettings.autoSetApiName(m_CMAKE_settings.libraryName);
 	}
 
 	ProjectSettings ProjectSettings::getValidated() const
@@ -138,7 +138,7 @@ namespace CLC
 	{
 		namespaceName = libraryName;
 	}
-	void ProjectSettings::LibrarySettings::autoSetExportName(const QString& libraryName)
+	void ProjectSettings::LibrarySettings::autoSetApiName(const QString& libraryName)
 	{
 		QString name;
 		name.reserve(libraryName.size()*2);
@@ -153,8 +153,8 @@ namespace CLC
 			}
 			name += libraryName[i].toUpper();
 		}
-		name += "_EXPORT";
-		exportName = name;
+		name += "_API";
+		apiName = name;
 	}
 	ProjectSettings::LibrarySettings::Version::Version()
 	{

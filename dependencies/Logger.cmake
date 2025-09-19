@@ -8,8 +8,6 @@ function(dep LIBRARY_MACRO_NAME SHARED_LIB STATIC_LIB STATIC_PROFILE_LIB)
     set(GIT_REPO https://github.com/KROIA/Logger.git)
     set(GIT_TAG main)
 
-    
-
     FetchContent_Declare(
         ${LIB_NAME}
         GIT_REPOSITORY ${GIT_REPO}

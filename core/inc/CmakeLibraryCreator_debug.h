@@ -89,7 +89,7 @@ namespace CLC
 /// USER_SECTION_START 4
 
 /// USER_SECTION_END
-	class CMAKE_LIBRARY_CREATOR_EXPORT Profiler
+	class LIBRARY_NAME_API Profiler
 	{
 	public:
 		/// USER_SECTION_START 5
@@ -112,7 +112,7 @@ namespace CLC
 
 
 #if LOGGER_LIBRARY_AVAILABLE == 1
-	class CMAKE_LIBRARY_CREATOR_EXPORT Logger 
+	class LIBRARY_NAME_API Logger 
 	{
 		/// USER_SECTION_START 8
 

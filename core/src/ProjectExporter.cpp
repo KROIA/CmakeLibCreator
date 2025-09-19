@@ -144,7 +144,7 @@ namespace CLC
 		const ProjectSettings::LibrarySettings &librarySettings = settings.getLibrarySettings();
 		const ProjectSettings::CMAKE_settings &cmakeSettings = settings.getCMAKE_settings();
 		placeholder.Library_Namespace = librarySettings.namespaceName;
-		placeholder.LIBRARY__NAME_EXPORT = librarySettings.exportName;
+		placeholder.LIBRARY__NAME_API = librarySettings.apiName;
 		placeholder.Library_Name = cmakeSettings.libraryName;
 		placeholder.LIBRARY__NAME_LIB = cmakeSettings.lib_define;
 		placeholder.LIBRARY__NAME_SHORT = cmakeSettings.lib_short_define;
@@ -625,7 +625,7 @@ namespace CLC
 		};
 		QVector<Replacements> replacements{
 			{defaultPlaceholders.Library_Namespace,librarySettigns.namespaceName,	{}},
-			{defaultPlaceholders.LIBRARY__NAME_EXPORT,librarySettigns.exportName,  {{defaultPlaceholders.LIBRARY__NAME_EXPORT + " "}, {"#","define"}}},
+			{defaultPlaceholders.LIBRARY__NAME_API,librarySettigns.apiName,  {{defaultPlaceholders.LIBRARY__NAME_API + " "}, {"#","define"}}},
 			{defaultPlaceholders.LIBRARY__NAME_SHORT,cmakeSettings.lib_short_define, {}},
 			{defaultPlaceholders.LIBRARY__NAME_LIB,cmakeSettings.lib_define, {{"#"}}},
 			{defaultPlaceholders.Library_Name ,cmakeSettings.libraryName, {{"#include"}}},
@@ -875,29 +875,31 @@ namespace CLC
 		librarySettings.namespaceName = namespaceName;
 
 		// Read the export name from that file
-		int exportLineIndex1 = Utilities::getLineIndex(fileContent, "EXPORT", false, "//");
+		int exportLineIndex1 = Utilities::getLineIndex(fileContent, "API", false, "//");
+		if(exportLineIndex1 == -1)
+			exportLineIndex1 = Utilities::getLineIndex(fileContent, "EXPORT", false, "//");
 		int exportLineIndex2 = Utilities::getLineIndex(fileContent, { "class","LibraryInfo" }, true, "//");
 		if ((exportLineIndex1 == -1 || exportLineIndex2 == -1) || (exportLineIndex1 != exportLineIndex2))
 		{
-			Utilities::critical("Error", "Could not find export name in " + header);
+			Utilities::critical("Error", "Could not find api name in " + header);
 			//return false;
 		}
 		else
 		{
 			QString line = fileContent[exportLineIndex1];
 			QStringList splitted = line.split(" ");
-			QString exportName;
+			QString apiName;
 			for (int i = 0; i < splitted.size(); ++i)
 			{
-				if (splitted[i].indexOf("EXPORT") != -1)
+				if (splitted[i].indexOf("EXPORT") != -1 || splitted[i].indexOf("API") != -1)
 				{
-					exportName = splitted[i].trimmed();
+					apiName = splitted[i].trimmed();
 					break;
 				}
 			}
 			
 			
-			librarySettings.exportName = exportName;
+			librarySettings.apiName = apiName;
 		}
 
 		success &= Utilities::readHeaderVariable(fileContent, "versionMajor", librarySettings.version.major);

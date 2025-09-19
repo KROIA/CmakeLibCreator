@@ -184,7 +184,7 @@
           <item row="3" column="0">
            <widget class="QLabel" name="label_23">
             <property name="text">
-             <string>Export macro</string>
+             <string>API macro</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -339,7 +339,7 @@
           <item row="3" column="4">
            <widget class="QLabel" name="label_24">
             <property name="text">
-             <string>_EXPORT</string>
+             <string>_API</string>
             </property>
            </widget>
           </item>
@@ -740,6 +740,9 @@
                </property>
                <property name="text">
                 <string>newest of</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
                </property>
               </widget>
              </item>

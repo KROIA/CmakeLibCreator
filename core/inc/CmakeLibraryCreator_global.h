@@ -11,13 +11,13 @@
 #ifndef BUILD_STATIC
 	//#pragma message("CMAKE_LIBRARY_CREATOR_LIB is a shared library")
 	#if defined(CMAKE_LIBRARY_CREATOR_LIB)
-		#define CMAKE_LIBRARY_CREATOR_EXPORT __declspec(dllexport)
+		#define LIBRARY_NAME_API __declspec(dllexport)
 	#else
-		#define CMAKE_LIBRARY_CREATOR_EXPORT __declspec(dllimport)
+		#define LIBRARY_NAME_API __declspec(dllimport)
 	#endif
 #else 
 	//#pragma message("CMAKE_LIBRARY_CREATOR_LIB is a static library")
-	#define CMAKE_LIBRARY_CREATOR_EXPORT
+	#define LIBRARY_NAME_API
 #endif
 
 /// USER_SECTION_START 2

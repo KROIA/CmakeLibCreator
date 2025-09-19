@@ -5,8 +5,8 @@ function(dep LIBRARY_MACRO_NAME SHARED_LIB STATIC_LIB STATIC_PROFILE_LIB)
     # Define the git repository and tag to download from
     set(LIB_NAME easy_profiler)
     set(LIB_MACRO_NAME EASY_PROFILER_LIBRARY_AVAILABLE)
-    set(GIT_REPO https://github.com/yse/easy_profiler.git)
-    set(GIT_TAG v2.1.0)
+    set(GIT_REPO https://github.com/KROIA/easy_profiler.git)
+    set(GIT_TAG develop)
 
     FetchContent_Declare(
         ${LIB_NAME}
