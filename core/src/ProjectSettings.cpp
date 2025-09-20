@@ -1,6 +1,5 @@
 #include "ProjectSettings.h"
 
-
 namespace CLC
 {
 	// Needs to be splitted into 2 chuncks because otherwise this application would replace the strings in the file if 
@@ -145,12 +144,22 @@ namespace CLC
 		// convert each letter to upper case and if it was already uppercase, add a '_'
 		for (int i = 0; i < libraryName.size(); i++)
 		{
-			if (libraryName[i] >= 'A' && libraryName[i] <= "Z" && i > 0)
+#if QT_VERSION > QT_VERSION_CHECK(5, 0, 0)
+			if (libraryName[i] >= 'A' && libraryName[i] <= 'Z')
 			{
-				if((libraryName[i - 1] >= 'a' && libraryName[i - 1] <= "z") ||
-				   (libraryName[i - 1] >= '0' && libraryName[i - 1] <= "9"))
+				if ((libraryName[i - 1] >= 'a' && libraryName[i - 1] <= 'z') ||
+					(libraryName[i - 1] >= '0' && libraryName[i - 1] <= '9'))
 					name += '_';
 			}
+#else
+			if (libraryName[i] >= 'A' && libraryName[i] <= "Z" && i > 0)
+			{
+				if ((libraryName[i - 1] >= 'a' && libraryName[i - 1] <= "z") ||
+					(libraryName[i - 1] >= '0' && libraryName[i - 1] <= "9"))
+					name += '_';
+			}
+#endif
+			
 			name += libraryName[i].toUpper();
 		}
 		name += "_API";
@@ -191,7 +200,11 @@ namespace CLC
 		QString shortName;
 		for (int i = 0; i < libraryName.size(); i++)
 		{
+#if QT_VERSION > QT_VERSION_CHECK(5, 0, 0)
+			if (libraryName[i] >= 'A' && libraryName[i] <= 'Z')
+#else
 			if (libraryName[i] >= 'A' && libraryName[i] <= "Z")
+#endif
 			{
 				shortName += libraryName[i];
 			}
@@ -208,7 +221,11 @@ namespace CLC
 		QString shortName;
 		for (int i = 0; i < libraryName.size(); i++)
 		{
+#if QT_VERSION > QT_VERSION_CHECK(5, 0, 0)
+			if (libraryName[i] >= 'A' && libraryName[i] <= 'Z')
+#else
 			if (libraryName[i] >= 'A' && libraryName[i] <= "Z")
+#endif
 			{
 				shortName += libraryName[i];
 			}
