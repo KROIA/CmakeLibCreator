@@ -875,7 +875,7 @@ namespace CLC
 		librarySettings.namespaceName = namespaceName;
 
 		// Read the export name from that file
-		int exportLineIndex1 = Utilities::getLineIndex(fileContent, "API", false, "//");
+		int exportLineIndex1 = Utilities::getLineIndex(fileContent, "_API", false, "//");
 		if(exportLineIndex1 == -1)
 			exportLineIndex1 = Utilities::getLineIndex(fileContent, "EXPORT", false, "//");
 		int exportLineIndex2 = Utilities::getLineIndex(fileContent, { "class","LibraryInfo" }, true, "//");
