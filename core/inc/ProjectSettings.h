@@ -66,6 +66,8 @@ namespace CLC
 			bool compile_examples;
 			bool compile_unittests;
 
+			QString libraryVersion;  // e.g. "1.0.0"
+
 			QVector<Dependency> dependencies;
 			CMAKE_settings();
 			void autosetLibDefine();

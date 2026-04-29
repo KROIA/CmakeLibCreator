@@ -188,6 +188,7 @@ namespace CLC
 		cxxStandardRequired = true;
 		compile_examples = true;
 		compile_unittests = true;
+		libraryVersion = "1.0.0";
 		dependencies = QVector<Dependency>();
 	}
 	void ProjectSettings::CMAKE_settings::autosetLibDefine()
