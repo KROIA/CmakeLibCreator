@@ -6,6 +6,7 @@
 
 #include "CmakeLibraryCreator_global.h"
 #include "CmakeLibraryCreator_debug.h"
+#include "CmakeLibraryCreator_version.h"
 
 #include <sstream>
 
@@ -53,10 +54,10 @@ namespace CLC
 		};
 
 
-		// Current version of the library
-		static constexpr int versionMajor				= 1;
-		static constexpr int versionMinor				= 5;
-		static constexpr int versionPatch				= 0;
+		// Current version of the library — driven by LIBRARY_VERSION in CMakeLists.txt
+		static constexpr int versionMajor				= CmakeLibraryCreator_VERSION_MAJOR;
+		static constexpr int versionMinor				= CmakeLibraryCreator_VERSION_MINOR;
+		static constexpr int versionPatch				= CmakeLibraryCreator_VERSION_PATCH;
 
 		static constexpr Version version{ versionMajor, versionMinor, versionPatch };
 

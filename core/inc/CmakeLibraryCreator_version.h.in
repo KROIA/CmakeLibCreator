@@ -1,0 +1,6 @@
+#pragma once
+// Auto-generated from LIBRARY_VERSION in CMakeLists.txt.
+// Do not edit — change LIBRARY_VERSION in CMakeLists.txt and reconfigure.
+#define @LIBRARY_NAME@_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define @LIBRARY_NAME@_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define @LIBRARY_NAME@_VERSION_PATCH @PROJECT_VERSION_PATCH@

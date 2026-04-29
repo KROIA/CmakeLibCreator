@@ -14,6 +14,7 @@
 
 static int runCli(QApplication& app, const QStringList& args)
 {
+    using namespace CLC;
     Q_UNUSED(app)
 
     QCommandLineParser parser;
