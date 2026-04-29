@@ -50,30 +50,30 @@ endfunction()
 # Function name: windeployqt
 # Params: targetName        Name of the target created using add_executable(...)
 #         outputPath        Path where the deployment will be done
-#
+#     
 function(windeployqt targetName outputPath)
-
+    
     # check if QT_PATH is empty
     if (NOT QT_PATH)
-		message("QT_PATH is not set. include QtLocator.cmake first, to find a qt installation or assign a
+		message("QT_PATH is not set. include QtLocator.cmake first, to find a qt installation or assign a 
                  QT path to it. example: set(QT_PATH \"C:/Qt/5.14.2\")")
         return()
     endif()
 
-    set(targetExePath "${outputPath}/${targetName}.exe")
-    set(DEPLOY_COMMAND  "${QT_PATH}/bin/windeployqt.exe
-		--no-compiler-runtime
+    set(targetExePath "${outputPath}/${targetName}.exe") 
+    set(DEPLOY_COMMAND  "${QT_PATH}/bin/windeployqt.exe 
+		--no-compiler-runtime 
 		--translations de,en
-		--no-system-d3d-compiler
-		--no-opengl-sw
-		--pdb
+		--no-system-d3d-compiler 
+		--no-opengl-sw 
+		--pdb 
 		--dir \"${outputPath}\" \"${targetExePath}\"
         --qmldir \"${CMAKE_SOURCE_DIR}\"")
 
 	set(CMD "${DEPLOY_COMMAND}")
 	string(REPLACE "\\" "/" CMD "${CMD}")
 
-
+	
 	install(
     CODE
     "execute_process(
@@ -81,7 +81,7 @@ function(windeployqt targetName outputPath)
         ${CMD}
     )"
 )
-
+	
 endfunction()
 
 
@@ -98,6 +98,8 @@ function(set_if_not_defined varName value)
         set(${varName} ${value} PARENT_SCOPE)
     endif()
 endfunction()
+
+
 
 
 
@@ -153,7 +155,7 @@ endmacro()
 
 # Macro to download and setup a default library using FetchContent.
 # A default library is a library that was created using this project's template or is compatible with this macro.
-#
+# 
 # Params:
 #   LIB_NAME: Name of the library (used for FetchContent)
 #   LIB_MACRO_NAME: Macro name to be added to the LIBRARY_MACRO_NAME variable
@@ -180,11 +182,11 @@ include(cmake/utility.cmake)
 
 function(dep LIBRARY_MACRO_NAME SHARED_LIB STATIC_LIB STATIC_PROFILE_LIB INCLUDE_PATHS)
     # Define the git repository and tag to download from
-    set(LIB_NAME AppSettings)
-    set(LIB_MACRO_NAME APP_SETTINGS_LIBRARY_AVAILABLE)
-    set(GIT_REPO https://github.com/KROIA/AppSettings.git)
-    set(GIT_TAG main)
-    set(NO_EXAMPLES True)
+    set(LIB_NAME AppSettings)								
+    set(LIB_MACRO_NAME APP_SETTINGS_LIBRARY_AVAILABLE)		
+    set(GIT_REPO https://github.com/KROIA/AppSettings.git)	
+    set(GIT_TAG main)										
+    set(NO_EXAMPLES True)	
     set(NO_UNITTESTS True)
     set(ADDITIONAL_INCLUDE_PATHS )
 
@@ -192,9 +194,9 @@ function(dep LIBRARY_MACRO_NAME SHARED_LIB STATIC_LIB STATIC_PROFILE_LIB INCLUDE
 endfunction()
 
 dep(DEPENDENCY_NAME_MACRO
-    DEPENDENCIES_FOR_SHARED_LIB
-    DEPENDENCIES_FOR_STATIC_LIB
-    DEPENDENCIES_FOR_STATIC_PROFILE_LIB
+    DEPENDENCIES_FOR_SHARED_LIB 
+    DEPENDENCIES_FOR_STATIC_LIB 
+    DEPENDENCIES_FOR_STATIC_PROFILE_LIB 
     DEPENDENCIES_INCLUDE_PATHS)
 #]]
 macro(downloadStandardLibrary)
@@ -286,6 +288,8 @@ endmacro()
 
 
 
+
+
 # Macro to download and setup an external library using FetchContent.
 # This macro can be used for libraries that do not follow the default library structure of this project.
 # Params:
@@ -293,7 +297,7 @@ endmacro()
 #   LIB_MACRO_NAME: Macro name to be added to the LIBRARY_MACRO_NAME variable
 #   GIT_REPO: Git repository URL of the library
 #   GIT_TAG: Git tag or commit hash to checkout
-#   SHARED_LIB_DEPENDENCY: The library name to be used for the shared library profile. If not set, LIB_NAME will be used.
+#   SHARED_LIB_DEPENDENCY: The library name to be used for the shared library profile. If not set, LIB_NAME will be used. 
 #   STATIC_LIB_DEPENDENCY: The library name to be used for the static library profile. If not set, LIB_NAME will be used.
 #   STATIC_PROFILE_LIB_DEPENDENCY: The library name to be used for the static profiling library profile. If not set, LIB_NAME will be used.
 #   ADDITIONAL_SHARED_LIB_DEPENDENCIES: Additional libraries to be linked for the shared library profile
@@ -343,7 +347,7 @@ macro(downloadExternalLibrary)
     endif()
     FetchContent_MakeAvailable(${LIB_NAME})
 
-
+    
     if (NOT DEFINED SHARED_LIB_DEPENDENCY)
         set(SHARED_LIB_DEPENDENCY ${LIB_NAME})
     endif()
@@ -384,3 +388,4 @@ macro(downloadExternalLibrary)
     set(${STATIC_PROFILE_LIB} "${${STATIC_PROFILE_LIB}};${DEPS_FOR_STATIC_PROFILE_LIB}" PARENT_SCOPE)
     set(${INCLUDE_PATHS} "${${INCLUDE_PATHS}};${ADDITIONAL_INCLUDE_PATHS}" PARENT_SCOPE)
 endmacro()
+

@@ -43,7 +43,7 @@ if(EXISTS "${order_file_path}")
             message(WARNING "Dependency ${dep_name} in order.cmake not found in ${dependency_dir}")
         endif()
     endforeach()
-
+    
     # Append remaining children that were not listed in `order.cmake`
     list(APPEND ordered_children ${children})
     set(children ${ordered_children})
@@ -70,3 +70,4 @@ list(APPEND DEPENDENCY_NAME_MACRO ${_prev_dep_macros})
 list(REMOVE_DUPLICATES DEPENDENCY_NAME_MACRO)
 set(DEPENDENCY_NAME_MACRO ${DEPENDENCY_NAME_MACRO} CACHE STRING
     "Global availability macros accumulated from all libraries in the dependency tree" FORCE)
+

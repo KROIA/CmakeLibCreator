@@ -42,7 +42,7 @@
             "inherits": "base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CLC_PROFILING": "1"
+                "LIBRARY_NAME_SHORT_PROFILING": "1"
             }
         },
         {
@@ -51,7 +51,7 @@
             "inherits": "base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CLC_PROFILING": "1"
+                "LIBRARY_NAME_SHORT_PROFILING": "1"
             }
         }
     ],

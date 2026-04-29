@@ -647,7 +647,7 @@ namespace CLC
 			{defaultPlaceholders.LIBRARY__NAME_API,librarySettigns.apiName,  {{defaultPlaceholders.LIBRARY__NAME_API + " "}, {"#","define"}}},
 			{defaultPlaceholders.LIBRARY__NAME_SHORT,cmakeSettings.lib_short_define, {}},
 			{defaultPlaceholders.LIBRARY__NAME_LIB,cmakeSettings.lib_define, {{"#"}}},
-			// Replace LibraryName on #include lines, version-macro lines, and name-macro lines.
+			// Replace CmakeLibraryCreator on #include lines, version-macro lines, and name-macro lines.
 			{defaultPlaceholders.Library_Name, cmakeSettings.libraryName, {{"#include"}, {"_VERSION_"}, {"_LIBRARY_NAME"}}},
 
 			//{loadedPlaceholders.Library_Namespace,librarySettigns.namespaceName,	{}},
@@ -937,7 +937,7 @@ namespace CLC
 			success &= Utilities::readHeaderVariable(fileContent, "versionPatch", librarySettings.version.patch);
 		}
 
-		// In new-style projects the name field is a macro reference (LibraryName_LIBRARY_NAME),
+		// In new-style projects the name field is a macro reference (CmakeLibraryCreator_LIBRARY_NAME),
 		// not a string literal.  The library name is already authoritative in cmakeSettings
 		// (read from CMakeLists.txt), so we skip the string-equality check for those projects.
 		bool isNewStyleRead = QFile::exists(projectDirPath + "/core/inc/" + cmakeSettings.libraryName + "_meta.h.in");

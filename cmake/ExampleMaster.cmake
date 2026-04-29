@@ -5,7 +5,7 @@
 #         PROFILING_NAME        Name of the macro that defines that the profiler is enabled. Example: JD_PROFILING
 #         QT_ENABLE             Enables QT modules. ON if QT is used, otherwise OFF
 #         QT_DEPLOY             Deploys the compiled file to the compile output path and the install path. ON / OFF
-#         QT_MODULES            Defines which QT modules are required.
+#         QT_MODULES            Defines which QT modules are required. 
 #                                     set(QT_MODULES
 #                                         Core
 #                                         # Widgets
@@ -16,22 +16,22 @@
 #         ADDITIONAL_SOURCES    Additional source files that should be added to the project. Example: "Application icon"
 #         ADDITIONAL_LIBRARIES  Additional libraries that should be added to the project.
 #         INSTALL_BIN_PATH      Specifies the install path. Example: "${CMAKE_INSTALL_PREFIX}/bin"
-function(exampleMaster
-			PARENT_LIBRARY_NAME
-			PROFILING_NAME
-			QT_ENABLE
-			QT_DEPLOY
+function(exampleMaster 
+			PARENT_LIBRARY_NAME 
+			PROFILING_NAME 
+			QT_ENABLE 
+			QT_DEPLOY 
 			QT_MODULES
             ADDITIONAL_SOURCES
             ADDITIONAL_LIBRARIES
             INSTALL_BIN_PATH)
 
-
+			
 set(PARENT_LIBRARY_STATIC ${PARENT_LIBRARY_NAME}_static)
 set(PARENT_LIBRARY_STATIC_PROFILE ${PARENT_LIBRARY_STATIC}_profile)
 
 # Set the project name to the same as the folder name this file is contained in
-cmake_path(GET CMAKE_CURRENT_SOURCE_DIR FILENAME PROJECT_NAME)
+cmake_path(GET CMAKE_CURRENT_SOURCE_DIR FILENAME PROJECT_NAME)   
 string(REPLACE " " "_" ProjectId ${PROJECT_NAME})
 
 # Change the project name if it gets compiled with profiler enabled
@@ -68,7 +68,7 @@ GLOB_FILES(C_FILES *.c)
 GLOB_FILES(INL_FILES *.inl)
 
 
-set(SOURCES
+set(SOURCES 
 	${H_FILES}
 	${CPP_FILES}
 	${INL_FILES}
