@@ -50,6 +50,20 @@ namespace CLC
 	{
 		bool success = true;
 		settings.setDefaultPlaceholder(ProjectSettings::s_defaultPlaceholder);
+
+		// LIBRARY_VERSION string is the write-side master for CMakeLists.txt.
+		// The UI stores version as int fields in LibrarySettings::version; always
+		// format them into the string so replaceTemplateVariablesIn_mainCmakeLists
+		// writes the correct value even when creating a brand-new project.
+		{
+			ProjectSettings::CMAKE_settings cms = settings.getCMAKE_settings();
+			const ProjectSettings::LibrarySettings& ls = settings.getLibrarySettings();
+			cms.libraryVersion = QString("%1.%2.%3")
+				.arg(ls.version.major)
+				.arg(ls.version.minor)
+				.arg(ls.version.patch);
+			settings.setCMAKE_settings(cms);
+		}
 		//const ProjectSettings::LibrarySettings &librarySettings = settings.getLibrarySettings();
 		//const ProjectSettings::CMAKE_settings &cmakeSettings = settings.getCMAKE_settings();
 		
@@ -428,7 +442,7 @@ namespace CLC
 
 		// Replace the library name
 		success &= Utilities::replaceCmakeVariable(fileContent, "LIBRARY_NAME", cmakeSettings.libraryName);
-		success &= Utilities::replaceCmakeVariable(fileContent, "LIBRARY_VERSION", cmakeSettings.libraryVersion);
+		success &= Utilities::replaceCmakeVariableString(fileContent, "LIBRARY_VERSION", cmakeSettings.libraryVersion);
 		success &= Utilities::replaceCmakeVariable(fileContent, "LIB_DEFINE", cmakeSettings.lib_define);
 		success &= Utilities::replaceCmakeVariable(fileContent, "LIB_PROFILE_DEFINE", cmakeSettings.lib_profile_define);
 
@@ -572,11 +586,14 @@ namespace CLC
 		const ProjectSettings::LibrarySettings &librarySettings = settings.getLibrarySettings();
 		const ProjectSettings::CMAKE_settings& cmakeSettings = settings.getCMAKE_settings();
 
-		if(success) success &= Utilities::replaceHeaderVariable(fileContent, "versionMajor", QString::number(librarySettings.version.major));
-		if(success) success &= Utilities::replaceHeaderVariable(fileContent, "versionMinor", QString::number(librarySettings.version.minor));
-		if(success) success &= Utilities::replaceHeaderVariable(fileContent, "versionPatch", QString::number(librarySettings.version.patch));
-
-		if(success) success &= Utilities::replaceHeaderVariable(fileContent, "name", "\"" + cmakeSettings.libraryName + "\"");
+		// Version and name are now macro references driven by CMakeLists.txt (new-style projects
+		// that ship a _meta.h.in file).  Writing literal values would overwrite those references.
+		// For legacy projects without _meta.h.in the string literals are still written directly.
+		bool isNewStyle = QFile::exists(projectDirPath + "/core/inc/" + cmakeSettings.libraryName + "_meta.h.in");
+		if (!isNewStyle)
+		{
+			if(success) success &= Utilities::replaceHeaderVariable(fileContent, "name", "\"" + cmakeSettings.libraryName + "\"");
+		}
 		if(success) success &= Utilities::replaceHeaderVariable(fileContent, "author", "\"" + librarySettings.author + "\"");
 		if(success) success &= Utilities::replaceHeaderVariable(fileContent, "email", "\"" + librarySettings.email + "\"");
 		if(success) success &= Utilities::replaceHeaderVariable(fileContent, "website", "\"" + librarySettings.website + "\"");
@@ -630,7 +647,8 @@ namespace CLC
 			{defaultPlaceholders.LIBRARY__NAME_API,librarySettigns.apiName,  {{defaultPlaceholders.LIBRARY__NAME_API + " "}, {"#","define"}}},
 			{defaultPlaceholders.LIBRARY__NAME_SHORT,cmakeSettings.lib_short_define, {}},
 			{defaultPlaceholders.LIBRARY__NAME_LIB,cmakeSettings.lib_define, {{"#"}}},
-			{defaultPlaceholders.Library_Name ,cmakeSettings.libraryName, {{"#include"}}},
+			// Replace LibraryName on #include lines, version-macro lines, and name-macro lines.
+			{defaultPlaceholders.Library_Name, cmakeSettings.libraryName, {{"#include"}, {"_VERSION_"}, {"_LIBRARY_NAME"}}},
 
 			//{loadedPlaceholders.Library_Namespace,librarySettigns.namespaceName,	{}},
 			//{loadedPlaceholders.LIBRARY__NAME_EXPORT,librarySettigns.exportName,  {{loadedPlaceholders.LIBRARY__NAME_EXPORT + " "}, {"#","define"}}},
@@ -727,7 +745,7 @@ namespace CLC
 
 		ProjectSettings::CMAKE_settings cmakeSettings = settings.getCMAKE_settings();
 		success &= Utilities::readCmakeVariable(fileContent, "LIBRARY_NAME", cmakeSettings.libraryName);
-		Utilities::readCmakeVariable(fileContent, "LIBRARY_VERSION", cmakeSettings.libraryVersion); // optional — not present in older projects
+		Utilities::readCmakeVariableString(fileContent, "LIBRARY_VERSION", cmakeSettings.libraryVersion); // optional — not present in older projects
 		success &= Utilities::readCmakeVariable(fileContent, "LIB_DEFINE", cmakeSettings.lib_define);
 		success &= Utilities::readCmakeVariable(fileContent, "LIB_PROFILE_DEFINE", cmakeSettings.lib_profile_define);
 
@@ -905,22 +923,35 @@ namespace CLC
 			librarySettings.apiName = apiName;
 		}
 
-		success &= Utilities::readHeaderVariable(fileContent, "versionMajor", librarySettings.version.major);
-		success &= Utilities::readHeaderVariable(fileContent, "versionMinor", librarySettings.version.minor);
-		success &= Utilities::readHeaderVariable(fileContent, "versionPatch", librarySettings.version.patch);
+		// Prefer LIBRARY_VERSION from CMakeLists.txt (canonical in new-style projects where
+		// _info.h holds macro references instead of integer literals).
+		// Fall back to reading integers from _info.h for old-style projects.
+		if (!cmakeSettings.libraryVersion.isEmpty()) {
+			QStringList vparts = cmakeSettings.libraryVersion.split(".");
+			librarySettings.version.major = (vparts.size() > 0) ? vparts[0].trimmed().toInt() : 0;
+			librarySettings.version.minor = (vparts.size() > 1) ? vparts[1].trimmed().toInt() : 0;
+			librarySettings.version.patch = (vparts.size() > 2) ? vparts[2].trimmed().toInt() : 0;
+		} else {
+			success &= Utilities::readHeaderVariable(fileContent, "versionMajor", librarySettings.version.major);
+			success &= Utilities::readHeaderVariable(fileContent, "versionMinor", librarySettings.version.minor);
+			success &= Utilities::readHeaderVariable(fileContent, "versionPatch", librarySettings.version.patch);
+		}
 
-		QString name;
-		success &= Utilities::readHeaderVariable(fileContent, "name", name);
+		// In new-style projects the name field is a macro reference (LibraryName_LIBRARY_NAME),
+		// not a string literal.  The library name is already authoritative in cmakeSettings
+		// (read from CMakeLists.txt), so we skip the string-equality check for those projects.
+		bool isNewStyleRead = QFile::exists(projectDirPath + "/core/inc/" + cmakeSettings.libraryName + "_meta.h.in");
+		if (!isNewStyleRead)
+		{
+			QString name;
+			if (Utilities::readHeaderVariable(fileContent, "name", name) && name != cmakeSettings.libraryName)
+				Utilities::critical("Error", "Library name in " + header + " does not match the library name in CMakeLists.txt");
+		}
+
 		success &= Utilities::readHeaderVariable(fileContent, "author", librarySettings.author);
 		success &= Utilities::readHeaderVariable(fileContent, "email", librarySettings.email);
 		success &= Utilities::readHeaderVariable(fileContent, "website", librarySettings.website);
 		success &= Utilities::readHeaderVariable(fileContent, "license", librarySettings.license);
-
-		if (name != cmakeSettings.libraryName)
-		{
-			Utilities::critical("Error", "Library name in " + header + " does not match the library name in CMakeLists.txt");
-			//return false;
-		}
 		settings.setLibrarySettings(librarySettings);
 		settings.setCMAKE_settings(cmakeSettings);
 		return success;

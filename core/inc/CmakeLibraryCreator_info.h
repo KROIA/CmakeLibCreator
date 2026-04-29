@@ -6,7 +6,7 @@
 
 #include "CmakeLibraryCreator_global.h"
 #include "CmakeLibraryCreator_debug.h"
-#include "CmakeLibraryCreator_version.h"
+#include "CmakeLibraryCreator_meta.h"
 
 #include <sstream>
 
@@ -61,8 +61,8 @@ namespace CLC
 
 		static constexpr Version version{ versionMajor, versionMinor, versionPatch };
 
-		// Library name
-		static constexpr const char* name				= "CmakeLibraryCreator";
+		// Library name — driven by LIBRARY_NAME in CMakeLists.txt
+		static constexpr const char* name				= CmakeLibraryCreator_LIBRARY_NAME;
 		static constexpr const char* author				= "Alex Krieg";
 		static constexpr const char* email				= "";
 		static constexpr const char* website			= "https://github.com/KROIA/CmakeLibCreator";

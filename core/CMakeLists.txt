@@ -43,13 +43,13 @@ set(SOURCES
     ${H_FILES}
 )
 
-# Sync LIBRARY_VERSION → _version.h at configure time.
+# Sync LIBRARY_VERSION → _meta.h at configure time.
 # The generated header lands in CMAKE_CURRENT_BINARY_DIR which is already
 # on every target's include path via $<BUILD_INTERFACE:...> below.
 # _info.h stays a normal .h (full IDE syntax highlighting); it #includes this generated file.
-set(_ver_h_in "${CMAKE_CURRENT_SOURCE_DIR}/${INCLUDE_PATH}/${LIBRARY_NAME}_version.h.in")
+set(_ver_h_in "${CMAKE_CURRENT_SOURCE_DIR}/${INCLUDE_PATH}/${LIBRARY_NAME}_meta.h.in")
 if(EXISTS "${_ver_h_in}")
-    configure_file("${_ver_h_in}" "${CMAKE_CURRENT_BINARY_DIR}/${LIBRARY_NAME}_version.h" @ONLY)
+    configure_file("${_ver_h_in}" "${CMAKE_CURRENT_BINARY_DIR}/${LIBRARY_NAME}_meta.h" @ONLY)
     list(APPEND SOURCES "${_ver_h_in}")
 endif()
 unset(_ver_h_in)
@@ -209,8 +209,8 @@ if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
 
     copyLibraryHeaders("${CMAKE_CURRENT_SOURCE_DIR}/${INCLUDE_PATH}" "${INSTALL_INCLUDE_PATH}" "${LIBRARY_NAME}")
 
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${INCLUDE_PATH}/${LIBRARY_NAME}_version.h.in")
-        install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${LIBRARY_NAME}_version.h"
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${INCLUDE_PATH}/${LIBRARY_NAME}_meta.h.in")
+        install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${LIBRARY_NAME}_meta.h"
                 DESTINATION "${INSTALL_INCLUDE_PATH}/${LIBRARY_NAME}")
     endif()
 endif()

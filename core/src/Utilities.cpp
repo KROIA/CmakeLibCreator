@@ -275,11 +275,12 @@ namespace CLC
 			{
 				if (onlyCompleteWord)
 				{
-					//const QString& line = lines[i];
 					int index = line.indexOf(pattern);
 					QChar before = (index == 0 ? ' ' : line.at(index - 1));
 					QChar after = (index + pattern.size() >= line.size() ? ' ' : line.at(index + pattern.size()));
-					if (before.isLetterOrNumber() || after.isLetterOrNumber())
+					// Treat '_' as a word character so LIBRARY_NAME doesn't match inside LIBRARY_NAME_LIB
+					auto isWordChar = [](QChar c){ return c.isLetterOrNumber() || c == '_'; };
+					if (isWordChar(before) || isWordChar(after))
 						continue;
 					else
 						return i;
@@ -313,11 +314,11 @@ namespace CLC
 				{
 					if (onlyCompleteWord)
 					{
-						//const QString& line = lines[i];
 						int index = line.indexOf(pattern);
 						QChar before = (index == 0 ? ' ' : line.at(index - 1));
 						QChar after = (index + pattern.size() >= line.size() ? ' ' : line.at(index + pattern.size()));
-						if (before.isLetterOrNumber() || after.isLetterOrNumber())
+						auto isWordChar = [](QChar c){ return c.isLetterOrNumber() || c == '_'; };
+						if (isWordChar(before) || isWordChar(after))
 							foundAll = false;
 					}
 				}
@@ -752,10 +753,16 @@ namespace CLC
 
 				section.lines.push_back(lines[i]);
 				i++;
-				while (!lines[i].contains("USER_SECTION_END"))
+				while (i < lines.size() && !lines[i].contains("USER_SECTION_END"))
 				{
 					section.lines.push_back(lines[i]);
 					i++;
+				}
+				if (i >= lines.size())
+				{
+					critical("Error", "Missing USER_SECTION_END for section " + QString::number(sectionIndex));
+					success = false;
+					break;
 				}
 				section.lines.push_back(lines[i]);
 				sections.push_back(section);
