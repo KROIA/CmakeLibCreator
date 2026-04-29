@@ -33,7 +33,7 @@ include(cmake/utility.cmake)
 set(LIBRARY_NAME CmakeLibraryCreator)                   # <AUTO_REPLACED>
 
 # Library version (used for CMake package version file)
-set(LIBRARY_VERSION "1.5.1")                    # <AUTO_REPLACED>
+set(LIBRARY_VERSION "1.6.0")                    # <AUTO_REPLACED>
 
 # Define is only active if the library is built
 set(LIB_DEFINE CMAKE_LIBRARY_CREATOR_LIB)                # <AUTO_REPLACED>

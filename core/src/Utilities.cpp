@@ -941,6 +941,31 @@ namespace CLC
 	}
 	bool Utilities::gitCommit(const QString& folder, const QString& message)
 	{
+		// Check if there are any changes to commit
+		QString checkCommand = "cd /d " + folder + " && git status --porcelain";
+		FILE* pipe = _popen((checkCommand).toStdString().c_str(), "r");
+		if (!pipe) {
+			Logging::getLogger().log("popen failed!", Log::Level::error);
+			return false;
+		}
+		char buffer[1024];
+		bool hasChanges = false;
+
+		while (!feof(pipe)) {
+			if (fgets(buffer, 1024, pipe) != nullptr) {
+				hasChanges = true;
+				break;
+			}
+		}
+		_pclose(pipe);
+
+		if (!hasChanges)
+			return true;
+
+
+		// Add new files
+		QString stageNewFiles = "cd /d " + folder + " && git add .";
+		executeCommand(stageNewFiles, Logging::getLogger());
 		QString gitCommand = "cd /d " + folder + " && git commit -am \"" + message + "\"";
 		int ret = executeCommand(gitCommand, Logging::getLogger());
 		if (ret == 0)
