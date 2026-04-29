@@ -173,6 +173,7 @@ namespace CLC
 		QVector<QString> fileList{
 			//templateSourcePath + "/.gitignore",
 			templateSourcePath + "/CMakeSettings.json",
+			templateSourcePath + "/CMakePresets.json",
 			templateSourcePath + "/build.bat",
 			templateSourcePath + "/CMakeLists.txt",
 		};
@@ -427,6 +428,7 @@ namespace CLC
 
 		// Replace the library name
 		success &= Utilities::replaceCmakeVariable(fileContent, "LIBRARY_NAME", cmakeSettings.libraryName);
+		success &= Utilities::replaceCmakeVariable(fileContent, "LIBRARY_VERSION", cmakeSettings.libraryVersion);
 		success &= Utilities::replaceCmakeVariable(fileContent, "LIB_DEFINE", cmakeSettings.lib_define);
 		success &= Utilities::replaceCmakeVariable(fileContent, "LIB_PROFILE_DEFINE", cmakeSettings.lib_profile_define);
 
@@ -725,6 +727,7 @@ namespace CLC
 
 		ProjectSettings::CMAKE_settings cmakeSettings = settings.getCMAKE_settings();
 		success &= Utilities::readCmakeVariable(fileContent, "LIBRARY_NAME", cmakeSettings.libraryName);
+		Utilities::readCmakeVariable(fileContent, "LIBRARY_VERSION", cmakeSettings.libraryVersion); // optional — not present in older projects
 		success &= Utilities::readCmakeVariable(fileContent, "LIB_DEFINE", cmakeSettings.lib_define);
 		success &= Utilities::readCmakeVariable(fileContent, "LIB_PROFILE_DEFINE", cmakeSettings.lib_profile_define);
 
