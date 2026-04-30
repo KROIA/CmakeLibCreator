@@ -145,7 +145,7 @@ namespace CLC
 		for (int i = 0; i < libraryName.size(); i++)
 		{
 #if QT_VERSION > QT_VERSION_CHECK(5, 0, 0)
-			if (libraryName[i] >= 'A' && libraryName[i] <= 'Z')
+			if (libraryName[i] >= 'A' && libraryName[i] <= 'Z' && i > 0)
 			{
 				if ((libraryName[i - 1] >= 'a' && libraryName[i - 1] <= 'z') ||
 					(libraryName[i - 1] >= '0' && libraryName[i - 1] <= '9'))
@@ -210,7 +210,7 @@ namespace CLC
 				shortName += libraryName[i];
 			}
 		}
-		if (shortName.isEmpty())
+		if (shortName.isEmpty() && !libraryName.isEmpty())
 		{
 			shortName = libraryName[0].toUpper();
 		}
@@ -231,7 +231,7 @@ namespace CLC
 				shortName += libraryName[i];
 			}
 		}
-		if (shortName.isEmpty())
+		if (shortName.isEmpty() && !libraryName.isEmpty())
 		{
 			shortName = libraryName[0].toUpper();
 		}
