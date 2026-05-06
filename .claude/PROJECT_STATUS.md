@@ -1,24 +1,20 @@
 # PROJECT_STATUS
 
-**Current version:** Can be found in `CMakeLists.txt` (supports template 1.6.1)
+**Current version:** Can be found in `CMakeLists.txt` (now 1.7.0). Template version comment in root `CMakeLists.txt` still reads `1.6.1` — user is migrating the tool's own template instantiation to template 1.7.0 manually.
 **Branch:** `main`
-**Phase:** post-init — PM scaffolding established 2026-05-06.
+**Phase:** 1.7.0 development cycle begins.
 
 ## At a glance
 - No open hotfixes.
-- No backlog tasks. TASK-001, TASK-002, TASK-003 ✓ done 2026-05-06.
+- No backlog tasks.
 - No tasks in progress.
-- Code review not yet run — recommend running the **code-review** agent against current `main` to seed `ISSUES.md`.
-- Unit-test coverage: KROIA UnitTest framework wired in `unittests/UnitTest.cmake`, but no test suites authored yet.
+- 1.7.0 release just shipped (commit `11eeef8`).
+- Code review not yet run for this cycle — recommend running the **code-review** agent against current `main` to seed `ISSUES.md`.
 
-## Recent commits
-- `11ba390` + AI_Knowledge
-- `473027a` ~ crashfix
-- `8df655e` ~ V1.6.0
-- `af8f74c` Merge branch 'feature/cli-and-version'
-- `22e6445` ~ Template version: 1.6.1
+## Recent release notes
+See `changelogs/1.7.0.md` for the 1.6.0 → 1.7.0 delta.
 
 ## Next suggested moves
-1. Run **code-review** agent → populate `ISSUES.md`.
-2. Run **unit-test** agent → seed `UNIT_TEST_TASKS.md` from current coverage gaps (mainly `Utilities`, `ProjectExporter` parser logic).
-3. Run **user-docs** / **api-docs** agents for staleness check against current `core/inc/` headers.
+1. User-driven: complete manual migration of this repo's own template instantiation to template 1.7.0 (drop `CMakeSettings.json` from disk, update `## Template version: 1.6.1` → `1.7.0`, apply any other template deltas).
+2. Run **code-review** agent → populate `ISSUES.md`.
+3. Run **unit-test** agent → seed `UNIT_TEST_TASKS.md` (no test suites authored yet).
