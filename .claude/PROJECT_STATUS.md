@@ -6,7 +6,7 @@
 
 ## At a glance
 - No open hotfixes.
-- No backlog tasks. TASK-001 ✓ done 2026-05-06.
+- No backlog tasks. TASK-001, TASK-002 ✓ done 2026-05-06.
 - No tasks in progress.
 - Code review not yet run — recommend running the **code-review** agent against current `main` to seed `ISSUES.md`.
 - Unit-test coverage: KROIA UnitTest framework wired in `unittests/UnitTest.cmake`, but no test suites authored yet.

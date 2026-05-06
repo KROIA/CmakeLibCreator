@@ -5,6 +5,9 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QJsonParseError>
+#include <QSet>
+#include <QFile>
 
 namespace CLC
 {
@@ -67,6 +70,17 @@ namespace CLC
 		//const ProjectSettings::LibrarySettings &librarySettings = settings.getLibrarySettings();
 		//const ProjectSettings::CMAKE_settings &cmakeSettings = settings.getCMAKE_settings();
 		
+		// Capture developer-added macros before the template overwrites the project's
+		// CMakePresets.json / CMakeSettings.json. Only relevant on upgrade (project files
+		// already exist). Re-applied after placeholder substitution. Template wins on
+		// any key the template manages.
+		CmakeMacroSnapshot userMacroSnapshot;
+		const bool isUpgradePath = !expSettings.copyAllTemplateFiles && expSettings.replaceTemplateCmakeFiles;
+		if (isUpgradePath)
+		{
+			userMacroSnapshot = snapshotUserCmakeMacros(projectDirPath);
+		}
+
 		if (expSettings.copyAllTemplateFiles)
 		{
 			// Create the project directory
@@ -132,15 +146,19 @@ namespace CLC
 		}
 		if (expSettings.replaceTemplateCodePlaceholders)
 		{
-			success &= replaceTemplateCodePlaceholders(settings,  
-				{ 
+			success &= replaceTemplateCodePlaceholders(settings,
+				{
 					"core",
 					"examples",
-					"unittests" 
+					"unittests"
 				}, projectDirPath);
-		}	
-		
-		
+		}
+
+		if (isUpgradePath && userMacroSnapshot.valid)
+		{
+			success &= applyUserCmakeMacros(userMacroSnapshot, projectDirPath);
+		}
+
 		return success;
 	}
 	bool ProjectExporter::readProjectData_intern(ProjectSettings& settings, const QString& projectDirPath)
@@ -1104,6 +1122,353 @@ namespace CLC
 		return true;
 	}
 
-	
+	namespace
+	{
+		// Read a JSON file into a QJsonObject. Returns false if missing/unreadable/unparseable
+		// or if the root is not an object. The caller decides how loud to be about failure.
+		bool readJsonObject(const QString& path, QJsonObject& outObj)
+		{
+			QFile f(path);
+			if (!f.exists() || !f.open(QIODevice::ReadOnly))
+				return false;
+			const QByteArray bytes = f.readAll();
+			f.close();
+			QJsonParseError err{};
+			const QJsonDocument doc = QJsonDocument::fromJson(bytes, &err);
+			if (doc.isNull() || !doc.isObject())
+				return false;
+			outObj = doc.object();
+			return true;
+		}
+
+		bool writeJsonObject(const QString& path, const QJsonObject& obj)
+		{
+			QJsonDocument doc(obj);
+			QFile f(path);
+			if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate))
+				return false;
+			f.write(doc.toJson());
+			f.close();
+			return true;
+		}
+
+		// Tokenize a cmakeCommandArgs string. Whitespace splits tokens, except inside
+		// double quotes — quoted segments stay attached to their token (quotes preserved
+		// verbatim) so values like -DPATH="C:/Some Dir" survive round-trip.
+		QStringList tokenizeCommandArgs(const QString& s)
+		{
+			QStringList tokens;
+			QString cur;
+			bool inQuotes = false;
+			for (int i = 0; i < s.size(); ++i)
+			{
+				const QChar c = s[i];
+				if (c == '"')
+				{
+					inQuotes = !inQuotes;
+					cur.append(c);
+				}
+				else if (!inQuotes && c.isSpace())
+				{
+					if (!cur.isEmpty())
+					{
+						tokens.append(cur);
+						cur.clear();
+					}
+				}
+				else
+				{
+					cur.append(c);
+				}
+			}
+			if (!cur.isEmpty())
+				tokens.append(cur);
+			return tokens;
+		}
+
+		// Returns "<KEY>" for tokens shaped like -D<KEY> or -D<KEY>=<VALUE>, else "".
+		QString extractDefineKey(const QString& token)
+		{
+			if (!token.startsWith("-D"))
+				return QString();
+			QString rest = token.mid(2);
+			const int eq = rest.indexOf('=');
+			if (eq >= 0)
+				rest = rest.left(eq);
+			return rest.trimmed();
+		}
+	}
+
+	ProjectExporter::CmakeMacroSnapshot ProjectExporter::snapshotUserCmakeMacros(const QString& projectDirPath) const
+	{
+		CmakeMacroSnapshot snap;
+		const QString templateRoot = Resources::getCurrentTemplateAbsSourcePath();
+
+		// --- CMakePresets.json ---
+		{
+			const QString projectPath  = projectDirPath + "/CMakePresets.json";
+			const QString templatePath = templateRoot   + "/CMakePresets.json";
+			QJsonObject projectObj, templateObj;
+			const bool projectOk  = readJsonObject(projectPath, projectObj);
+			const bool templateOk = readJsonObject(templatePath, templateObj);
+			if (projectOk && templateOk)
+			{
+				const QJsonArray projectPresets  = projectObj.value("configurePresets").toArray();
+				const QJsonArray templatePresets = templateObj.value("configurePresets").toArray();
+				for (const QJsonValue& pVal : projectPresets)
+				{
+					const QJsonObject p = pVal.toObject();
+					const QString name = p.value("name").toString();
+					if (name.isEmpty())
+						continue;
+					// find matching template preset by name
+					QJsonObject tplPreset;
+					bool found = false;
+					for (const QJsonValue& tVal : templatePresets)
+					{
+						const QJsonObject t = tVal.toObject();
+						if (t.value("name").toString() == name)
+						{
+							tplPreset = t;
+							found = true;
+							break;
+						}
+					}
+					if (!found)
+						continue; // out of scope: drop unmatched presets entirely
+					const QJsonObject projectCache  = p.value("cacheVariables").toObject();
+					const QJsonObject templateCache = tplPreset.value("cacheVariables").toObject();
+					QJsonObject extras;
+					for (auto it = projectCache.begin(); it != projectCache.end(); ++it)
+					{
+						if (!templateCache.contains(it.key()))
+							extras.insert(it.key(), it.value());
+					}
+					if (!extras.isEmpty())
+						snap.presetExtras.insert(name, extras);
+				}
+			}
+			else if (!projectOk && QFile::exists(projectPath))
+			{
+				getLogger().logWarning("Could not parse existing CMakePresets.json; user-macro preservation skipped for this file.");
+			}
+			else if (!templateOk)
+			{
+				getLogger().logWarning("Could not read template CMakePresets.json; user-macro preservation skipped for presets.");
+			}
+		}
+
+		// --- CMakeSettings.json ---
+		{
+			const QString projectPath  = projectDirPath + "/CMakeSettings.json";
+			const QString templatePath = templateRoot   + "/CMakeSettings.json";
+			QJsonObject projectObj, templateObj;
+			const bool projectOk  = readJsonObject(projectPath, projectObj);
+			const bool templateOk = readJsonObject(templatePath, templateObj);
+			if (projectOk && templateOk)
+			{
+				const QJsonArray projectConfigs  = projectObj.value("configurations").toArray();
+				const QJsonArray templateConfigs = templateObj.value("configurations").toArray();
+				for (const QJsonValue& cVal : projectConfigs)
+				{
+					const QJsonObject cfg = cVal.toObject();
+					const QString name = cfg.value("name").toString();
+					if (name.isEmpty())
+						continue;
+					QJsonObject tplCfg;
+					bool found = false;
+					for (const QJsonValue& tVal : templateConfigs)
+					{
+						const QJsonObject t = tVal.toObject();
+						if (t.value("name").toString() == name)
+						{
+							tplCfg = t;
+							found = true;
+							break;
+						}
+					}
+					if (!found)
+						continue;
+
+					// -D tokens
+					const QStringList projectTokens  = tokenizeCommandArgs(cfg.value("cmakeCommandArgs").toString());
+					const QStringList templateTokens = tokenizeCommandArgs(tplCfg.value("cmakeCommandArgs").toString());
+					QSet<QString> templateKeys;
+					for (const QString& tt : templateTokens)
+					{
+						const QString k = extractDefineKey(tt);
+						if (!k.isEmpty())
+							templateKeys.insert(k);
+					}
+					ConfigExtras extras;
+					for (const QString& pt : projectTokens)
+					{
+						const QString k = extractDefineKey(pt);
+						if (k.isEmpty())
+							continue;
+						if (!templateKeys.contains(k))
+							extras.extraDFlags.append(pt);
+					}
+
+					// variables[]
+					const QJsonArray projectVars  = cfg.value("variables").toArray();
+					const QJsonArray templateVars = tplCfg.value("variables").toArray();
+					QSet<QString> templateVarNames;
+					for (const QJsonValue& tv : templateVars)
+						templateVarNames.insert(tv.toObject().value("name").toString());
+					for (const QJsonValue& pv : projectVars)
+					{
+						const QJsonObject pvo = pv.toObject();
+						const QString vname = pvo.value("name").toString();
+						if (vname.isEmpty())
+							continue;
+						if (!templateVarNames.contains(vname))
+							extras.extraVariables.append(pvo);
+					}
+
+					if (!extras.extraDFlags.isEmpty() || !extras.extraVariables.isEmpty())
+						snap.settingsExtras.insert(name, extras);
+				}
+			}
+			else if (!projectOk && QFile::exists(projectPath))
+			{
+				getLogger().logWarning("Could not parse existing CMakeSettings.json; user-macro preservation skipped for this file.");
+			}
+			else if (!templateOk)
+			{
+				getLogger().logWarning("Could not read template CMakeSettings.json; user-macro preservation skipped for settings.");
+			}
+		}
+
+		snap.valid = true;
+		return snap;
+	}
+
+	bool ProjectExporter::applyUserCmakeMacros(const CmakeMacroSnapshot& snapshot, const QString& projectDirPath)
+	{
+		bool success = true;
+
+		// --- CMakePresets.json ---
+		if (!snapshot.presetExtras.isEmpty())
+		{
+			const QString path = projectDirPath + "/CMakePresets.json";
+			QJsonObject root;
+			if (!readJsonObject(path, root))
+			{
+				getLogger().logWarning("Skipping preset macro re-injection: cannot read " + path.toStdString());
+			}
+			else
+			{
+				QJsonArray presets = root.value("configurePresets").toArray();
+				for (int i = 0; i < presets.size(); ++i)
+				{
+					QJsonObject p = presets[i].toObject();
+					const QString name = p.value("name").toString();
+					if (!snapshot.presetExtras.contains(name))
+						continue;
+					const QJsonObject extras = snapshot.presetExtras.value(name);
+					QJsonObject cache = p.value("cacheVariables").toObject();
+					for (auto it = extras.begin(); it != extras.end(); ++it)
+					{
+						// Template wins: if the post-substitution template re-introduced this key, keep template's value.
+						if (cache.contains(it.key()))
+							continue;
+						cache.insert(it.key(), it.value());
+						getLogger().logInfo("Preserved user cacheVariable '" + it.key().toStdString()
+							+ "' in preset '" + name.toStdString() + "'");
+					}
+					p.insert("cacheVariables", cache);
+					presets[i] = p;
+				}
+				root.insert("configurePresets", presets);
+				if (!writeJsonObject(path, root))
+				{
+					getLogger().logError("Failed to write " + path.toStdString());
+					success = false;
+				}
+			}
+		}
+
+		// --- CMakeSettings.json ---
+		if (!snapshot.settingsExtras.isEmpty())
+		{
+			const QString path = projectDirPath + "/CMakeSettings.json";
+			QJsonObject root;
+			if (!readJsonObject(path, root))
+			{
+				getLogger().logWarning("Skipping settings macro re-injection: cannot read " + path.toStdString());
+			}
+			else
+			{
+				QJsonArray configs = root.value("configurations").toArray();
+				for (int i = 0; i < configs.size(); ++i)
+				{
+					QJsonObject cfg = configs[i].toObject();
+					const QString name = cfg.value("name").toString();
+					if (!snapshot.settingsExtras.contains(name))
+						continue;
+					const ConfigExtras& extras = snapshot.settingsExtras.value(name);
+
+					// cmakeCommandArgs
+					if (!extras.extraDFlags.isEmpty())
+					{
+						QString args = cfg.value("cmakeCommandArgs").toString();
+						const QStringList currentTokens = tokenizeCommandArgs(args);
+						QSet<QString> currentKeys;
+						for (const QString& t : currentTokens)
+						{
+							const QString k = extractDefineKey(t);
+							if (!k.isEmpty())
+								currentKeys.insert(k);
+						}
+						for (const QString& token : extras.extraDFlags)
+						{
+							const QString k = extractDefineKey(token);
+							if (k.isEmpty() || currentKeys.contains(k))
+								continue; // template wins on collision after substitution
+							if (!args.isEmpty())
+								args.append(' ');
+							args.append(token);
+							currentKeys.insert(k);
+							getLogger().logInfo("Preserved user -D flag '" + token.toStdString()
+								+ "' in configuration '" + name.toStdString() + "'");
+						}
+						cfg.insert("cmakeCommandArgs", args);
+					}
+
+					// variables[]
+					if (!extras.extraVariables.isEmpty())
+					{
+						QJsonArray vars = cfg.value("variables").toArray();
+						QSet<QString> currentVarNames;
+						for (const QJsonValue& v : vars)
+							currentVarNames.insert(v.toObject().value("name").toString());
+						for (const QJsonValue& v : extras.extraVariables)
+						{
+							const QJsonObject vo = v.toObject();
+							const QString vname = vo.value("name").toString();
+							if (vname.isEmpty() || currentVarNames.contains(vname))
+								continue;
+							vars.append(vo);
+							currentVarNames.insert(vname);
+							getLogger().logInfo("Preserved user variable '" + vname.toStdString()
+								+ "' in configuration '" + name.toStdString() + "'");
+						}
+						cfg.insert("variables", vars);
+					}
+
+					configs[i] = cfg;
+				}
+				root.insert("configurations", configs);
+				if (!writeJsonObject(path, root))
+				{
+					getLogger().logError("Failed to write " + path.toStdString());
+					success = false;
+				}
+			}
+		}
+
+		return success;
+	}
 
 }
