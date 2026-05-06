@@ -387,6 +387,7 @@ namespace CLC
 		bool success = true;
 		success &= replaceTemplateVariablesIn_mainCmakeLists(settings, projectDirPath);
 		success &= replaceTemplateVariablesIn_cmakeSettings(settings, projectDirPath);
+		success &= replaceTemplateVariablesIn_cmakePresets(settings, projectDirPath);
 		success &= replaceTemplateVariablesIn_libraryInfo(settings, projectDirPath);
 
 		return success;
@@ -568,6 +569,64 @@ namespace CLC
 		}
 		file.write(doc.toJson());
 		file.close();
+		return true;
+	}
+
+	bool ProjectExporter::replaceTemplateVariablesIn_cmakePresets(const ProjectSettings& settings,
+																  const QString& projectDirPath)
+	{
+		QString presetsPath = projectDirPath + "/CMakePresets.json";
+		if (!QFile::exists(presetsPath))
+			return true; // optional file in older projects
+
+		QVector<QString> fileContent = Utilities::getFileContents(presetsPath);
+		if (fileContent.size() == 0)
+		{
+			getLogger().logError("Failed to read file:\n" + presetsPath.toStdString());
+			Utilities::critical("Error", "Failed to read file:\n" + presetsPath);
+			return false;
+		}
+
+		const ProjectSettings::LibrarySettings& librarySettings = settings.getLibrarySettings();
+		const ProjectSettings::CMAKE_settings& cmakeSettings = settings.getCMAKE_settings();
+		const ProjectSettings::Placeholder defaults = settings.getDefaultPlaceholder();
+
+		struct Replacement { QString from; QString to; };
+		// Order matters: longer / more-specific tokens before tokens that are substrings of them
+		// (e.g. LIBRARY_NAME_SHORT must run before LIBRARY_NAME_LIB / LIBRARY_NAME_API would,
+		// and Library_Name must run after LIBRARY_NAME_* so it doesn't eat the prefix).
+		const QVector<Replacement> replacements{
+			{ defaults.LIBRARY__NAME_SHORT, cmakeSettings.lib_short_define },
+			{ defaults.LIBRARY__NAME_API,   librarySettings.apiName        },
+			{ defaults.LIBRARY__NAME_LIB,   cmakeSettings.lib_define       },
+			{ defaults.Library_Namespace,   librarySettings.namespaceName  },
+			{ defaults.Library_Name,        cmakeSettings.libraryName      },
+		};
+
+		bool changed = false;
+		for (auto& line : fileContent)
+		{
+			for (const auto& r : replacements)
+			{
+				if (r.from.isEmpty() || r.from == r.to)
+					continue;
+				if (line.contains(r.from))
+				{
+					line.replace(r.from, r.to);
+					changed = true;
+				}
+			}
+		}
+
+		if (!changed)
+			return true;
+
+		if (!Utilities::saveFileContents(presetsPath, fileContent))
+		{
+			getLogger().logError("Failed to write file:\n" + presetsPath.toStdString());
+			Utilities::critical("Error", "Failed to write file:\n" + presetsPath);
+			return false;
+		}
 		return true;
 	}
 

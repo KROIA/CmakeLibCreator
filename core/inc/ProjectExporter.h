@@ -59,6 +59,8 @@ namespace CLC
 													   const QString& projectDirPath);
 		bool replaceTemplateVariablesIn_cmakeSettings(const ProjectSettings& settings,
 													  const QString& projectDirPath);
+		bool replaceTemplateVariablesIn_cmakePresets(const ProjectSettings& settings,
+													 const QString& projectDirPath);
 		bool replaceTemplateVariablesIn_libraryInfo(const ProjectSettings& settings,
 													const QString& projectDirPath);
 
