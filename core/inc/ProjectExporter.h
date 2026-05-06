@@ -5,7 +5,6 @@
 #include <QHash>
 #include <QJsonObject>
 #include <QJsonArray>
-#include <QStringList>
 
 namespace CLC
 {
@@ -59,10 +58,8 @@ namespace CLC
 									  const QString& projectDirPath);
 
 
-		bool replaceTemplateVariablesIn_mainCmakeLists(const ProjectSettings& settings, 
+		bool replaceTemplateVariablesIn_mainCmakeLists(const ProjectSettings& settings,
 													   const QString& projectDirPath);
-		bool replaceTemplateVariablesIn_cmakeSettings(const ProjectSettings& settings,
-													  const QString& projectDirPath);
 		bool replaceTemplateVariablesIn_cmakePresets(const ProjectSettings& settings,
 													 const QString& projectDirPath);
 		bool replaceTemplateVariablesIn_libraryInfo(const ProjectSettings& settings,
@@ -78,19 +75,13 @@ namespace CLC
 													 const QString& projectDirPath);
 
 		// User-macro preservation across upgrade. Snapshot is captured before the template
-		// CMakePresets.json / CMakeSettings.json overwrite the project's existing files,
-		// then re-applied after placeholder substitution. Conflict policy: template wins —
-		// only keys absent from the matching template preset/configuration are preserved.
-		struct ConfigExtras
-		{
-			QStringList extraDFlags;
-			QJsonArray  extraVariables;
-		};
+		// CMakePresets.json overwrites the project's existing file, then re-applied after
+		// placeholder substitution. Conflict policy: template wins — only keys absent from
+		// the matching template preset are preserved.
 		struct CmakeMacroSnapshot
 		{
 			bool valid = false;
 			QHash<QString, QJsonObject>  presetExtras;   // preset name -> extra cacheVariables
-			QHash<QString, ConfigExtras> settingsExtras; // configuration name -> extras
 		};
 		CmakeMacroSnapshot snapshotUserCmakeMacros(const QString& projectDirPath) const;
 		bool applyUserCmakeMacros(const CmakeMacroSnapshot& snapshot, const QString& projectDirPath);

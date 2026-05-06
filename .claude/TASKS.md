@@ -7,6 +7,40 @@ _(empty — hotfixes go here, worked on first, bypass normal prioritization)_
 
 ## Backlog
 
+### TASK-004 — Drop `CMakeSettings.json` handling from the tool
+- **Linked issue:** _(none — feature follow-up; template 1.7.0 dropped the file 2026-05-06)_
+- **Why:** Template repo has removed `CMakeSettings.json`. The tool's existing copy/edit logic now triggers `Utilities::critical(...)` on every export because it tries to copy a file that no longer exists in the template. CMakeSettings.json is a Visual Studio-only legacy format; CMakePresets.json is the portable replacement and stays.
+- **Scope (delete-only — do not touch CMakePresets.json paths):**
+  1. `core/src/ProjectExporter.cpp:189` — remove the `templateSourcePath + "/CMakeSettings.json"` entry from the `fileList` initializer.
+  2. `core/src/ProjectExporter.cpp` ~line 389 — remove the call to `replaceTemplateVariablesIn_cmakeSettings(settings, projectDirPath)` from `replaceTemplateVariables`.
+  3. `core/src/ProjectExporter.cpp` ~lines 535–573 — delete the entire `replaceTemplateVariablesIn_cmakeSettings` method definition.
+  4. `core/inc/ProjectExporter.h` — delete the declaration of `replaceTemplateVariablesIn_cmakeSettings`.
+  5. TASK-002 helpers in `core/src/ProjectExporter.cpp`:
+     - `snapshotUserCmakeMacros` — delete the entire `--- CMakeSettings.json ---` block; keep the CMakePresets.json block intact.
+     - `applyUserCmakeMacros` — delete the entire `--- CMakeSettings.json ---` block; keep the CMakePresets.json block intact.
+     - In `core/inc/ProjectExporter.h`: delete the `ConfigExtras` struct and the `settingsExtras` field of `CmakeMacroSnapshot`. Keep `presetExtras`. The struct now only carries preset extras; rename if it improves clarity (optional, low priority — keep `CmakeMacroSnapshot` to avoid churn).
+  6. Documentation:
+     - `AI_Knowledge.md` — remove or amend mentions of `CMakeSettings.json` (mostly the "Repo layout" and template structure sections); state that CMakePresets.json is the only build-config file the tool manages.
+     - `.claude/ProjectManager/PROJECT_SUMMARY.md` — same.
+     - `.claude/ProjectManager/GLOSSARY.md` — no changes needed (no CMakeSettings.json entry).
+- **Out of scope (the user will handle manually):**
+  - Migration of this repo's own template instantiation from 1.6.1 → 1.7.0 (root `CMakeLists.txt` `## Template version:` comment, any USER_SECTION schema changes, any new `<AUTO_REPLACED>` variables). The user does this with the migration agent or by hand later.
+- **Backwards-compat:** existing user projects keep their `CMakeSettings.json` untouched — the tool simply stops copying/editing/scanning it. No deletions on the user's disk.
+- **Acceptance criteria:**
+  - Exporting a fresh project produces no `CMakeSettings.json` and emits no critical-error popup about the missing file.
+  - Upgrading an existing project that has a `CMakeSettings.json` does not modify or delete that file; only `CMakePresets.json` is processed (placeholder substitution + macro preservation from TASK-002 still works).
+  - Build succeeds; no unused-variable / unreachable warnings introduced.
+- **Estimate:** S.
+- **Status:** done — user implemented manually (verified 2026-05-06)
+- **Owner agent:** user (direct edits)
+- **Stage checklist:**
+  - [x] implemented   (`core/inc/ProjectExporter.h`, `core/src/ProjectExporter.cpp`, `AI_Knowledge.md` — 266 deletions; verified zero residual references via grep)
+  - [ ] tested        (pending user manual export verification)
+  - [x] documented    (changelog 1.6.0 → Changes)
+  - [x] reviewed      (N/A — manual review gate disabled per PREFERENCES.md)
+
+---
+
 ### TASK-003 — `// @file LibraryName*.h` Doxygen comments not substituted on export
 - **Linked issue:** _(none — bug reported by user 2026-05-06)_
 - **Symptom:** After exporting a project, the first-line `// @file LibraryName.h`, `_base.h`, `_debug.h`, `_global.h`, `_info.h`, `_meta.h` Doxygen comments still contain the literal `LibraryName` instead of the project's actual library name.

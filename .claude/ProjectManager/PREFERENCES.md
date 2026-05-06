@@ -25,6 +25,7 @@ User-confirmed choices, persisted across sessions. Re-read on every bootstrap. T
 
 ## Commit message style
 - `+` for additions, `~` for changes, `-` for deletions.
+- These prefixes apply **everywhere** — subject line *and* body bullets. Don't fall back to `-` as a generic bullet character; pick the prefix that matches the action.
 - Short subject line; details belong in `CHANGELOG.md`.
 
 ## Harness hooks

@@ -30,7 +30,6 @@ The whole job of the app boils down to: **download template → copy files → s
 CmakeLibCreator/
 ├── CMakeLists.txt              Root config — IS ITSELF a generated-from-template file
 ├── CMakePresets.json
-├── CMakeSettings.json
 ├── build.bat
 ├── CmakeLibCreator/            App shell — main.cpp, AppIcon.rc/ico, CMakeLists.txt
 ├── core/
