@@ -67,6 +67,9 @@ namespace CLC
 		static void setLoadSaveProjects(const LoadSaveProjects& paths);
 		static const LoadSaveProjects& getLoadSaveProjects();
 
+		static void setDefaultLibraryPath(const QString& path);
+		static const QString& getDefaultLibraryPath();
+
 		static void setLoadedProjectPath(const QString& path);
 		static const QString &getLoadedProjectPath();
 
@@ -94,6 +97,7 @@ namespace CLC
 		QVector<Dependency> m_dependencies;
 
 		QString m_loadedProjectPath;
+		QString m_defaultLibraryPath;
 
 		QString m_settingsFilePath;
 

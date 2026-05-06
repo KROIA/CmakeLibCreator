@@ -31,7 +31,7 @@ static int runCli(QApplication& app, const QStringList& args)
 
     QCommandLineOption templatePathOption(
         QStringList() << "t" << "template",
-        "Override the template source path (default: data/template/main relative to exe).",
+        "Override the template source path (default: <AppData>/data/template/main).",
         "templatePath");
     parser.addOption(templatePathOption);
 
@@ -87,6 +87,11 @@ static int runCli(QApplication& app, const QStringList& args)
 
 int main(int argc, char* argv[])
 {
+    // Set org/app name before any QStandardPaths::AppDataLocation lookup so
+    // Resources can anchor settings.json + data/ under a stable AppData root.
+    QCoreApplication::setOrganizationName("KROIA");
+    QCoreApplication::setApplicationName("CmakeLibCreator");
+
     QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
     QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);

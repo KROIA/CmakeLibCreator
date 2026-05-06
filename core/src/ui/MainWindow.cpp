@@ -134,14 +134,14 @@ namespace CLC
 			Utilities::downloadGitRepository(gitRepoUrl, "dependencies", tmpPath);
 			Utilities::downloadGitRepository(gitRepoUrl, "qtModules", tmpPath);
 
-			// Copy the dependencies and qtModules to the template source path
-			QString workingDir = QDir::currentPath();
-			Utilities::copyAndReplaceFolderContents(workingDir + "/" + tmpPath + "/dependencies/dependencies", workingDir + "/" + Resources::getRelativeDependenciesSourcePath());
-			Utilities::copyAndReplaceFolderContents(workingDir + "/" + tmpPath + "/qtModules/qtModules", workingDir + "/" + Resources::getRelativeQtModulesSourcePath());
+			// Copy the dependencies and qtModules to the template source path.
+			// tmpPath and the Resources paths are absolute (AppData-anchored).
+			Utilities::copyAndReplaceFolderContents(tmpPath + "/dependencies/dependencies", Resources::getRelativeDependenciesSourcePath());
+			Utilities::copyAndReplaceFolderContents(tmpPath + "/qtModules/qtModules", Resources::getRelativeQtModulesSourcePath());
 
-			QDir tmpDir1(workingDir + "/" + tmpPath + "/dependencies");
+			QDir tmpDir1(tmpPath + "/dependencies");
 			tmpDir1.removeRecursively();
-			QDir tmpDir2(workingDir + "/" + tmpPath + "/qtModules");
+			QDir tmpDir2(tmpPath + "/qtModules");
 			tmpDir2.removeRecursively();
 
 			Resources::loadQTModules();
@@ -299,8 +299,10 @@ namespace CLC
 		
 		
 
+		const QString loaded = Resources::getLoadedProjectPath();
+		const QString initialDir = loaded.isEmpty() ? Resources::getDefaultLibraryPath() : loaded;
 		QString folderPath = QFileDialog::getExistingDirectory(this, tr("Open Library Path"),
-			Resources::getLoadedProjectPath(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+			initialDir, QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 		if (folderPath.size() == 0)
 		{
 			return;
@@ -343,6 +345,8 @@ namespace CLC
 		// Open file dialog to select a folder
 		QString loadedProjectPath = Resources::getLoadedProjectPath();
 		loadedProjectPath = QFileInfo(loadedProjectPath).path();
+		if (loadedProjectPath.isEmpty())
+			loadedProjectPath = Resources::getDefaultLibraryPath();
 		QString folderPath = QFileDialog::getExistingDirectory(this, tr("Open Libraries root path"),
 			loadedProjectPath, QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 		if (folderPath.size() == 0)

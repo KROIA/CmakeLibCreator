@@ -2,20 +2,25 @@
 #include <QDir>
 #include <QJsonDocument>
 #include <QJsonArray>
+#include <QStandardPaths>
 #include "Logging.h"
 
 namespace CLC
 {
 	Resources::Resources()
 	{
-		m_settingsFilePath = "settings.json";
+		const QString appDataRoot = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+		QDir().mkpath(appDataRoot);
 
+		m_settingsFilePath = appDataRoot + "/settings.json";
 
-		m_templateSourcePath = "data/template";
-		m_dependenciesSourcePath = "data/dependencies";
-		m_qtModulesSourcePath = "data/qtModules";
-		m_styleSheetSourcePath = "data/stylesheet";
-		m_tmpPath = "data/temp";
+		m_templateSourcePath = appDataRoot + "/data/template";
+		m_dependenciesSourcePath = appDataRoot + "/data/dependencies";
+		m_qtModulesSourcePath = appDataRoot + "/data/qtModules";
+		m_styleSheetSourcePath = appDataRoot + "/data/stylesheet";
+		m_tmpPath = appDataRoot + "/data/temp";
+
+		m_defaultLibraryPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/Visual Studio 2022/Projects";
 
 		m_gitRepo.repo = "https://github.com/KROIA/QT_cmake_library_template.git";
 		m_gitRepo.templateBranch = "main";
@@ -32,6 +37,8 @@ namespace CLC
 			dir.mkpath(m_qtModulesSourcePath);
 		if (!dir.exists(m_styleSheetSourcePath))
 			dir.mkpath(m_styleSheetSourcePath);
+		if (!dir.exists(m_tmpPath))
+			dir.mkpath(m_tmpPath);
 
 		QFile file(m_settingsFilePath);
 		if (!file.exists())
@@ -95,7 +102,7 @@ namespace CLC
 	QString Resources::getCurrentTemplateAbsSourcePath()
 	{
 		const Resources& res = instance();
-		return QDir::currentPath() + "/" + res.m_templateSourcePath + "/" + res.m_gitRepo.templateBranch;
+		return res.m_templateSourcePath + "/" + res.m_gitRepo.templateBranch;
 	}
 
 	void Resources::setRelativeDependenciesSourcePath(const QString& path)
@@ -109,7 +116,7 @@ namespace CLC
 	}
 	QString Resources::getDependenciesAbsSourcePath()
 	{
-		return QDir::currentPath() + "/" + getRelativeDependenciesSourcePath();
+		return getRelativeDependenciesSourcePath();
 	}
 	void Resources::setRelativeQtModulesSourcePath(const QString& path)
 	{
@@ -170,6 +177,14 @@ namespace CLC
 	{
 		return instance().m_loadSaveProjects;
 	}
+	void Resources::setDefaultLibraryPath(const QString& path)
+	{
+		instance().m_defaultLibraryPath = path;
+	}
+	const QString& Resources::getDefaultLibraryPath()
+	{
+		return instance().m_defaultLibraryPath;
+	}
 	void Resources::setLoadedProjectPath(const QString& path)
 	{
 		instance().m_loadedProjectPath = path;
@@ -199,6 +214,8 @@ namespace CLC
 		m_gitRepo.load(settings["git"]);
 		//qDebug() << settings;
 		m_loadSaveProjects.load(settings["projectPaths"]);
+		if (settings.contains("defaultLibraryPath"))
+			m_defaultLibraryPath = settings["defaultLibraryPath"].toString();
 		loadQTModules_intern();
 		loadDependencies_intern();
 	}
@@ -212,6 +229,7 @@ namespace CLC
 		settings["tmpPath"] = m_tmpPath;
 		settings["git"] = m_gitRepo.save();
 		settings["projectPaths"] = m_loadSaveProjects.save();
+		settings["defaultLibraryPath"] = m_defaultLibraryPath;
 
 		QJsonDocument doc(settings);
 		QFile file(m_settingsFilePath);

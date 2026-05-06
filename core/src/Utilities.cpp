@@ -896,9 +896,8 @@ namespace CLC
 			dir.mkpath(folder);
 		}*/
 		dir.mkpath(folder + "/" + branch);
-		// copy all files and folders from tmpPath to folderPath
-		QString currentDir = QDir::currentPath();
-		copyAndReplaceFolderContents(currentDir + "/" + tmpFolder, currentDir + "/" + folder, true);
+		// copy all files and folders from tmpPath to folderPath (absolute paths).
+		copyAndReplaceFolderContents(tmpFolder, folder, true);
 		// Remove tmpPath
 		QDir tmpDir(tmpFolder+"/"+branch);
 		tmpDir.removeRecursively();

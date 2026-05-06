@@ -6,13 +6,13 @@
 
 ## At a glance
 - No open hotfixes.
-- No backlog tasks.
+- 1 backlog task: **TASK-006** (self-upgrade mangles literal placeholder mentions; not yet started).
 - No tasks in progress.
-- 1.7.0 release just shipped (commit `11eeef8`).
+- TASK-007 (relocate to AppData) + TASK-008 (ProjectPaths editor + default library path) ✓ done 2026-05-06; pending in `changelogs/1.8.0.md` for next release.
 - Code review not yet run for this cycle — recommend running the **code-review** agent against current `main` to seed `ISSUES.md`.
 
 ## Recent release notes
-See `changelogs/1.7.0.md` for the 1.6.0 → 1.7.0 delta.
+See `changelogs/1.7.0.md` for the most recent shipped release. `changelogs/1.8.0.md` accumulates pending work (rename if a different version number is chosen at release).
 
 ## Next suggested moves
 1. User-driven: complete manual migration of this repo's own template instantiation to template 1.7.0 (drop `CMakeSettings.json` from disk, update `## Template version: 1.6.1` → `1.7.0`, apply any other template deltas).

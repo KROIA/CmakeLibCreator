@@ -23,7 +23,6 @@ _(empty — hotfixes go here, worked on first, bypass normal prioritization)_
   - `#ifdef` / `#if defined` lines
   - `#include` lines (rare for short, but possible for namespace)
   - Lines containing `namespace` (for `Library_Namespace`)
-  - Lines containing the appended-suffix usages like `<SHORT>_PROFILING`, `<SHORT>_LOG_`, etc. — too project-specific; instead require `#` (preprocessor) OR `namespace` OR `using` for namespace.
 - **Acceptance criteria:**
   - The tool's own source survives a self-upgrade unchanged in comment/prose lines that mention `LIBRARY_NAME_SHORT` or `LibraryNamespace` as text.
   - Legitimate substitutions in `#define`, `#ifdef`, `namespace`, `using namespace`, and `#include` lines still happen.
