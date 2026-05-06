@@ -7,6 +7,26 @@ _(empty — hotfixes go here, worked on first, bypass normal prioritization)_
 
 ## Backlog
 
+### TASK-003 — `// @file LibraryName*.h` Doxygen comments not substituted on export
+- **Linked issue:** _(none — bug reported by user 2026-05-06)_
+- **Symptom:** After exporting a project, the first-line `// @file LibraryName.h`, `_base.h`, `_debug.h`, `_global.h`, `_info.h`, `_meta.h` Doxygen comments still contain the literal `LibraryName` instead of the project's actual library name.
+- **Root cause:** `ProjectExporter.cpp:728` — the `Library_Name` placeholder replacement is gated by `mustContainInLine` requiring one of `{"#include"}`, `{"_VERSION_"}`, or `{"_LIBRARY_NAME"}`. Doxygen `@file` comment lines match none of these so substitution is skipped.
+- **Fix:** Add `{"@file"}` as a fourth allowed-context entry on that filter.
+- **Acceptance criteria:**
+  - After exporting a fresh project named e.g. `MyAwesomeLib`, line 1 of every generated header (`MyAwesomeLib.h`, `MyAwesomeLib_base.h`, `MyAwesomeLib_debug.h`, `MyAwesomeLib_global.h`, `MyAwesomeLib_info.h`, `MyAwesomeLib_meta.h.in`) reads `// @file MyAwesomeLib*.h` (matching the file's actual name).
+  - No regression: random uses of the substring `LibraryName` in user code (which the existing filter is designed to avoid touching) remain untouched. Verify by checking that lines with `LibraryName` but neither `@file`, `#include`, `_VERSION_`, nor `_LIBRARY_NAME` are still skipped.
+- **Implementation outline:** one-line edit to the `replacements` vector at `core/src/ProjectExporter.cpp:728`.
+- **Estimate:** XS.
+- **Status:** done (moved to FINISHED_TASKS.md 2026-05-06 — user-confirmed after rebuild)
+- **Owner agent:** PM (direct edit — one-line mechanical change)
+- **Stage checklist:**
+  - [x] implemented   (`core/src/ProjectExporter.cpp:728` — added `{"@file"}` to `mustContainInLine`)
+  - [x] tested        (user-confirmed working after rebuild)
+  - [x] documented    (changelog 1.6.0 → Bugfixes)
+  - [x] reviewed      (N/A — manual review gate disabled per PREFERENCES.md)
+
+---
+
 ### TASK-002 — Preserve user-added macro definitions in `CMakePresets.json` / `CMakeSettings.json` on upgrade
 - **Linked issue:** _(none — feature request 2026-05-06)_
 - **Problem:** The upgrade flow overwrites both files at `ProjectExporter.cpp:189-190`. Developer-added macro definitions are lost.

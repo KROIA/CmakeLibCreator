@@ -724,8 +724,8 @@ namespace CLC
 			{defaultPlaceholders.LIBRARY__NAME_API,librarySettigns.apiName,  {{defaultPlaceholders.LIBRARY__NAME_API + " "}, {"#","define"}}},
 			{defaultPlaceholders.LIBRARY__NAME_SHORT,cmakeSettings.lib_short_define, {}},
 			{defaultPlaceholders.LIBRARY__NAME_LIB,cmakeSettings.lib_define, {{"#"}}},
-			// Replace CmakeLibraryCreator on #include lines, version-macro lines, and name-macro lines.
-			{defaultPlaceholders.Library_Name, cmakeSettings.libraryName, {{"#include"}, {"_VERSION_"}, {"_LIBRARY_NAME"}}},
+			// Replace CmakeLibraryCreator on #include lines, version-macro lines, name-macro lines, and Doxygen @file comment lines.
+			{defaultPlaceholders.Library_Name, cmakeSettings.libraryName, {{"#include"}, {"_VERSION_"}, {"_LIBRARY_NAME"}, {"@file"}}},
 
 			//{loadedPlaceholders.Library_Namespace,librarySettigns.namespaceName,	{}},
 			//{loadedPlaceholders.LIBRARY__NAME_EXPORT,librarySettigns.exportName,  {{loadedPlaceholders.LIBRARY__NAME_EXPORT + " "}, {"#","define"}}},

@@ -18,7 +18,7 @@ User-confirmed choices, persisted across sessions. Re-read on every bootstrap. T
 
 ## Version control
 - VCS: **git**.
-- **Commit permission:** granted — **automatic** (PM may commit without asking each time, following the pre-commit ritual).
+- **Commit permission:** granted — **explicit user command only** (updated 2026-05-06). Never commit automatically. The user manually tests the tool first; only commit when the user explicitly says to.
 - **Push permission:** **denied.** Never push.
 - **Branches:** **work directly on `main`.** No custom feature branches.
 - **Repo artifacts:** `CLAUDE.md` and `.claude/` are committed to the repository.

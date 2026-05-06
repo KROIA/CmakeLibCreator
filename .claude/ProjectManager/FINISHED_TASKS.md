@@ -2,6 +2,12 @@
 
 Completed tasks for the **current** version. Rotated into `changelogs/<version>.md` at release.
 
+### TASK-003 — `// @file LibraryName*.h` Doxygen comments not substituted on export — ✓ 2026-05-06
+- One-line filter fix at `core/src/ProjectExporter.cpp:728`: added `{"@file"}` to the `mustContainInLine` allow-list for the `Library_Name` substitution. Doxygen `@file` comment lines now get the placeholder replaced alongside `#include`, `_VERSION_`, and `_LIBRARY_NAME` lines.
+- Narrow filter preserved — random uses of the substring `LibraryName` in user code remain untouched.
+- User-confirmed after rebuild.
+- Files: `core/src/ProjectExporter.cpp`.
+
 ### TASK-002 — Preserve user-added macros in `CMakePresets.json` / `CMakeSettings.json` on upgrade — ✓ 2026-05-06
 - Added `ProjectExporter::snapshotUserCmakeMacros` (runs before file copy on upgrade path) and `applyUserCmakeMacros` (runs after placeholder substitution).
 - Preserved macros: `configurePresets[].cacheVariables` keys absent from the template; `-D<KEY>(=<VALUE>)?` tokens in `configurations[].cmakeCommandArgs` whose key is absent from the template; `configurations[].variables[]` entries whose `name` is absent from the template.

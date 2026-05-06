@@ -1,12 +1,12 @@
 # PROJECT_STATUS
 
-**Current version:** 1.6.0 (supports template 1.6.1)
+**Current version:** Can be found in `CMakeLists.txt` (supports template 1.6.1)
 **Branch:** `main`
 **Phase:** post-init — PM scaffolding established 2026-05-06.
 
 ## At a glance
 - No open hotfixes.
-- No backlog tasks. TASK-001, TASK-002 ✓ done 2026-05-06.
+- No backlog tasks. TASK-001, TASK-002, TASK-003 ✓ done 2026-05-06.
 - No tasks in progress.
 - Code review not yet run — recommend running the **code-review** agent against current `main` to seed `ISSUES.md`.
 - Unit-test coverage: KROIA UnitTest framework wired in `unittests/UnitTest.cmake`, but no test suites authored yet.
