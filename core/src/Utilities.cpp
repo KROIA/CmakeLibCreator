@@ -7,6 +7,62 @@
 
 namespace CLC
 {
+	namespace
+	{
+		// Strict USER_SECTION marker recognition. The whole line (after trimming) must
+		// start with the comment sign's first character doubled (so "#" -> "##",
+		// "//" -> "///") followed by a single space and the keyword. Anything else —
+		// including single-"#" comments that merely mention the keyword in prose — is
+		// rejected. This prevents false positives when a multi-line explanatory comment
+		// happens to write "USER_SECTION_START" as text.
+		QString userSectionMarkerPrefix(const QString& commentSign)
+		{
+			if (commentSign.isEmpty())
+				return QString();
+			return commentSign + commentSign.left(1);
+		}
+
+		bool isUserSectionStartLine(const QString& line, const QString& commentSign, int& sectionIndex)
+		{
+			const QString prefix = userSectionMarkerPrefix(commentSign);
+			if (prefix.isEmpty())
+				return false;
+			const QString trimmed = line.trimmed();
+			if (!trimmed.startsWith(prefix))
+				return false;
+			const QString afterPrefix = trimmed.mid(prefix.size());
+			if (afterPrefix.isEmpty() || !afterPrefix[0].isSpace())
+				return false;
+			const QString rest = afterPrefix.trimmed();
+			static const QString keyword = "USER_SECTION_START";
+			if (!rest.startsWith(keyword))
+				return false;
+			const QString tail = rest.mid(keyword.size());
+			if (!tail.isEmpty() && !tail[0].isSpace())
+				return false;
+			bool ok = false;
+			const int n = tail.trimmed().toInt(&ok);
+			if (!ok)
+				return false;
+			sectionIndex = n;
+			return true;
+		}
+
+		bool isUserSectionEndLine(const QString& line, const QString& commentSign)
+		{
+			const QString prefix = userSectionMarkerPrefix(commentSign);
+			if (prefix.isEmpty())
+				return false;
+			const QString trimmed = line.trimmed();
+			if (!trimmed.startsWith(prefix))
+				return false;
+			const QString afterPrefix = trimmed.mid(prefix.size());
+			if (afterPrefix.isEmpty() || !afterPrefix[0].isSpace())
+				return false;
+			return afterPrefix.trimmed() == "USER_SECTION_END";
+		}
+	}
+
 	Utilities& Utilities::instance()
 	{
 		static Utilities inst;
@@ -504,55 +560,47 @@ namespace CLC
 		bool success = true;
 		for (int i = 0; i < lines.size(); i++)
 		{
-			const QString startPattern1 = "USER_SECTION_START";
-			const QString startPattern2 = commentSign;
-			int patternIndex1 = lines[i].indexOf(startPattern1);
-			int patternIndex2 = lines[i].indexOf(startPattern2);
-			if (patternIndex1 >= 0 && patternIndex2 >= 0 && patternIndex1 > patternIndex2 && success)
+			int sectionIndex = -1;
+			if (!success || !isUserSectionStartLine(lines[i], commentSign, sectionIndex))
 			{
-				int sectionIndex = -1;
-				bool ok = false;
-				sectionIndex = lines[i].mid(patternIndex1 + startPattern1.size()).trimmed().toInt(&ok);
-				if (!ok)
-				{
-					critical("Error", "Invalid user section index in CMakeLists.txt Line: " + QString::number(i) + " : " + lines[i]);
-					//QMessageBox::critical("Error", "Invalid user section index in CMakeLists.txt Line: " + QString::number(i) + " : " + lines[i]);
-					sectionIndex = -1;
-				}
-				int sectionListIndex = -1;
-				for (int j=0; j<sections.size(); ++j)
-				{
-					if (sections[j].sectionIndex == sectionIndex)
-					{
-						sectionListIndex = j;
-						break;
-					}
-				}
-				if (sectionListIndex == -1)
-				{
-					newLines.push_back(lines[i]);
-					continue;
-				}
-				else
-				{
-					//getLogger().logInfo("Inserting user section [" + std::to_string(sectionIndex) + "] "
-					//					"Lines: "+std::to_string(sections[sectionListIndex].lines.size()));
-					for (const auto& line : sections[sectionListIndex].lines)
-						newLines.push_back(line);
-				}
-				
-				int endIndex = getLineIndex(lines, "USER_SECTION_END", i, false, "");
-				if (endIndex == -1)
-				{
-					critical("Error", "Could not find end of user section in CMakeLists.txt");
-					//QMessageBox::critical("Error", "Could not find end of user section in CMakeLists.txt");
-					success = false;
-				}
-				else
-					i = endIndex;
+				newLines.push_back(lines[i]);
 				continue;
 			}
-			newLines.push_back(lines[i]);
+
+			int sectionListIndex = -1;
+			for (int j = 0; j < sections.size(); ++j)
+			{
+				if (sections[j].sectionIndex == sectionIndex)
+				{
+					sectionListIndex = j;
+					break;
+				}
+			}
+			if (sectionListIndex == -1)
+			{
+				newLines.push_back(lines[i]);
+				continue;
+			}
+			for (const auto& line : sections[sectionListIndex].lines)
+				newLines.push_back(line);
+
+			// Locate the matching strict USER_SECTION_END marker.
+			int endIndex = -1;
+			for (int k = i + 1; k < lines.size(); ++k)
+			{
+				if (isUserSectionEndLine(lines[k], commentSign))
+				{
+					endIndex = k;
+					break;
+				}
+			}
+			if (endIndex == -1)
+			{
+				critical("Error", "Could not find end of user section " + QString::number(sectionIndex));
+				success = false;
+			}
+			else
+				i = endIndex;
 		}
 		lines = newLines;
 		return success;
@@ -731,42 +779,27 @@ namespace CLC
 		bool success = true;
 		for (int i = 0; i < lines.size(); i++)
 		{
-			const QString startPattern1 = "USER_SECTION_START";
-			const QString startPattern2 = commentSign;
-			int patternIndex1 = lines[i].indexOf(startPattern1);
-			int patternIndex2 = lines[i].indexOf(startPattern2);
-			if (patternIndex1 >= 0 && patternIndex2 >= 0 && patternIndex1 > patternIndex2 && success)
-			{
-				int sectionIndex = -1;
-				bool ok = false;
-				UserSection section;
-				sectionIndex = lines[i].mid(patternIndex1 + startPattern1.size()).trimmed().toInt(&ok);
-				if (!ok)
-				{
-					critical("Error", "Invalid user section index in CMakeLists.txt Line: " + QString::number(i)+" : "+lines[i]);
-					//QMessageBox::critical("Error", "Invalid user section index in CMakeLists.txt Line: " + QString::number(i)+" : "+lines[i]);
-					section.sectionIndex = -1;
-				}
-				else
-					section.sectionIndex = sectionIndex;
-				success &= ok;
+			int sectionIndex = -1;
+			if (!isUserSectionStartLine(lines[i], commentSign, sectionIndex))
+				continue;
 
+			UserSection section;
+			section.sectionIndex = sectionIndex;
+			section.lines.push_back(lines[i]);
+			i++;
+			while (i < lines.size() && !isUserSectionEndLine(lines[i], commentSign))
+			{
 				section.lines.push_back(lines[i]);
 				i++;
-				while (i < lines.size() && !lines[i].contains("USER_SECTION_END"))
-				{
-					section.lines.push_back(lines[i]);
-					i++;
-				}
-				if (i >= lines.size())
-				{
-					critical("Error", "Missing USER_SECTION_END for section " + QString::number(sectionIndex));
-					success = false;
-					break;
-				}
-				section.lines.push_back(lines[i]);
-				sections.push_back(section);
 			}
+			if (i >= lines.size())
+			{
+				critical("Error", "Missing USER_SECTION_END for section " + QString::number(sectionIndex));
+				success = false;
+				break;
+			}
+			section.lines.push_back(lines[i]);
+			sections.push_back(section);
 		}
 		return success;
 	}

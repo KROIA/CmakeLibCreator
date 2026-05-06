@@ -7,6 +7,31 @@ _(empty — hotfixes go here, worked on first, bypass normal prioritization)_
 
 ## Backlog
 
+### TASK-005 — USER_SECTION parser false-positives on in-text mentions of the keyword
+- **Linked issue:** _(none — bug reported by user 2026-05-06)_
+- **Symptom:** A regular comment line that happens to mention the string `USER_SECTION_START` (e.g. inside a multi-line `# ...` explanatory comment) is misinterpreted as an actual section marker, breaking import.
+- **Root cause:** `Utilities::readUserSections` (`Utilities.cpp:729`) and `Utilities::replaceUserSections` (`Utilities.cpp:501`) detect markers via two `indexOf` checks (the comment sign anywhere, and the keyword anywhere, in any order beyond "comment-sign first"). Loose substring matching → trips on any mention.
+- **Fix:** Require strict marker syntax. The whole line, after trimming, must read exactly:
+  - START: `<doubled-comment-prefix> USER_SECTION_START <integer>`
+  - END:   `<doubled-comment-prefix> USER_SECTION_END`
+  where `<doubled-comment-prefix>` is the comment sign with its first character doubled (`#` → `##`; `//` → `///`). This matches the template's actual marker convention (e.g. `## USER_SECTION_START 6`, `/// USER_SECTION_START 1`) and excludes single-`#` / `//` comments that merely mention the keyword.
+- **Acceptance criteria:**
+  - A multi-line `# …` cmake comment that contains the substring `USER_SECTION_START 6` no longer triggers a section start; only the literal `## USER_SECTION_START <N>` line does.
+  - Import succeeds on the user's reported repro.
+  - All existing template files still parse the same number of sections.
+  - No regression in code-file handling — `///`-prefixed markers in `.h`/`.cpp` continue to work.
+- **Implementation outline:** add file-local helpers `isUserSectionStartLine(line, commentSign, &sectionIndex)` and `isUserSectionEndLine(line, commentSign)` in `core/src/Utilities.cpp`. Use them in both `readUserSections` and `replaceUserSections`, replacing the 4 detection sites (start detection × 2, end detection × 2). Tighten the `getLineIndex(..., "USER_SECTION_END", ...)` call too.
+- **Estimate:** S.
+- **Status:** done (user-confirmed 2026-05-06; ships with 1.7.0)
+- **Owner agent:** PM (direct edit)
+- **Stage checklist:**
+  - [x] implemented   (`core/src/Utilities.cpp` — added file-local helpers `isUserSectionStartLine` / `isUserSectionEndLine` / `userSectionMarkerPrefix`; rewrote `readUserSections` and `replaceUserSections` to use them)
+  - [x] tested        (user-confirmed working)
+  - [x] documented    (changelog 1.7.0 → Bugfixes)
+  - [x] reviewed      (N/A — manual review gate disabled per PREFERENCES.md)
+
+---
+
 ### TASK-004 — Drop `CMakeSettings.json` handling from the tool
 - **Linked issue:** _(none — feature follow-up; template 1.7.0 dropped the file 2026-05-06)_
 - **Why:** Template repo has removed `CMakeSettings.json`. The tool's existing copy/edit logic now triggers `Utilities::critical(...)` on every export because it tries to copy a file that no longer exists in the template. CMakeSettings.json is a Visual Studio-only legacy format; CMakePresets.json is the portable replacement and stays.
