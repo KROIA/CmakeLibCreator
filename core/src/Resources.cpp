@@ -4,6 +4,7 @@
 #include <QJsonArray>
 #include <QStandardPaths>
 #include "Logging.h"
+#include <algorithm>
 
 namespace CLC
 {
@@ -177,6 +178,12 @@ namespace CLC
 	{
 		return instance().m_loadSaveProjects;
 	}
+	void Resources::setProjectGroupEnabled(const QString& path, bool enabled)
+	{
+		for (ProjectEntry& e : instance().m_loadSaveProjects.projects)
+			if (e.path == path) { e.groupEnabled = enabled; break; }
+		saveSettings();
+	}
 	void Resources::setDefaultLibraryPath(const QString& path)
 	{
 		instance().m_defaultLibraryPath = path;
@@ -184,6 +191,14 @@ namespace CLC
 	const QString& Resources::getDefaultLibraryPath()
 	{
 		return instance().m_defaultLibraryPath;
+	}
+	void Resources::setMaxBuildThreads(int n)
+	{
+		instance().m_maxBuildThreads = n < 1 ? 1 : n;
+	}
+	int Resources::getMaxBuildThreads()
+	{
+		return instance().m_maxBuildThreads;
 	}
 	void Resources::setLoadedProjectPath(const QString& path)
 	{
@@ -216,6 +231,8 @@ namespace CLC
 		m_loadSaveProjects.load(settings["projectPaths"]);
 		if (settings.contains("defaultLibraryPath"))
 			m_defaultLibraryPath = settings["defaultLibraryPath"].toString();
+		if (settings.contains("maxBuildThreads"))
+			m_maxBuildThreads = std::max(1, settings["maxBuildThreads"].toInt(4));
 		loadQTModules_intern();
 		loadDependencies_intern();
 	}
@@ -230,6 +247,7 @@ namespace CLC
 		settings["git"] = m_gitRepo.save();
 		settings["projectPaths"] = m_loadSaveProjects.save();
 		settings["defaultLibraryPath"] = m_defaultLibraryPath;
+		settings["maxBuildThreads"] = m_maxBuildThreads;
 
 		QJsonDocument doc(settings);
 		QFile file(m_settingsFilePath);
@@ -260,20 +278,38 @@ namespace CLC
 		return obj;
 	}
 
+	QStringList Resources::LoadSaveProjects::paths() const
+	{
+		QStringList out;
+		for (const ProjectEntry& e : projects)
+			out.push_back(e.path);
+		return out;
+	}
 	void Resources::LoadSaveProjects::load(const QJsonValue& val)
 	{
 		QJsonArray arr = val.toArray();
-		projectPaths.clear();
+		projects.clear();
 		for (int i = 0; i < arr.size(); ++i)
-			if (arr[i].isString())
-				projectPaths.push_back(arr[i].toString());		 
+		{
+			if (arr[i].isString())                       // legacy format: plain path string
+				projects.push_back({ arr[i].toString(), true });
+			else if (arr[i].isObject())
+			{
+				QJsonObject obj = arr[i].toObject();
+				projects.push_back({ obj["path"].toString(), obj["groupEnabled"].toBool(true) });
+			}
+		}
 	}
 	QJsonValue Resources::LoadSaveProjects::save() const
 	{
 		QJsonArray arr;
-		for (int i = 0; i < projectPaths.size(); ++i)
-			arr.push_front(projectPaths[i]);
-
+		for (const ProjectEntry& e : projects)          // push_back: fixes the old order-reversal bug
+		{
+			QJsonObject obj;
+			obj["path"] = e.path;
+			obj["groupEnabled"] = e.groupEnabled;
+			arr.push_back(obj);
+		}
 		return arr;
 	}
 	void Resources::loadQTModules_intern()

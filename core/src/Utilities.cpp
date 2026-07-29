@@ -1,6 +1,8 @@
 #include "Utilities.h"
 #include <QDebug>
+#include <QDir>
 #include <QDirIterator>
+#include <QProcess>
 #include <cstdio>
 #include <iostream>
 #include <windows.h>
@@ -930,38 +932,6 @@ namespace CLC
 		}
 		return true;
 	}
-	bool Utilities::gitHasUncommitedChanges(const QString& folder)
-	{
-		QString gitCommand = "cd /d " + folder + " && ";
-		// Check if the repo has uncommited changes, return false if this repo is behind the head
-		QString gitCommand1 = gitCommand + "git fetch";
-		QString gitCommand2 = gitCommand + "git rev-list --count origin/$(git branch --show-current)..HEAD";
-		int ret = executeCommand(gitCommand1, Logging::getLogger());
-		ret = executeCommand(gitCommand2, Logging::getLogger());
-		if (ret == 0)
-			return false;
-		return true;
-	}
-	bool Utilities::gitHasUnpushedCommits(const QString& folder)
-	{
-		QString gitCommand = "cd /d " + folder + " && git log origin/master..HEAD";
-		int ret = executeCommand(gitCommand, Logging::getLogger());
-		if (ret == 0)
-			return false;
-		return true;
-	}
-	bool Utilities::gitBehindRemote(const QString& folder)
-	{
-		QString gitCommand = "cd /d " + folder + " && ";
-		// Check if the repo has uncommited changes, return false if this repo is behind the head
-		QString gitCommand1 = gitCommand + "git fetch";
-		QString gitCommand2 = gitCommand + "git rev-list --count HEAD..origin/$(git branch --show-current)";
-		int ret = executeCommand(gitCommand1, Logging::getLogger());
-		ret = executeCommand(gitCommand2, Logging::getLogger());
-		if (ret == 0)
-			return false;
-		return true;
-	}
 	bool Utilities::gitPull(const QString& folder)
 	{
 		// Pull fast forward if possible
@@ -1011,6 +981,98 @@ namespace CLC
 		if (ret == 0)
 			return true;
 		return false;
+	}
+
+	int Utilities::executeCommandCapture(const QString& command, const QString& workingDir, QString& output)
+	{
+		QProcess proc;
+		proc.setProgram("cmd");
+		proc.setArguments({ "/c", command });
+		if (!workingDir.isEmpty())
+			proc.setWorkingDirectory(workingDir);
+		proc.setProcessChannelMode(QProcess::MergedChannels);
+		proc.start();
+		if (!proc.waitForStarted(10000))
+		{
+			getLogger().logError("Failed to start command: " + command.toStdString());
+			return -1;
+		}
+		proc.waitForFinished(120000);
+		output = QString::fromLocal8Bit(proc.readAll());
+		if (proc.exitStatus() != QProcess::NormalExit)
+			return -2;
+		return proc.exitCode();
+	}
+	bool Utilities::gitIsDirty(const QString& folder, bool* commandOk)
+	{
+		QString out;
+		int code = executeCommandCapture("git status --porcelain", folder, out);
+		if (commandOk)
+			*commandOk = (code == 0);
+		return code == 0 && !out.trimmed().isEmpty();
+	}
+	bool Utilities::gitHasUnpushedCommits(const QString& folder, bool* commandOk)
+	{
+		// "@{u}..HEAD" counts commits ahead of the upstream. No upstream -> command
+		// fails; we cannot determine the state, so we allow the push (return true).
+		QString out;
+		int code = executeCommandCapture("git rev-list --count @{u}..HEAD", folder, out);
+		if (code != 0)
+		{
+			if (commandOk)
+				*commandOk = false;
+			return true;
+		}
+		if (commandOk)
+			*commandOk = true;
+		bool parsed = false;
+		const int count = out.trimmed().toInt(&parsed);
+		if (!parsed)
+		{
+			if (commandOk)
+				*commandOk = false;
+			return true;
+		}
+		return count > 0;
+	}
+	QString Utilities::gitHeadCommitSubject(const QString& folder)
+	{
+		QString out;
+		int code = executeCommandCapture("git log -1 --pretty=%s", folder, out);
+		if (code != 0)
+			return QString();
+		return out.trimmed();
+	}
+	bool Utilities::gitDiscardChanges(const QString& folder)
+	{
+		QString out;
+		bool ok = executeCommandCapture("git reset --hard", folder, out) == 0;
+		getLogger().logInfo(out.toStdString());
+		ok &= executeCommandCapture("git clean -fd", folder, out) == 0;
+		getLogger().logInfo(out.toStdString());
+		if (!ok)
+			getLogger().logError("Failed to discard changes in: " + folder.toStdString());
+		return ok;
+	}
+	bool Utilities::readTemplateVersion(const QString& cmakeListsPath, QString& version)
+	{
+		const QVector<QString> lines = getFileContents(cmakeListsPath);
+		static const QString key = "## Template version:";
+		for (const QString& line : lines)
+		{
+			QString t = line.trimmed();
+			if (t.startsWith(key))
+			{
+				version = t.mid(key.size()).trimmed();
+				return !version.isEmpty();
+			}
+		}
+		return false;
+	}
+	void Utilities::openFolderInExplorer(const QString& path)
+	{
+		// explorer.exe opens a NEW window per invocation (requirement)
+		QProcess::startDetached("explorer.exe", { QDir::toNativeSeparators(path) });
 	}
 
 	void Utilities::information(const QString& title, const QString& text)

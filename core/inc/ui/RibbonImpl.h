@@ -24,32 +24,44 @@ namespace CLC {
 			RibbonWidget::InformativeToolButton* openExistingProject = nullptr;
 			RibbonWidget::InformativeToolButton* saveExistingProject = nullptr;
 			RibbonWidget::InformativeToolButton* saveAsNewProject = nullptr;
-			RibbonWidget::InformativeToolButton* loadAndSaveAll = nullptr;
-			RibbonWidget::InformativeToolButton* buildAll = nullptr;
 		};
 
-		struct GitButtons
+		struct RepositoryButtons
 		{
-			RibbonWidget::InformativeToolButton* pullProjects = nullptr;
-			RibbonWidget::InformativeToolButton* pushProjects = nullptr;
+			// group "General"
+			RibbonWidget::InformativeToolButton* openFolders = nullptr;
+			RibbonWidget::InformativeToolButton* updateTemplates = nullptr;
+			RibbonWidget::InformativeToolButton* refreshStatus = nullptr;
+			// group "Git"
+			RibbonWidget::InformativeToolButton* pull = nullptr;
+			RibbonWidget::InformativeToolButton* push = nullptr;
+			RibbonWidget::InformativeToolButton* commit = nullptr;
+			RibbonWidget::InformativeToolButton* discard = nullptr;
+			// group "Build"
+			RibbonWidget::InformativeToolButton* build = nullptr;
+			RibbonWidget::InformativeToolButton* clean = nullptr;
+			RibbonWidget::InformativeToolButton* unitTest = nullptr;
 		};
 
 
 		static TemplateManagementButtons& getTemplateManagementButtons();
 		static ProjectButtons& getProjectButtons();
-		static GitButtons& getGitButtons();
+		static RepositoryButtons& getRepositoryButtons();
 	private:
 		static RibbonImpl* m_instance;
 
 		TemplateManagementButtons m_templateButtons;
 		ProjectButtons m_projectButtons;
-		GitButtons m_gitButtons;
+		RepositoryButtons m_repositoryButtons;
 
 		RibbonWidget::RibbonTab* m_mainTab;
+		RibbonWidget::RibbonTab* m_repoTab;
 
 		RibbonWidget::RibbonButtonGroup* m_templateGroup;
 		RibbonWidget::RibbonButtonGroup* m_projectGroup;
-		RibbonWidget::RibbonButtonGroup* m_gitGroup;
+		RibbonWidget::RibbonButtonGroup* m_repoGeneralGroup;
+		RibbonWidget::RibbonButtonGroup* m_repoGitGroup;
+		RibbonWidget::RibbonButtonGroup* m_repoBuildGroup;
 
 	};
 }

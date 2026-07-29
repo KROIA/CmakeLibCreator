@@ -55,7 +55,10 @@ The repo's *own* root CMakeLists.txt is itself an instance of the template (note
 | `core/inc/Utilities.h` / `.cpp` | File ops, CMake/header text parsing, USER_SECTION read/replace, git ops, command exec |
 | `core/inc/Resources.h` / `.cpp` | Singleton — paths, git repo URL/branches, settings.json, QT modules and dependencies registry |
 | `core/inc/Dependency.h`, `QTModule.h` | Models for dependency entries and Qt module entries |
-| `core/inc/ui/MainWindow.h` + siblings | Qt widgets (RibbonImpl, ProjectSettingsDialog, SettingsDialog, CheckBoxSelectionDialog) |
+| `core/inc/ui/MainWindow.h` + siblings | Qt widgets (RibbonImpl, ProjectSettingsDialog, SettingsDialog, CheckBoxSelectionDialog). Central `QTabWidget`: page 0 = project editor, page 1 = `RepositoryOverviewWidget` (Repositories tab), synced with the ribbon tabs |
+| `core/inc/RepositoryJobQueue.h` / `.cpp` | Sequential cancelable worker (`QProcess` + `taskkill /T /F`) for repo group operations; emits per-repo status signals |
+| `core/inc/RepositoryInfo.h` | Per-repository status model (dirty, HEAD, lib/template version, build/test status); registered Qt metatype |
+| `core/inc/ui/RepositoryWidget.h`, `RepositoryOverviewWidget.h`, `TextLogWindow.h` | Repository card, cards container/page, and unittest-log window |
 | `core/inc/Logging.h` | `Log::LogObject` wrapper used everywhere |
 
 ## CLI usage

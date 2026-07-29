@@ -72,11 +72,12 @@ namespace CLC
 		ui.qtModulesBranch_lineEdit->setText(gitResources.qtModulesBranch);
 
 		ui.defaultLibraryPath_lineEdit->setText(Resources::getDefaultLibraryPath());
+		ui.maxBuildThreads_spinBox->setValue(Resources::getMaxBuildThreads());
 
 		clearProjectPathRows();
 		const Resources::LoadSaveProjects& projects = Resources::getLoadSaveProjects();
-		for (const QString& p : projects.projectPaths)
-			addProjectPathRow(p);
+		for (const Resources::ProjectEntry& e : projects.projects)
+			addProjectPathRow(e.path);
 	}
 	void SettingsDialog::saveSettings()
 	{
@@ -88,7 +89,10 @@ namespace CLC
 		Resources::setTemplateGitRepo(gitResources);
 
 		Resources::setDefaultLibraryPath(ui.defaultLibraryPath_lineEdit->text());
+		Resources::setMaxBuildThreads(ui.maxBuildThreads_spinBox->value());
 
+		// Preserve each path's groupEnabled flag across a settings save (UI edits paths only).
+		const QVector<Resources::ProjectEntry>& previous = Resources::getLoadSaveProjects().projects;
 		Resources::LoadSaveProjects projects;
 		if (m_projectPathsLayout)
 		{
@@ -104,12 +108,17 @@ namespace CLC
 				if (!edit)
 					continue;
 				const QString text = edit->text().trimmed();
-				if (!text.isEmpty())
-					projects.projectPaths.push_back(text);
+				if (text.isEmpty())
+					continue;
+				bool groupEnabled = true;
+				for (const Resources::ProjectEntry& e : previous)
+					if (e.path == text) { groupEnabled = e.groupEnabled; break; }
+				projects.projects.push_back({ text, groupEnabled });
 			}
 		}
 		Resources::setLoadSaveProjects(projects);
 		Resources::saveSettings();
+		emit settingsSaved();
 	}
 	void SettingsDialog::addProjectPathRow(const QString& initial)
 	{

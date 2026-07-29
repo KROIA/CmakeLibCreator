@@ -16,6 +16,8 @@ namespace CLC
 		SettingsDialog(QWidget *parent = nullptr);
 		~SettingsDialog();
 
+	signals:
+		void settingsSaved();
 
 	private slots:
 		void on_apply_pushButton_clicked();

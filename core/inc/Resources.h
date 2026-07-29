@@ -27,11 +27,17 @@ namespace CLC
 			void load(const QJsonValue& val);
 			QJsonValue save() const;
 		};
+		struct ProjectEntry
+		{
+			QString path;
+			bool groupEnabled = true;
+		};
 		struct LoadSaveProjects
 		{
-			QStringList projectPaths;
+			QVector<ProjectEntry> projects;
 
-			void load(const QJsonValue& val);
+			QStringList paths() const;          // convenience: all entry paths in order
+			void load(const QJsonValue& val);   // accepts old (string array) and new (object array) formats
 			QJsonValue save() const;
 		};
 		static void loadSettings();
@@ -66,9 +72,13 @@ namespace CLC
 
 		static void setLoadSaveProjects(const LoadSaveProjects& paths);
 		static const LoadSaveProjects& getLoadSaveProjects();
+		static void setProjectGroupEnabled(const QString& path, bool enabled); // updates entry + saveSettings()
 
 		static void setDefaultLibraryPath(const QString& path);
 		static const QString& getDefaultLibraryPath();
+
+		static void setMaxBuildThreads(int n);   // clamped to >= 1
+		static int  getMaxBuildThreads();
 
 		static void setLoadedProjectPath(const QString& path);
 		static const QString &getLoadedProjectPath();
@@ -98,6 +108,7 @@ namespace CLC
 
 		QString m_loadedProjectPath;
 		QString m_defaultLibraryPath;
+		int m_maxBuildThreads = 4;
 
 		QString m_settingsFilePath;
 
