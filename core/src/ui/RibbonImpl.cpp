@@ -37,11 +37,12 @@ namespace CLC {
 		m_repositoryButtons.pull    = new RibbonWidget::InformativeToolButton("Pull", "git pull on all selected repositories", ":/icons/download.png", true, m_repoGitGroup);
 		m_repositoryButtons.push    = new RibbonWidget::InformativeToolButton("Push", "git push on all selected repositories", ":/icons/upload.png", true, m_repoGitGroup);
 		m_repositoryButtons.commit  = new RibbonWidget::InformativeToolButton("Commit", "Commit all selected repositories with the same message", ":/icons/accept.png", true, m_repoGitGroup);
-		m_repositoryButtons.discard = new RibbonWidget::InformativeToolButton("Discard", "Discards uncommitted changes of all selected repositories", "", true, m_repoGitGroup);
+		m_repositoryButtons.discard = new RibbonWidget::InformativeToolButton("Discard", "Discards uncommitted changes of all selected repositories", ":/icons/reset.png", true, m_repoGitGroup);
 
 		m_repositoryButtons.build    = new RibbonWidget::InformativeToolButton("Build", "Builds all selected repositories sequentially", ":/icons/hammer.png", true, m_repoBuildGroup);
-		m_repositoryButtons.clean    = new RibbonWidget::InformativeToolButton("Clean", "Deletes the build folder of all selected repositories", "", true, m_repoBuildGroup);
+		m_repositoryButtons.clean    = new RibbonWidget::InformativeToolButton("Clean", "Deletes the build folder of all selected repositories", ":/icons/clean.png", true, m_repoBuildGroup);
 		m_repositoryButtons.unitTest = new RibbonWidget::InformativeToolButton("Unittest", "Runs the unittests of all selected repositories", ":/icons/accept.png", true, m_repoBuildGroup);
+		m_repositoryButtons.terminateAll = new RibbonWidget::InformativeToolButton("Terminate all", "Kills every in-flight build and unittest and cancels the queue", ":/icons/terminate.png", true, m_repoBuildGroup);
 
 		// Add tabs
 		addTab(m_mainTab);
@@ -65,6 +66,7 @@ namespace CLC {
 		delete m_repositoryButtons.build;
 		delete m_repositoryButtons.clean;
 		delete m_repositoryButtons.unitTest;
+		delete m_repositoryButtons.terminateAll;
 		delete m_templateGroup;
 		delete m_projectGroup;
 		delete m_repoGeneralGroup;

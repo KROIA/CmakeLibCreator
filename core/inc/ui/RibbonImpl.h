@@ -41,6 +41,7 @@ namespace CLC {
 			RibbonWidget::InformativeToolButton* build = nullptr;
 			RibbonWidget::InformativeToolButton* clean = nullptr;
 			RibbonWidget::InformativeToolButton* unitTest = nullptr;
+			RibbonWidget::InformativeToolButton* terminateAll = nullptr;
 		};
 
 

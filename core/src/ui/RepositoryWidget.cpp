@@ -138,7 +138,7 @@ namespace CLC
                 ActionKey::Push, RepositoryJobQueue::JobType::Push, gitBox));
             h->addWidget(makeActionButton("Commit", ":/icons/accept.png", "Commit all changes with a message",
                 ActionKey::Commit, RepositoryJobQueue::JobType::Commit, gitBox));
-            h->addWidget(makeActionButton("Discard", "", "Discards all changes (git reset --hard + git clean -fd)",
+            h->addWidget(makeActionButton("Discard", ":/icons/reset.png", "Discards all changes (git reset --hard + git clean -fd)",
                 ActionKey::Discard, RepositoryJobQueue::JobType::Discard, gitBox));
         }
         row2->addWidget(gitBox);
@@ -157,7 +157,7 @@ namespace CLC
                 emit buildRequested(m_info.path);
             });
             h->addWidget(buildPair);
-            h->addWidget(makeActionButton("Clean", "", "Deletes the build folder",
+            h->addWidget(makeActionButton("Clean", ":/icons/clean.png", "Deletes the build folder",
                 ActionKey::Clean, RepositoryJobQueue::JobType::Clean, buildBox));
             // Unittest runs off the sequential queue (own runner). It keeps its own ActionKey so it
             // stays clickable/independent while queue jobs for other repos run.
@@ -172,6 +172,21 @@ namespace CLC
                 emit unitTestRequested(m_info.path);
             });
             h->addWidget(testPair);
+
+            // Terminate: single button shared by Build + Unittest (they're mutually exclusive per repo).
+            // Aligned with the button-row of the paired buttons; disabled unless one of them is Working.
+            m_terminateButton = new QPushButton("Terminate", buildBox);
+            m_terminateButton->setIcon(QIcon(":/icons/terminate.png"));
+            m_terminateButton->setToolTip("Kill the running build or unittest process for this repository");
+            m_terminateButton->setEnabled(false);
+            connect(m_terminateButton, &QPushButton::clicked, this, [this]()
+            {
+                emit terminateRequested(m_info.path);
+            });
+            QVBoxLayout* termPair = new QVBoxLayout();
+            termPair->addWidget(m_terminateButton);
+            termPair->addStretch(1);
+            h->addLayout(termPair);
         }
         row2->addWidget(buildBox);
 
@@ -364,9 +379,43 @@ namespace CLC
     {
         for (auto it = m_actions.begin(); it != m_actions.end(); ++it)
         {
+            QString staticReason;
+            const bool staticOk = isKeyStaticallyAvailable(it.key(), &staticReason);
             // A Working button always stays disabled; collision extends disabling to siblings.
-            const bool enabled = m_info.pathExists && !it->working && !isKeyCollisionLocked(it.key());
+            const bool enabled = m_info.pathExists && staticOk && !it->working && !isKeyCollisionLocked(it.key());
             it->button->setEnabled(enabled);
+            // Explain WHY the button is disabled so the user isn't left guessing.
+            it->button->setToolTip(staticOk ? it->originalTooltip
+                                            : it->originalTooltip + "\n\n(disabled: " + staticReason + ")");
+        }
+        if (m_terminateButton)
+        {
+            const bool buildWorking = m_actions.value(ActionKey::Build).working;
+            const bool testWorking  = m_actions.value(ActionKey::UnitTest).working;
+            m_terminateButton->setEnabled(buildWorking || testWorking);
+        }
+    }
+
+    bool RepositoryWidget::isKeyStaticallyAvailable(ActionKey key, QString* reasonOut) const
+    {
+        auto deny = [&](const QString& reason) { if (reasonOut) *reasonOut = reason; return false; };
+        switch (key)
+        {
+        case ActionKey::Commit:
+        case ActionKey::Discard:
+            if (!m_info.isGitRepo)
+                return deny("no git repository detected in this folder");
+            return true;
+        case ActionKey::Push:
+            if (!m_info.isGitRepo) return deny("no git repository detected in this folder");
+            if (!m_info.hasRemote) return deny("local-only repository — no configured remote to push to");
+            return true;
+        case ActionKey::Pull:
+            if (!m_info.isGitRepo) return deny("no git repository detected in this folder");
+            if (!m_info.hasRemote) return deny("local-only repository — no configured remote to pull from");
+            return true;
+        default:
+            return true;
         }
     }
 

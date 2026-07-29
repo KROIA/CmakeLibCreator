@@ -1035,6 +1035,14 @@ namespace CLC
 		}
 		return count > 0;
 	}
+	bool Utilities::gitHasRemote(const QString& folder, bool* commandOk)
+	{
+		QString out;
+		const int code = executeCommandCapture("git remote", folder, out);
+		if (commandOk)
+			*commandOk = (code == 0);
+		return code == 0 && !out.trimmed().isEmpty();
+	}
 	QString Utilities::gitHeadCommitSubject(const QString& folder)
 	{
 		QString out;

@@ -543,13 +543,27 @@ namespace CLC
 		m_buildResultDialog = new JobResultDialog("Build results");
 		m_testResultDialog = new JobResultDialog("Unittest results");
 		// result-row "Show log" reuses the shared TextLogWindow with the repo's captured log.
-		connect(m_buildResultDialog, &JobResultDialog::showLogRequested, this, [this](const QString& path) {
+		connect(m_buildResultDialog, &JobResultDialog::showLogRequested, this, [this](const QString& path, const QString&) {
 			if (!m_testLogWindow) m_testLogWindow = new TextLogWindow();
 			m_testLogWindow->showLog("Build log — " + QDir(path).dirName(), m_repositoryOverview->infoFor(path).buildLog);
 			});
-		connect(m_testResultDialog, &JobResultDialog::showLogRequested, this, [this](const QString& path) {
+		connect(m_testResultDialog, &JobResultDialog::showLogRequested, this, [this](const QString& path, const QString& subKey) {
 			if (!m_testLogWindow) m_testLogWindow = new TextLogWindow();
-			m_testLogWindow->showLog("Unittest log — " + QDir(path).dirName(), m_repositoryOverview->infoFor(path).unitTestLog);
+			const RepositoryInfo info = m_repositoryOverview->infoFor(path);
+			if (subKey.isEmpty())
+			{
+				m_testLogWindow->showLog("Unittest log — " + QDir(path).dirName(), info.unitTestLog);
+				return;
+			}
+			for (const UnitTestSuiteResult& s : info.unitTestSuites)
+			{
+				if (s.suiteName == subKey)
+				{
+					m_testLogWindow->showLog("Unittest log — " + QDir(path).dirName() + " / " + s.suiteName, s.log);
+					return;
+				}
+			}
+			m_testLogWindow->showLog("Unittest log — " + QDir(path).dirName(), info.unitTestLog);
 			});
 		// queue -> overview (per-repo state)
 		connect(m_jobQueue, &RepositoryJobQueue::statusRefreshed,  m_repositoryOverview, &RepositoryOverviewWidget::onStatusRefreshed);
@@ -578,11 +592,25 @@ namespace CLC
 		connect(m_unitTestRunner, &UnitTestRunner::started, this, [this](const QString& path) {
 			refreshCardLock(path, m_buildRunner->isRunning(path), true, m_queueActiveRepos.contains(path));
 			});
-		connect(m_unitTestRunner, &UnitTestRunner::finished, this, [this](const QString& path, int result, const QString&) {
+		connect(m_unitTestRunner, &UnitTestRunner::finished, this,
+			[this](const QString& path, int result, const QString&, const QVector<UnitTestSuiteResult>& suites) {
 			QString text = "pass", color = "#2ecc40";                 // green
 			if (result == RepositoryJobQueue::ResultCanceled) { text = "cancel"; color = "#ff851b"; }  // orange
 			else if (result != RepositoryJobQueue::ResultSuccess) { text = "fail"; color = "#ff4136"; } // red
-			m_testResultDialog->setResult(QDir(path).dirName(), path, text, color);
+
+			QVector<JobResultDialog::SubItem> subs;
+			for (const UnitTestSuiteResult& s : suites)
+			{
+				JobResultDialog::SubItem si;
+				si.key = s.suiteName;
+				si.label = s.exeName.isEmpty() ? (s.suiteName + " (no exe)") : (s.suiteName + " — " + s.exeName);
+				if (s.result == RepositoryJobQueue::ResultSuccess)      { si.resultText = "pass";   si.color = "#2ecc40"; }
+				else if (s.result == RepositoryJobQueue::ResultCanceled){ si.resultText = "cancel"; si.color = "#ff851b"; }
+				else                                                    { si.resultText = "fail";   si.color = "#ff4136"; }
+				subs.push_back(si);
+			}
+
+			m_testResultDialog->setResult(QDir(path).dirName(), path, text, color, subs);
 			m_testResultDialog->popup();   // reopens if the user closed it
 			refreshCardLock(path, m_buildRunner->isRunning(path), false, m_queueActiveRepos.contains(path));
 			});
@@ -623,6 +651,13 @@ namespace CLC
 		connect(m_repositoryOverview, &RepositoryOverviewWidget::actionRequested, this, &MainWindow::onRepoActionRequested);
 		connect(m_repositoryOverview, &RepositoryOverviewWidget::buildRequested, this, &MainWindow::onRepoBuildRequested);
 		connect(m_repositoryOverview, &RepositoryOverviewWidget::unitTestRequested, this, &MainWindow::onRepoUnitTestRequested);
+		connect(m_repositoryOverview, &RepositoryOverviewWidget::terminateRequested, this, [this](const QString& path) {
+			// Build and unittest are mutually exclusive per repo; try both — the one not running is a no-op.
+			if (m_buildRunner->isRunning(path))
+				m_buildRunner->cancel(path);
+			if (m_unitTestRunner->isRunning(path))
+				m_unitTestRunner->cancel(path);
+			});
 		connect(m_repositoryOverview, &RepositoryOverviewWidget::showTestLogRequested, this, [this](const QString& path) {
 			if (!m_testLogWindow) m_testLogWindow = new TextLogWindow();
 			m_testLogWindow->showLog("Unittest log — " + QDir(path).dirName(), m_repositoryOverview->infoFor(path).unitTestLog);
@@ -653,6 +688,13 @@ namespace CLC
 		connect(rb.build,    &QPushButton::clicked, this, [this]() { runGroupBuild(); });
 		connect(rb.clean,    &QPushButton::clicked, this, [this]() { runGroupAction(RepositoryJobQueue::JobType::Clean); });
 		connect(rb.unitTest, &QPushButton::clicked, this, [this]() { runGroupUnitTest(); });
+		connect(rb.terminateAll, &QPushButton::clicked, this, [this]() {
+			// Group stop: kill every in-flight parallel build and unittest, and cancel the sequential queue.
+			m_buildRunner->cancelAll();
+			m_unitTestRunner->cancelAll();
+			if (m_jobQueue) m_jobQueue->cancel();
+			m_statusLabel->setText("Canceling...");
+			});
 	}
 
 	MainWindow::GroupWarnChoice MainWindow::askGroupWarning(const QString& title, const QString& intro, const QStringList& repoNames)
@@ -882,6 +924,35 @@ namespace CLC
 				Logging::getLogger().logWarning("Skipping repositories with an operation already running: "
 					+ namesOf(colliding).join(", ").toStdString());
 				if (repos.isEmpty()) return;
+			}
+		}
+
+		// Capability filter: git-only ops need a git repo; push/pull additionally need a remote.
+		{
+			const bool needsGit    = (type == RepositoryJobQueue::JobType::Pull
+								   || type == RepositoryJobQueue::JobType::Push
+								   || type == RepositoryJobQueue::JobType::Commit
+								   || type == RepositoryJobQueue::JobType::Discard);
+			const bool needsRemote = (type == RepositoryJobQueue::JobType::Pull
+								   || type == RepositoryJobQueue::JobType::Push);
+			if (needsGit)
+			{
+				QStringList skipped;
+				QString reason;
+				for (const QString& p : repos)
+				{
+					const RepositoryInfo info = m_repositoryOverview->infoFor(p);
+					if (!info.isGitRepo)                     { skipped.push_back(p); reason = "not a git repository"; }
+					else if (needsRemote && !info.hasRemote) { skipped.push_back(p); reason = "no configured remote"; }
+				}
+				if (!skipped.isEmpty())
+				{
+					for (const QString& p : skipped) repos.removeAll(p);
+					QMessageBox::information(this, "Skipped repositories",
+						"The following repositories were skipped (" + reason + "):\n\n- "
+						+ namesOf(skipped).join("\n- "));
+					if (repos.isEmpty()) return;
+				}
 			}
 		}
 

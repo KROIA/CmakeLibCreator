@@ -91,6 +91,7 @@ namespace CLC
             connect(card, &RepositoryWidget::actionRequested, this, &RepositoryOverviewWidget::actionRequested);
             connect(card, &RepositoryWidget::buildRequested, this, &RepositoryOverviewWidget::buildRequested);
             connect(card, &RepositoryWidget::unitTestRequested, this, &RepositoryOverviewWidget::unitTestRequested);
+            connect(card, &RepositoryWidget::terminateRequested, this, &RepositoryOverviewWidget::terminateRequested);
             connect(card, &RepositoryWidget::showTestLogRequested, this, &RepositoryOverviewWidget::showTestLogRequested);
 
             // Insert above the trailing stretch (always the last layout item).
@@ -242,7 +243,8 @@ namespace CLC
         w->setInfo(info);
     }
 
-    void RepositoryOverviewWidget::onUnitTestFinished(const QString& path, int result, const QString& log)
+    void RepositoryOverviewWidget::onUnitTestFinished(const QString& path, int result, const QString& log,
+                                                      const QVector<CLC::UnitTestSuiteResult>& suites)
     {
         RepositoryWidget* w = widgetFor(path);
         if (!w) return;
@@ -255,6 +257,7 @@ namespace CLC
         else
             info.testStatus = RepositoryInfo::TestStatus::Failed;
         info.unitTestLog = log;   // enables the card's "Show log" button via setInfo
+        info.unitTestSuites = suites;
         w->setInfo(info);
     }
 

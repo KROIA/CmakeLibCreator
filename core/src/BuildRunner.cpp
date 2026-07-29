@@ -145,16 +145,45 @@ namespace CLC
             if (capturedOutput) *capturedOutput += rest;
         }
 
+        bool perRepoCanceled = false;
         {
             QMutexLocker lock(&m_mutex);
             m_pids.remove(repoPath);
+            perRepoCanceled = m_canceledRepos.remove(repoPath);
         }
 
-        if (m_canceling.load())
+        if (m_canceling.load() || perRepoCanceled)
             return RepositoryJobQueue::ResultCanceled;
         if (proc.exitStatus() != QProcess::NormalExit)
             return RepositoryJobQueue::ResultFailed;
         return proc.exitCode() == 0 ? RepositoryJobQueue::ResultSuccess : RepositoryJobQueue::ResultFailed;
+    }
+
+    void BuildRunner::cancel(const QString& repoPath)
+    {
+        qint64 pid = 0;
+        bool wasPending = false;
+        {
+            QMutexLocker lock(&m_mutex);
+            if (m_pendingSet.contains(repoPath))
+            {
+                m_pendingQueue.removeAll(repoPath);
+                m_pendingSet.remove(repoPath);
+                wasPending = true;
+            }
+            if (m_active.contains(repoPath))
+            {
+                pid = m_pids.value(repoPath, 0);
+                m_canceledRepos.insert(repoPath);   // consumed by runBuildProcess to mark Canceled
+            }
+        }
+        if (pid != 0)
+        {
+            Logging::getLogger().logInfo("Canceling build: killing process tree " + std::to_string(pid));
+            QProcess::startDetached("taskkill", { "/PID", QString::number(pid), "/T", "/F" });
+        }
+        if (wasPending)
+            emit finished(repoPath, RepositoryJobQueue::ResultCanceled, QString());
     }
 
     void BuildRunner::cancelAll()

@@ -228,7 +228,10 @@ namespace CLC
             info.hasUncommittedChanges = Utilities::gitIsDirty(repoPath, &gitOk);
             info.isGitRepo = gitOk;
             if (gitOk)
+            {
                 info.headCommitSubject = Utilities::gitHeadCommitSubject(repoPath);
+                info.hasRemote = Utilities::gitHasRemote(repoPath);
+            }
             QString v;
             const QVector<QString> lines = Utilities::getFileContents(repoPath + "/CMakeLists.txt");
             info.libraryVersion = Utilities::readCmakeVariableString(lines, "LIBRARY_VERSION", v) ? v : "?";

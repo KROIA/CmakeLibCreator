@@ -96,6 +96,8 @@ namespace CLC
 		static int  executeCommandCapture(const QString& command, const QString& workingDir, QString& output);
 		static bool gitIsDirty(const QString& folder, bool* commandOk = nullptr);
 		static bool gitHasUnpushedCommits(const QString& folder, bool* commandOk = nullptr);
+		// True iff the repo has at least one configured remote (e.g. "origin").
+		static bool gitHasRemote(const QString& folder, bool* commandOk = nullptr);
 		static QString gitHeadCommitSubject(const QString& folder);
 		static bool gitDiscardChanges(const QString& folder);
 		static bool readTemplateVersion(const QString& cmakeListsPath, QString& version);

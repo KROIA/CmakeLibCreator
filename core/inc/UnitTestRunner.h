@@ -1,10 +1,12 @@
 #pragma once
 
 #include "CmakeLibraryCreator_base.h"
+#include "RepositoryInfo.h"
 #include <QObject>
 #include <QSet>
 #include <QMap>
 #include <QMutex>
+#include <QVector>
 
 class QThread;
 
@@ -23,19 +25,26 @@ namespace CLC
 
         void run(const QString& repoPath);                 // no-op if already running for this path
         bool isRunning(const QString& repoPath) const;
+        void cancel(const QString& repoPath);              // taskkill current suite exe for this repo
+        void cancelAll();                                  // terminate every in-flight repo
 
     signals:
         void started(const QString& repoPath);
-        void finished(const QString& repoPath, int result, const QString& log);
+        // suites carries per-executable results (name, exe, code, log); log is the
+        // concatenated log kept for the card's "Show log" convenience button.
+        void finished(const QString& repoPath, int result, const QString& log,
+                      const QVector<CLC::UnitTestSuiteResult>& suites);
         void noExecutables(const QString& repoPath);       // folder present but no build/Release/*.exe
 
     private:
         void executeTests(const QString& repoPath);        // runs on the per-repo worker thread
         int  runProcess(const QString& program, const QString& workingDir,
-                        QString* capturedOutput, int* rawExitCode);
+                        QString* capturedOutput, int* rawExitCode, const QString& repoPath);
 
         mutable QMutex m_mutex;
         QSet<QString> m_active;              // repo paths currently testing
         QMap<QString, QThread*> m_threads;   // repo path -> its worker thread
+        QMap<QString, qint64> m_pids;        // repo path -> current suite process id
+        QSet<QString> m_canceledRepos;       // repos whose current run was terminated
     };
 }

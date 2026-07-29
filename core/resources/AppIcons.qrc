@@ -7,5 +7,14 @@
         <file>icons/save.png</file>
         <file>icons/search.png</file>
         <file>icons/hammer.png</file>
+        <file>icons/clean.png</file>
+        <file>icons/reset.png</file>
+        <file>icons/copy.png</file>
+        <file>icons/alert-triangle.png</file>
+        <file>icons/chevron-down.png</file>
+        <file>icons/chevron-up.png</file>
+        <file>icons/wrap.png</file>
+        <file>icons/highlighter.png</file>
+        <file>icons/terminate.png</file>
     </qresource>
 </RCC>

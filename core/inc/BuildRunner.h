@@ -27,6 +27,7 @@ namespace CLC
         bool isRunning(const QString& repoPath) const;
         int  activeCount() const;
         void setMaxThreads(int n);                    // clamped to >= 1; fills freed slots
+        void cancel(const QString& repoPath);         // taskkill just this repo's build tree
         void cancelAll();                             // kill in-flight trees, drop pending
         void shutdown(int timeoutMs);                 // cancelAll + bounded join (closeEvent)
 
@@ -46,6 +47,7 @@ namespace CLC
         QSet<QString> m_pendingSet;             // membership check for m_pendingQueue
         QMap<QString, QThread*> m_threads;      // repo path -> its worker thread
         QMap<QString, qint64> m_pids;           // repo path -> in-flight process id
+        QSet<QString> m_canceledRepos;          // per-repo cancel flag consumed by runBuildProcess
         int m_maxThreads = 4;
         std::atomic<bool> m_canceling{ false };
     };

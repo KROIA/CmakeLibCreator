@@ -40,6 +40,7 @@ namespace CLC
         void actionRequested(const QString& path, CLC::RepositoryJobQueue::JobType type);
         void buildRequested(const QString& path);      // off-queue: runs via BuildRunner
         void unitTestRequested(const QString& path);   // off-queue: runs via UnitTestRunner
+        void terminateRequested(const QString& path);  // taskkill the current build or unittest
         void showTestLogRequested(const QString& path);
 
     private:
@@ -58,6 +59,9 @@ namespace CLC
         void updateLabels();
         void refreshButtonEnabled();                // enable/disable respecting collision lock + per-button working
         bool isKeyCollisionLocked(ActionKey key) const;
+        // Static availability based on repo capabilities (git present, remote configured, ...).
+        // Independent of runtime collisions. When false, reasonOut is filled with a user-facing reason.
+        bool isKeyStaticallyAvailable(ActionKey key, QString* reasonOut = nullptr) const;
         void applyState(ActionKey key, State state, const QString& runningTooltip);
         QWidget* makeActionButton(const QString& text, const QString& iconPath, const QString& tooltip,
                                   ActionKey key, RepositoryJobQueue::JobType type, QWidget* parent);
@@ -77,6 +81,7 @@ namespace CLC
         QLabel* m_buildStatusLabel;
         QLabel* m_testStatusLabel;
         QPushButton* m_showLogButton;
+        QPushButton* m_terminateButton = nullptr;   // enabled only while Build/UnitTest is Working
         QMap<ActionKey, ActionButton> m_actions;   // all threaded buttons (queue actions + unittest)
     };
 }

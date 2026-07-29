@@ -35,13 +35,15 @@ namespace CLC
         void onBuildFinished(const QString& path, int result, const QString& log);
         // Driven by UnitTestRunner (off-queue), independent of the queue's busy state.
         void onUnitTestStarted(const QString& path);
-        void onUnitTestFinished(const QString& path, int result, const QString& log);
+        void onUnitTestFinished(const QString& path, int result, const QString& log,
+                                const QVector<CLC::UnitTestSuiteResult>& suites);
         void onUnitTestNoExecutables(const QString& path);
 
     signals:
         void actionRequested(const QString& path, CLC::RepositoryJobQueue::JobType type);
         void buildRequested(const QString& path);
         void unitTestRequested(const QString& path);
+        void terminateRequested(const QString& path);
         void showTestLogRequested(const QString& path);
 
     private:
