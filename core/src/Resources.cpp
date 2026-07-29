@@ -37,11 +37,12 @@ namespace CLC
 
 	Resources::Resources()
 	{
-		// Machine-wide, username-independent location (Qt's GenericDataLocation resolves to
-		// C:/ProgramData on Windows) + our org/app suffix. Older per-user path from
-		// AppDataLocation is migrated in on first launch; the old files are left in place.
+		// Qt's canonical data root for the app, without the organization level. On Windows
+		// this is "%APPDATA%/<ApplicationName>" (what QStandardPaths::AppDataLocation would
+		// return if the organizationName weren't set). The previous location included
+		// the org name ("KROIA") — files there are migrated in on first launch and the
+		// old folder is left in place.
 		const QString newAppDataRoot = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation)
-			+ "/" + QCoreApplication::organizationName()
 			+ "/" + QCoreApplication::applicationName();
 		const QString oldAppDataRoot = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 
