@@ -27,7 +27,7 @@ namespace CLC
 
         explicit JobResultDialog(const QString& title, QWidget* parent = nullptr);
 
-        void beginRun();                                                    // clears all rows (new run reset)
+        void markRunning(const QString& repoName, const QString& repoPath); // add row or update in place; sets "Running..." label
         void setResult(const QString& repoName, const QString& repoPath,    // add row or update in place (keyed by repoPath)
                        const QString& resultText, const QString& color,
                        const QVector<SubItem>& subItems = {});
@@ -37,6 +37,8 @@ namespace CLC
         // Row button clicked. subKey is empty for the repo's combined-log button
         // and set to a SubItem::key for per-suite log buttons.
         void showLogRequested(const QString& repoPath, const QString& subKey);
+        // Retry button clicked — re-run the build/unittest for this repo.
+        void retryRequested(const QString& repoPath);
 
     private:
         struct Row
@@ -45,6 +47,8 @@ namespace CLC
             QLabel*  result = nullptr;
             QWidget* subContainer = nullptr;   // holds per-suite sub-rows; rebuilt each setResult
         };
+
+        Row& ensureRow(const QString& repoName, const QString& repoPath);
 
         QVBoxLayout* m_rowsLayout = nullptr;   // rows inserted above trailing stretch
         QMap<QString, Row> m_rows;             // key: repoPath

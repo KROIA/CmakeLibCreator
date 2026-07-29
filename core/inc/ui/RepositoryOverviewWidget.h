@@ -3,14 +3,16 @@
 #include "CmakeLibraryCreator_base.h"
 #include "RepositoryInfo.h"
 #include "RepositoryJobQueue.h"
-#include <QWidget>
+#include <QMainWindow>
 #include <QMap>
 
 namespace CLC
 {
     class RepositoryWidget;
 
-    class RepositoryOverviewWidget : public QWidget
+    // Uses QMainWindow so build/unittest result panels can be attached as
+    // dockwidgets scoped to this tab (not the whole application window).
+    class RepositoryOverviewWidget : public QMainWindow
     {
         Q_OBJECT
     public:
@@ -19,6 +21,9 @@ namespace CLC
         void reload();                                  // rebuild cards from Resources
         QStringList checkedRepoPaths() const;           // group-enabled + existing paths
         RepositoryInfo infoFor(const QString& path) const;
+        // Install the two result panels as vertically stacked dockwidgets on the
+        // right side of this tab (build on top, unittest below).
+        void addResultDocks(QWidget* buildResult, QWidget* testResult);
         // Push per-repo collision state to a single card (never touches other cards).
         void applyCollisionLock(const QString& path, bool building, bool testing, bool queueActive);
         // Reset per-repo fields at the start of a fresh run: clears the log and

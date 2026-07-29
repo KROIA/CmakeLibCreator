@@ -4,6 +4,7 @@
 #include "Logging.h"
 
 #include <QDir>
+#include <QDockWidget>
 #include <QHBoxLayout>
 #include <QLayoutItem>
 #include <QPushButton>
@@ -18,21 +19,26 @@ namespace CLC
     }
 
     RepositoryOverviewWidget::RepositoryOverviewWidget(QWidget* parent)
-        : QWidget(parent)
+        : QMainWindow(parent)
     {
-        QVBoxLayout* root = new QVBoxLayout(this);
+        // Nested QMainWindow acting as a plain tab page: no docking on the top-level app.
+        setWindowFlags(Qt::Widget);
+        setDockNestingEnabled(true);
+
+        QWidget* central = new QWidget(this);
+        QVBoxLayout* root = new QVBoxLayout(central);
 
         // Header row: bulk selection controls.
         QHBoxLayout* header = new QHBoxLayout();
-        QPushButton* selectAll = new QPushButton("Select all", this);
-        QPushButton* deselectAll = new QPushButton("Deselect all", this);
+        QPushButton* selectAll = new QPushButton("Select all", central);
+        QPushButton* deselectAll = new QPushButton("Deselect all", central);
         header->addWidget(selectAll);
         header->addWidget(deselectAll);
         header->addStretch(1);
         root->addLayout(header);
 
         // Scrollable card list.
-        QScrollArea* scroll = new QScrollArea(this);
+        QScrollArea* scroll = new QScrollArea(central);
         scroll->setWidgetResizable(true);
         QWidget* container = new QWidget(scroll);
         container->setObjectName(kCardsContainerName);
@@ -40,6 +46,8 @@ namespace CLC
         cardsLayout->addStretch(1);   // trailing stretch; cards inserted above it
         scroll->setWidget(container);
         root->addWidget(scroll, 1);
+
+        setCentralWidget(central);
 
         auto setAll = [this](bool enabled)
         {
@@ -274,5 +282,31 @@ namespace CLC
     RepositoryWidget* RepositoryOverviewWidget::widgetFor(const QString& path) const
     {
         return m_cards.value(path, nullptr);
+    }
+
+    void RepositoryOverviewWidget::addResultDocks(QWidget* buildResult, QWidget* testResult)
+    {
+        QDockWidget* buildDock = new QDockWidget("Build results", this);
+        buildDock->setObjectName("buildResultsDock");
+        buildDock->setWidget(buildResult);
+        buildDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+        buildDock->setFeatures(QDockWidget::DockWidgetMovable
+                             | QDockWidget::DockWidgetFloatable
+                             | QDockWidget::DockWidgetClosable);
+        addDockWidget(Qt::RightDockWidgetArea, buildDock);
+
+        QDockWidget* testDock = new QDockWidget("Unittest results", this);
+        testDock->setObjectName("testResultsDock");
+        testDock->setWidget(testResult);
+        testDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+        testDock->setFeatures(QDockWidget::DockWidgetMovable
+                            | QDockWidget::DockWidgetFloatable
+                            | QDockWidget::DockWidgetClosable);
+        addDockWidget(Qt::RightDockWidgetArea, testDock);
+        splitDockWidget(buildDock, testDock, Qt::Vertical);
+
+        // ~5x the previous default width so the result rows are readable without dragging.
+        const int kDockWidth = 900;
+        resizeDocks({ buildDock, testDock }, { kDockWidth, kDockWidth }, Qt::Horizontal);
     }
 }

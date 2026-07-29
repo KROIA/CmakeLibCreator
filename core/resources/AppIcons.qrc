@@ -16,5 +16,6 @@
         <file>icons/wrap.png</file>
         <file>icons/highlighter.png</file>
         <file>icons/terminate.png</file>
+        <file>icons/update.png</file>
     </qresource>
 </RCC>

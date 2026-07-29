@@ -542,10 +542,19 @@ namespace CLC
 		m_buildRunner->setMaxThreads(Resources::getMaxBuildThreads());
 		m_buildResultDialog = new JobResultDialog("Build results");
 		m_testResultDialog = new JobResultDialog("Unittest results");
+		// Embed both result panels as vertically stacked dockwidgets on the right
+		// side of the Repositories tab (build on top, unittest below).
+		m_repositoryOverview->addResultDocks(m_buildResultDialog, m_testResultDialog);
 		// result-row "Show log" reuses the shared TextLogWindow with the repo's captured log.
 		connect(m_buildResultDialog, &JobResultDialog::showLogRequested, this, [this](const QString& path, const QString&) {
 			if (!m_testLogWindow) m_testLogWindow = new TextLogWindow();
 			m_testLogWindow->showLog("Build log — " + QDir(path).dirName(), m_repositoryOverview->infoFor(path).buildLog);
+			});
+		connect(m_buildResultDialog, &JobResultDialog::retryRequested, this, [this](const QString& path) {
+			onRepoBuildRequested(path);
+			});
+		connect(m_testResultDialog, &JobResultDialog::retryRequested, this, [this](const QString& path) {
+			onRepoUnitTestRequested(path);
 			});
 		connect(m_testResultDialog, &JobResultDialog::showLogRequested, this, [this](const QString& path, const QString& subKey) {
 			if (!m_testLogWindow) m_testLogWindow = new TextLogWindow();
@@ -888,8 +897,8 @@ namespace CLC
 			Logging::getLogger().logWarning((name + ": build skipped — an operation on this repository is already running").toStdString());
 			return;
 		}
-		// Fresh single-repo build run: reset the result list + this repo's build fields.
-		m_buildResultDialog->beginRun();
+		// Fresh single-repo build run: mark this repo as running in the result list; leave other rows.
+		m_buildResultDialog->markRunning(QDir(path).dirName(), path);
 		m_repositoryOverview->resetRunFields(path, true);
 		m_buildRunner->run(path);   // off-queue; parallel per repo, capped by maxBuildThreads
 	}
@@ -1107,9 +1116,7 @@ namespace CLC
 			return;
 		}
 
-		// Parallel run: "start" is the moment the group action fires -> reset the list once here.
-		m_buildResultDialog->beginRun();
-
+		// Parallel run: mark each participating repo as running; prior rows stay visible.
 		QStringList skipped;
 		for (const QString& p : repos)
 		{
@@ -1118,6 +1125,7 @@ namespace CLC
 				skipped.push_back(QDir(p).dirName());
 				continue;
 			}
+			m_buildResultDialog->markRunning(QDir(p).dirName(), p);
 			m_repositoryOverview->resetRunFields(p, true);
 			m_buildRunner->run(p);   // pool caps concurrency; extra repos wait for a free slot
 		}
@@ -1145,8 +1153,8 @@ namespace CLC
 	{
 		if (!canRunUnitTest(path, true))
 			return;
-		// Fresh single-repo unittest run: reset the result list + this repo's test fields.
-		m_testResultDialog->beginRun();
+		// Fresh single-repo unittest run: mark this repo as running; leave other rows.
+		m_testResultDialog->markRunning(QDir(path).dirName(), path);
 		m_repositoryOverview->resetRunFields(path, false);
 		m_unitTestRunner->run(path);   // off-queue; parallel per repo
 	}
@@ -1161,14 +1169,13 @@ namespace CLC
 			return;
 		}
 
-		// Parallel run: "start" is the moment the group action fires -> reset the list once here.
-		m_testResultDialog->beginRun();
-
+		// Parallel run: mark each participating repo as running; prior rows stay visible.
 		QStringList skipped;
 		for (const QString& p : repos)
 		{
 			if (canRunUnitTest(p, false))
 			{
+				m_testResultDialog->markRunning(QDir(p).dirName(), p);
 				m_repositoryOverview->resetRunFields(p, false);
 				m_unitTestRunner->run(p);
 			}

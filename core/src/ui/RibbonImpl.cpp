@@ -31,7 +31,7 @@ namespace CLC {
 		m_repoBuildGroup   = new RibbonWidget::RibbonButtonGroup("Build", m_repoTab);
 
 		m_repositoryButtons.openFolders     = new RibbonWidget::InformativeToolButton("Open folders", "Opens the project folder of each selected repository in a new Explorer window", ":/icons/folder-open.png", true, m_repoGeneralGroup);
-		m_repositoryButtons.updateTemplates = new RibbonWidget::InformativeToolButton("Update templates", "Updates the library template of all selected repositories", ":/icons/save.png", true, m_repoGeneralGroup);
+		m_repositoryButtons.updateTemplates = new RibbonWidget::InformativeToolButton("Update templates", "Updates the library template of all selected repositories", ":/icons/update.png", true, m_repoGeneralGroup);
 		m_repositoryButtons.refreshStatus   = new RibbonWidget::InformativeToolButton("Refresh status", "Re-reads git status, commit message, library and template version of all repositories", ":/icons/search.png", true, m_repoGeneralGroup);
 
 		m_repositoryButtons.pull    = new RibbonWidget::InformativeToolButton("Pull", "git pull on all selected repositories", ":/icons/download.png", true, m_repoGitGroup);

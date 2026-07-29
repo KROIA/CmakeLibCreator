@@ -123,7 +123,7 @@ namespace CLC
             openPair->addWidget(openFolder);
             openPair->addStretch(1);
             h->addLayout(openPair);
-            h->addWidget(makeActionButton("Update template", ":/icons/save.png",
+            h->addWidget(makeActionButton("Update template", ":/icons/update.png",
                 "Re-applies the latest downloaded library template",
                 ActionKey::UpdateTemplate, RepositoryJobQueue::JobType::UpdateTemplate, generalBox));
         }
@@ -371,7 +371,10 @@ namespace CLC
         case ActionKey::Clean:          return m_lockBuilding || m_lockTesting;
         case ActionKey::UnitTest:       return m_lockBuilding || m_lockTesting;
         case ActionKey::UpdateTemplate: return m_lockBuilding;
-        default:                        return false;   // git ops collide only with a queue job
+        // Git ops (Pull/Push/Commit/Discard) also block while a build or unittest
+        // is running against this repo — mutating the working tree mid-run risks
+        // corrupt artifacts or test flakes.
+        default:                        return m_lockBuilding || m_lockTesting;
         }
     }
 
