@@ -1,5 +1,8 @@
 #include "Resources.h"
+#include <QCoreApplication>
 #include <QDir>
+#include <QFile>
+#include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QStandardPaths>
@@ -8,10 +11,54 @@
 
 namespace CLC
 {
+	namespace
+	{
+		// Recursive copy of every file under src into dst (creating dst). Existing
+		// destination files are kept — the copy is additive so a partial prior migration
+		// can be retried without stomping newer local state.
+		void copyDirRecursive(const QString& srcRoot, const QString& dstRoot)
+		{
+			QDir src(srcRoot);
+			if (!src.exists())
+				return;
+			QDir().mkpath(dstRoot);
+			const QFileInfoList entries = src.entryInfoList(
+				QDir::NoDotAndDotDot | QDir::AllEntries | QDir::Hidden | QDir::System);
+			for (const QFileInfo& entry : entries)
+			{
+				const QString dstPath = dstRoot + "/" + entry.fileName();
+				if (entry.isDir())
+					copyDirRecursive(entry.absoluteFilePath(), dstPath);
+				else if (!QFile::exists(dstPath))
+					QFile::copy(entry.absoluteFilePath(), dstPath);
+			}
+		}
+	}
+
 	Resources::Resources()
 	{
-		const QString appDataRoot = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-		QDir().mkpath(appDataRoot);
+		// Machine-wide, username-independent location (Qt's GenericDataLocation resolves to
+		// C:/ProgramData on Windows) + our org/app suffix. Older per-user path from
+		// AppDataLocation is migrated in on first launch; the old files are left in place.
+		const QString newAppDataRoot = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation)
+			+ "/" + QCoreApplication::organizationName()
+			+ "/" + QCoreApplication::applicationName();
+		const QString oldAppDataRoot = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+
+		const bool newRootExisted = QDir(newAppDataRoot).exists();
+		QDir().mkpath(newAppDataRoot);
+
+		if (!newRootExisted
+			&& !oldAppDataRoot.isEmpty()
+			&& QDir(oldAppDataRoot).exists()
+			&& QDir::cleanPath(oldAppDataRoot) != QDir::cleanPath(newAppDataRoot))
+		{
+			Logging::getLogger().logInfo("Migrating app data from '" + oldAppDataRoot.toStdString()
+				+ "' to '" + newAppDataRoot.toStdString() + "' (old location preserved).");
+			copyDirRecursive(oldAppDataRoot, newAppDataRoot);
+		}
+
+		const QString appDataRoot = newAppDataRoot;
 
 		m_settingsFilePath = appDataRoot + "/settings.json";
 
