@@ -35,6 +35,9 @@ namespace CLC
 		static bool createFolder(const QString& folder);
 		static bool deleteFile(const QString& file);
 		static bool deleteFolderRecursively(const QString& folder);
+		// Renames every file and folder below "folder" whose name contains "from", substituting "to".
+		// Only the entry name is rewritten, never the path above it.
+		static bool renameEntriesContaining(const QString& folder, const QString& from, const QString& to);
 
 		static QVector<QString> getFilesInFolder(const QString& folder, const QString& filter = "");
 		static QVector<QString> getFilesInFolderRecursive(const QString& folder, const QString& filter = "");

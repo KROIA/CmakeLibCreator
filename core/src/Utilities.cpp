@@ -2,7 +2,9 @@
 #include <QDebug>
 #include <QDir>
 #include <QDirIterator>
+#include <QFileInfo>
 #include <QProcess>
+#include <algorithm>
 #include <cstdio>
 #include <iostream>
 #include <windows.h>
@@ -137,6 +139,58 @@ namespace CLC
 	{
 		QDir dir(folder);
 		return dir.removeRecursively();
+	}
+	bool Utilities::renameEntriesContaining(const QString& folder, const QString& from, const QString& to)
+	{
+		if (from.isEmpty() || from == to)
+			return true;
+
+		bool success = true;
+		auto renameEntry = [&](const QString& path, bool isDir)
+			{
+				const QFileInfo info(path);
+				QString newName = info.fileName();
+				if (!newName.contains(from))
+					return;
+				newName.replace(from, to);
+				const QString target = info.absolutePath() + "/" + newName;
+
+				// An existing target is the remains of an interrupted export. The entry being
+				// renamed is the authoritative one, it still carries the user's sections.
+				if (QFileInfo::exists(target))
+				{
+					getLogger().logWarning("Discarding leftover of an interrupted export: " + target.toStdString());
+					const bool removed = isDir ? QDir(target).removeRecursively() : QFile::remove(target);
+					if (!removed)
+					{
+						getLogger().logError("Failed to remove: " + target.toStdString());
+						success = false;
+						return;
+					}
+				}
+				if (!(isDir ? QDir().rename(path, target) : QFile::rename(path, target)))
+				{
+					getLogger().logError("Failed to rename:\n" + path.toStdString() + "\nto\n" + target.toStdString());
+					success = false;
+				}
+			};
+
+		// Files first: their parent folders still carry the old name, so the target folder exists.
+		for (const QString& file : getFilesInFolderRecursive(folder))
+			renameEntry(file, false);
+
+		// Folders deepest first, so renaming a parent can not invalidate a path not handled yet.
+		// A parent path is a strict prefix of its children, so longest-first is deepest-first.
+		QVector<QString> dirs;
+		QDirIterator it(folder, QDir::Dirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+		while (it.hasNext())
+			dirs.push_back(it.next());
+		std::stable_sort(dirs.begin(), dirs.end(),
+			[](const QString& a, const QString& b) { return a.size() > b.size(); });
+		for (const QString& dir : dirs)
+			renameEntry(dir, true);
+
+		return success;
 	}
 
 	QVector<QString> Utilities::getFilesInFolder(const QString& folder, const QString& filter)

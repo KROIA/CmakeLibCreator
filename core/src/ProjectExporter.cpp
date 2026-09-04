@@ -7,6 +7,7 @@
 #include <QJsonArray>
 #include <QJsonParseError>
 #include <QFile>
+#include <algorithm>
 
 namespace CLC
 {
@@ -110,6 +111,11 @@ namespace CLC
 		}
 		else
 		{
+			// Must run before any copy: the copy writes pristine files under the *new* name while
+			// the user sections are still keyed to the old one, so without this the sections would
+			// be re-applied to the stale files and the new ones would ship empty.
+			success &= migratePreviousGeneration(settings, projectDirPath);
+
 			if (expSettings.replaceTemplateCodeFiles)
 			{
 				//ProjectSettings::Placeholder placeholder = settings.getPlaceholder();
@@ -138,7 +144,6 @@ namespace CLC
 		}
 		
 		success &= copyTemplateDependencies(settings, projectDirPath);
-		success &= replaceTemplateFileNames(settings, projectDirPath);
 		if (expSettings.replaceTemplateVariables)
 		{
 			success &= replaceTemplateVariables(settings, projectDirPath);
@@ -407,37 +412,61 @@ namespace CLC
 
 		return success;
 	}
-	bool ProjectExporter::replaceTemplateFileNames(
-		const ProjectSettings& settings,
+	bool ProjectExporter::migratePreviousGeneration(
+		ProjectSettings& settings,
 		const QString& projectDirPath)
 	{
-		QString targetFileNameContains = settings.getDefaultPlaceholder().Library_Name;
-		QString libraryName = settings.getCMAKE_settings().libraryName;
-		if(targetFileNameContains == libraryName)
-			return true; // nothing to do
+		const QString oldName = settings.getLoadedPlaceholder().Library_Name;
+		const QString newName = settings.getCMAKE_settings().libraryName;
+		if (oldName.isEmpty() || oldName == newName ||
+			oldName == ProjectSettings::s_defaultPlaceholder.Library_Name)
+			return true; // pristine template or no rename: nothing on disk to migrate
 
-		QVector<QString> fileList1 = Utilities::getFilesInFolderRecursive(projectDirPath, ".h");
-		QVector<QString> fileList2 = Utilities::getFilesInFolderRecursive(projectDirPath, ".cpp");
-		QVector<QString> allFiles = fileList1 + fileList2;
+		bool success = true;
+		const QVector<QString> sourceDirs{
+			"core",
+			"examples",
+			"unittests",
+		};
+		for (const QString& sourceDir : sourceDirs)
+			success &= Utilities::renameEntriesContaining(projectDirPath + "/" + sourceDir, oldName, newName);
 
-		int counter = 0;
-		for (const auto& file : allFiles)
-		{
-			QString fileName = QFileInfo(file).fileName();
-			if (fileName.contains(targetFileNameContains))
+		// User sections are keyed by the absolute path they were read from. Rewrite the keys the
+		// same way the entries on disk were renamed, otherwise the re-apply misses the new files.
+		// The keys come from QFileInfo::absoluteFilePath() while projectDirPath is whatever was
+		// stored in the settings, so both sides are normalized before comparing: a separator or
+		// trailing-slash mismatch would silently skip every key and write the sections back into
+		// the stale files. Never silent — a key that cannot be migrated is logged as an error.
+		const QString root = QDir::cleanPath(QDir::fromNativeSeparators(projectDirPath));
+		auto migrateKey = [&](const QString& path) -> QString
 			{
-				QString newFileName = QFileInfo(file).fileName();
-				newFileName.replace(targetFileNameContains, libraryName);
-				newFileName = QFileInfo(file).absolutePath() + "/" + newFileName;
-				if (file != newFileName)
+				const QString clean = QDir::cleanPath(QDir::fromNativeSeparators(path));
+				// Below the project folder only: the folder itself may legitimately carry the old name.
+				if (!clean.startsWith(root, Qt::CaseInsensitive) ||
+					(clean.size() > root.size() && clean[root.size()] != QLatin1Char('/')))
 				{
-					QFile::rename(file, newFileName);
-					counter++;
+					getLogger().logError("User section file is not inside the project, not migrated:\n" + path.toStdString());
+					return path;
 				}
-			}
-		}
-		qDebug() << "Renamed " << counter << " files";
-		return true;
+				QString tail = clean.mid(root.size());
+				const QString migrated = root + tail.replace(oldName, newName);
+				if (!QFile::exists(migrated))
+					getLogger().logError("Migrated user section file does not exist:\n" + migrated.toStdString());
+				return migrated;
+			};
+
+		QVector<ProjectSettings::CodeUserSections> codeSections = settings.getCodeUserSections();
+		for (ProjectSettings::CodeUserSections& section : codeSections)
+			section.file = migrateKey(section.file);
+		settings.setCodeUserSections(codeSections);
+
+		QVector<ProjectSettings::CMakeFileUserSections> cmakeSections = settings.getCmakeUserSections();
+		for (ProjectSettings::CMakeFileUserSections& section : cmakeSections)
+			section.file = migrateKey(section.file);
+		settings.setCmakeUserSections(cmakeSections);
+
+		getLogger().logInfo("Renamed library \"" + oldName.toStdString() + "\" to \"" + newName.toStdString() + "\"");
+		return success;
 	}
 
 	bool ProjectExporter::replaceTemplateVariablesIn_mainCmakeLists(
@@ -565,18 +594,29 @@ namespace CLC
 		const ProjectSettings::LibrarySettings& librarySettings = settings.getLibrarySettings();
 		const ProjectSettings::CMAKE_settings& cmakeSettings = settings.getCMAKE_settings();
 		const ProjectSettings::Placeholder defaults = settings.getDefaultPlaceholder();
+		const ProjectSettings::Placeholder loaded = settings.getLoadedPlaceholder();
 
 		struct Replacement { QString from; QString to; };
-		// Order matters: longer / more-specific tokens before tokens that are substrings of them
-		// (e.g. LIBRARY_NAME_SHORT must run before LIBRARY_NAME_LIB / LIBRARY_NAME_API would,
-		// and Library_Name must run after LIBRARY_NAME_* so it doesn't eat the prefix).
-		const QVector<Replacement> replacements{
+		// Both token sets are needed: when the template CMakePresets.json was re-copied the file
+		// holds the default tokens, when it was kept it still holds the previous generation's names
+		// (a stale "<OldShort>_PROFILING" cache variable that matches no default token).
+		QVector<Replacement> replacements{
 			{ defaults.LIBRARY__NAME_SHORT, cmakeSettings.lib_short_define },
 			{ defaults.LIBRARY__NAME_API,   librarySettings.apiName        },
 			{ defaults.LIBRARY__NAME_LIB,   cmakeSettings.lib_define       },
 			{ defaults.Library_Namespace,   librarySettings.namespaceName  },
 			{ defaults.Library_Name,        cmakeSettings.libraryName      },
+			{ loaded.LIBRARY__NAME_SHORT,   cmakeSettings.lib_short_define },
+			{ loaded.LIBRARY__NAME_API,     librarySettings.apiName        },
+			{ loaded.LIBRARY__NAME_LIB,     cmakeSettings.lib_define       },
+			{ loaded.Library_Namespace,     librarySettings.namespaceName  },
+			{ loaded.Library_Name,          cmakeSettings.libraryName      },
 		};
+		// Longest token first: shorter tokens are substrings of the longer ones (LIBRARY_NAME_SHORT
+		// before LIBRARY_NAME_LIB / _API, and a namespace "Foo" inside a library name "Foo_Driver"),
+		// so replacing them first would eat the prefix.
+		std::stable_sort(replacements.begin(), replacements.end(),
+			[](const Replacement& a, const Replacement& b) { return a.from.size() > b.from.size(); });
 
 		bool changed = false;
 		for (auto& line : fileContent)
@@ -683,13 +723,26 @@ namespace CLC
 			{defaultPlaceholders.LIBRARY__NAME_LIB,cmakeSettings.lib_define, {{"#"}}},
 			// Replace CmakeLibraryCreator on #include lines, version-macro lines, name-macro lines, and Doxygen @file comment lines.
 			{defaultPlaceholders.Library_Name, cmakeSettings.libraryName, {{"#include"}, {"_VERSION_"}, {"_LIBRARY_NAME"}, {"@file"}}},
-
-			//{loadedPlaceholders.Library_Namespace,librarySettigns.namespaceName,	{}},
-			//{loadedPlaceholders.LIBRARY__NAME_EXPORT,librarySettigns.exportName,  {{loadedPlaceholders.LIBRARY__NAME_EXPORT + " "}, {"#","define"}}},
-			//{loadedPlaceholders.LIBRARY__NAME_SHORT,cmakeSettings.lib_short_define, {}},
-			//{loadedPlaceholders.LIBRARY__NAME_LIB,cmakeSettings.lib_define, {{"#"}}},
-			//{loadedPlaceholders.Library_Name ,cmakeSettings.libraryName, {{"#include"}}}
 		};
+
+		// After a rename the previous generation's name still appears in files that are not
+		// re-copied from the template (examples, unittests, user-added core files). Runs last so
+		// the template tokens above are resolved first. Empty guard: an empty target would make
+		// replaceAllIfLineContains insert at every position.
+		if (!loadedPlaceholders.Library_Name.isEmpty() &&
+			loadedPlaceholders.Library_Name != cmakeSettings.libraryName)
+			replacements.push_back({ loadedPlaceholders.Library_Name, cmakeSettings.libraryName,
+									 {{"#include"}, {"_VERSION_"}, {"_LIBRARY_NAME"}, {"@file"}} });
+
+		// The namespace has to follow too, or the renamed project stops compiling: qualified uses
+		// ("Foo::Thing") match none of the name filters above. Rewritten inside user sections as
+		// well — a rename that leaves the user's own code referring to a namespace that no longer
+		// exists is worse than touching it. Filtered rather than unfiltered (TASK-006): a bare
+		// substitution also eats the token where prose merely mentions it.
+		if (!loadedPlaceholders.Library_Namespace.isEmpty() &&
+			loadedPlaceholders.Library_Namespace != librarySettigns.namespaceName)
+			replacements.push_back({ loadedPlaceholders.Library_Namespace, librarySettigns.namespaceName,
+									 {{"::"}, {"namespace"}} });
 
 		for (auto& file : files)
 		{
@@ -1098,6 +1151,34 @@ namespace CLC
 			return true;
 		}
 
+		// A template cache variable whose name embeds a placeholder (e.g. "LIBRARY_NAME_SHORT_PROFILING")
+		// appears in the project under the project's own name. Recognise it by prefix/suffix, otherwise
+		// every rename leaves the previous generation's key behind as a "user macro" and it gets
+		// re-injected on every following export.
+		bool isTemplateManagedKey(const QJsonObject& templateCache, const QString& key)
+		{
+			const ProjectSettings::Placeholder& tokens = ProjectSettings::s_defaultPlaceholder;
+			for (const QString& token : { tokens.Library_Namespace, tokens.LIBRARY__NAME_API,
+										  tokens.Library_Name, tokens.LIBRARY__NAME_LIB,
+										  tokens.LIBRARY__NAME_SHORT })
+			{
+				if (token.isEmpty())
+					continue;
+				for (auto it = templateCache.begin(); it != templateCache.end(); ++it)
+				{
+					const qsizetype pos = it.key().indexOf(token);
+					if (pos < 0)
+						continue;
+					const QString prefix = it.key().left(pos);
+					const QString suffix = it.key().mid(pos + token.size());
+					if (key.size() > prefix.size() + suffix.size() &&
+						key.startsWith(prefix) && key.endsWith(suffix))
+						return true;
+				}
+			}
+			return false;
+		}
+
 		bool writeJsonObject(const QString& path, const QJsonObject& obj)
 		{
 			QJsonDocument doc(obj);
@@ -1153,7 +1234,7 @@ namespace CLC
 					QJsonObject extras;
 					for (auto it = projectCache.begin(); it != projectCache.end(); ++it)
 					{
-						if (!templateCache.contains(it.key()))
+						if (!templateCache.contains(it.key()) && !isTemplateManagedKey(templateCache, it.key()))
 							extras.insert(it.key(), it.value());
 					}
 					if (!extras.isEmpty())

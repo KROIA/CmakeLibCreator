@@ -174,6 +174,7 @@ Rules (enforced by parser in `Utilities::readUserSections` / `replaceUserSection
 - Each block has an integer **section index** (the `1` above). Indices are how upgrade matches old user code to slots in the new template.
 - The template defines the *set* of available indices. User must not add new START/END pairs.
 - Anything *outside* USER_SECTION blocks is overwriteable by the tool.
+- **One exception, added 2026-09-04:** a library **rename** rewrites the old namespace (`OldName::`) *inside* USER_SECTION blocks too, on any line containing `::` or `namespace`. A rename that left the user's own code pointing at a namespace that no longer exists would not compile. See `.claude/ProjectManager/DECISIONS.md` 2026-09-04.
 - Section indices need not be contiguous — the template's root CMakeLists.txt uses 1–13 in non-monotonic order.
 
 `Utilities::UserSection { int sectionIndex; QStringList lines; }` is the in-memory representation.
@@ -231,6 +232,7 @@ Initialization order (mandatory, see `main.cpp` `runCli`): `loadSettings()` → 
 - **Don't add new USER_SECTION_START/END markers** in template-managed files — the parser enforces a fixed schema. Add only inside existing slots.
 - **Don't rename `# <AUTO_REPLACED>` variable names** — the substitution code matches by exact CMake variable name.
 - **The repo's own CMakeLists.txt is template-managed** — meaning the project upgrades itself. Be careful when editing root cmake; respect the USER_SECTION boundaries.
+- **Any change to a generated library's file set requires a CMake RECONFIGURE, not just a rebuild.** The template's `core/CMakeLists.txt` collects sources with `GLOB_FILES(H_FILES *.h)` / `GLOB_FILES(CPP_FILES *.cpp)`. CMake evaluates a glob at **configure** time and caches the result, so any operation that adds, removes or renames a file — an export, a template upgrade, and above all a library **rename** — leaves the cached list describing files that no longer exist. A plain `cmake --build` against that stale cache either fails on missing inputs or silently builds the wrong file set. Neither outcome tells you anything true about the change you just made. Delete the project's CMake cache (or run a full `cmake --preset` configure) before building after any tool-driven file change; this applies to automated tests as much as to a human, and `unittests/ExportRenameTest` depends on it to mean anything.
 - **Namespace:** all C++ code lives in `namespace CLC { … }`.
 - **Shell:** Windows but bash (Git Bash style). Use forward slashes / Unix conventions in shell commands; `/dev/null`, not `NUL`.
 

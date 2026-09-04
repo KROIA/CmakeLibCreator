@@ -50,11 +50,13 @@ namespace CLC
 		bool copyTemplateDependencies(const ProjectSettings& settings,
 									  const QString& projectDirPath);
 
-	
-		bool replaceTemplateVariables(const ProjectSettings& settings, 
-									  const QString& projectDirPath);
+		// Brings the previous export's generation up to the new library name before anything is
+		// copied or re-applied: renames the files/folders on disk and the user-section keys with it.
+		bool migratePreviousGeneration(ProjectSettings& settings,
+									   const QString& projectDirPath);
 
-		bool replaceTemplateFileNames(const ProjectSettings& settings,
+
+		bool replaceTemplateVariables(const ProjectSettings& settings,
 									  const QString& projectDirPath);
 
 

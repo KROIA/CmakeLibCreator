@@ -78,7 +78,7 @@ set_if_not_defined(RELATIVE_INSTALL_INCLUDE_FOLDER include)           # Relative
 
 
 set_if_not_defined(COMPILE_EXAMPLES OFF)						# <AUTO_REPLACED> 
-set_if_not_defined(COMPILE_UNITTESTS OFF)					# <AUTO_REPLACED> 
+set_if_not_defined(COMPILE_UNITTESTS ON)					# <AUTO_REPLACED> 
 
 
 # User specific defines which are added as defines to the compiler

@@ -296,8 +296,8 @@ namespace CLC
 		cmakeSettings.libraryName = text;
 		m_settings.setCMAKE_settings(cmakeSettings);
 		m_settings.autosetLibDefine();
-		m_settings.autosetLibProfileDefine();
 		m_settings.autosetLibShortDefine();
+		m_settings.autosetLibProfileDefine();
 		m_settings.autoSetNamespaceName();
 		m_settings.autoSetApiName();
 		const ProjectSettings::LibrarySettings& libSettings = m_settings.getLibrarySettings();
@@ -319,6 +319,18 @@ namespace CLC
 		}
 		ui.exportName_lineEdit->setText(apiStr);
 		ui.libraryNameShort_lineEdit->setText(cmakeSettings.lib_short_define);
+	}
+
+	void ProjectSettingsDialog::on_libraryNameShort_lineEdit_textChanged(const QString& text)
+	{
+		if (m_ignoreNameChangeEvents)
+			return;
+		ProjectSettings::CMAKE_settings cmakeSettings = m_settings.getCMAKE_settings();
+		cmakeSettings.lib_short_define = text;
+		m_settings.setCMAKE_settings(cmakeSettings);
+		m_settings.autosetLibProfileDefine();
+		cmakeSettings = m_settings.getCMAKE_settings();
+		ui.libProfileDefine_lineEdit->setText(cmakeSettings.lib_profile_define);
 	}
 
 	void ProjectSettingsDialog::on_qt_useNewestVersion_checkBox_clicked(bool checked)

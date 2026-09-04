@@ -175,10 +175,21 @@ namespace CLC
 	{
 		libraryName = "MyLibrary";
 		autosetLibDefine();
-		autosetLibProfileDefine();
 		autosetLibShortDefine();
+		autosetLibProfileDefine();
 		qt_enable = true;
 		qt_deploy = true;
+		// Mirrors the template's own Qt defaults (QT_INSTALL_BASE / QT_MAJOR_VERSION /
+		// QT_VERSION / QT_COMPILER in the root CMakeLists.txt). Assigned directly, not via the
+		// setters: setQtVersion() reads qt_versionNr[0] before writing it, which is the
+		// uninitialised read this exists to remove.
+		qt_installBase = "C:/Qt";
+		qt_compiler = "autoFind";
+		qt_versionNr[0] = 5;
+		qt_versionNr[1] = 0;
+		qt_versionNr[2] = 0;
+		qt_useNewestVersion = true;
+		qt_autoFindCompiler = true;
 		qModules = QVector<QTModule>();
 
 		debugPostFix = "-d";
@@ -197,24 +208,7 @@ namespace CLC
 	}
 	void ProjectSettings::CMAKE_settings::autosetLibProfileDefine()
 	{
-		// Pick the first letter of each word in the library name. The first letter is always uppercase.
-		QString shortName;
-		for (int i = 0; i < libraryName.size(); i++)
-		{
-#if QT_VERSION > QT_VERSION_CHECK(5, 0, 0)
-			if (libraryName[i] >= 'A' && libraryName[i] <= 'Z')
-#else
-			if (libraryName[i] >= 'A' && libraryName[i] <= "Z")
-#endif
-			{
-				shortName += libraryName[i];
-			}
-		}
-		if (shortName.isEmpty() && !libraryName.isEmpty())
-		{
-			shortName = libraryName[0].toUpper();
-		}
-		lib_profile_define = shortName + "_PROFILING";
+		lib_profile_define = lib_short_define + "_PROFILING";
 	}
 	void ProjectSettings::CMAKE_settings::autosetLibShortDefine()
 	{

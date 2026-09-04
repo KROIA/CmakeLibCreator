@@ -28,6 +28,7 @@ namespace CLC
 		void on_qtModules_pushButton_clicked();
 		void on_dependencies_pushButton_clicked();
 		void on_libraryName_lineEdit_textChanged(const QString& text);
+		void on_libraryNameShort_lineEdit_textChanged(const QString& text);
 		void on_qt_useNewestVersion_checkBox_clicked(bool checked);
 
 
